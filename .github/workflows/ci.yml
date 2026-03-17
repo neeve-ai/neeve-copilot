@@ -1,0 +1,53 @@
+name: Validation CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate-agents:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Verify Agent Directory Structure
+        run: |
+          echo "Validating .agents/skills directory..."
+          FAIL=0
+          for skills_dir in .agents/skills/*; do
+            if [ -d "$skills_dir" ]; then
+              if [ ! -f "$skills_dir/SKILL.md" ]; then
+                echo "::error::Agent directory $skills_dir is missing a SKILL.md file."
+                FAIL=1
+              else
+                # Extract frontmatter (content between the first two '---' lines)
+                fm=$(awk '/^---/{c++; if(c==2) exit; next} c==1{print}' "$skills_dir/SKILL.md")
+                if ! echo "$fm" | grep -qE "^name:[[:space:]]*[^[:space:]]"; then
+                  echo "::error::Agent directory $skills_dir SKILL.md is missing 'name' in frontmatter."
+                  FAIL=1
+                fi
+                if ! echo "$fm" | grep -qE "^description:[[:space:]]*[^[:space:]]"; then
+                  echo "::error::Agent directory $skills_dir SKILL.md is missing 'description' in frontmatter."
+                  FAIL=1
+                fi
+              fi
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "Agent subdirectories look good."
+
+      - name: Run Install Script Tests
+        run: |
+          echo "Running tests/test_install.sh..."
+          bash tests/test_install.sh
+
+      - name: Run Loader Script Tests
+        run: |
+          echo "Running tests/test_load_agents.sh..."
+          bash tests/test_load_agents.sh

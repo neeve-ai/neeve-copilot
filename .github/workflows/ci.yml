@@ -1,0 +1,41 @@
+name: Validation CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  validate-agents:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Verify Agent Directory Structure
+        run: |
+          echo "Validating .agents directory..."
+          FAIL=0
+          for agent_dir in .agents/*; do
+            if [ -d "$agent_dir" ]; then
+              if [ ! -f "$agent_dir/SKILL.md" ]; then
+                echo "::error::Agent directory $agent_dir is missing a SKILL.md file."
+                FAIL=1
+              fi
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "Agent subdirectories look good."
+
+      - name: Run Install Script Tests
+        run: |
+          echo "Running tests/test_install.sh..."
+          bash tests/test_install.sh
+
+      - name: Run Loader Script Tests
+        run: |
+          echo "Running tests/test_load_agents.sh..."
+          bash tests/test_load_agents.sh

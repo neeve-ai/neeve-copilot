@@ -8,7 +8,7 @@ AWESOME_SOURCE="$HOME/.awesome-copilot-source"
 
 # Ensure core directory exists
 mkdir -p "$COPILOT_HOME/system_instructions"
-mkdir -p "$HOME/.agents"
+mkdir -p "$HOME/.agents/skills"
 
 # Safety Link Function
 safe_link() {
@@ -24,13 +24,13 @@ if [ -d "$AWESOME_SOURCE" ]; then
 fi
 
 # 2. Map Neeve Internal Skills
-if [ -d "$NEEVE_SOURCE/.agents" ]; then
-    # Let's symlink the files/directories inside `.agents` to `~/.agents/` so we don't completely hijack `~/.agents`.
+if [ -d "$NEEVE_SOURCE/.agents/skills" ]; then
+    # Let's symlink the files/directories inside `.agents/skills` to `~/.agents/skills/` so we don't completely hijack `~/.agents/skills`.
 
-    for item in "$NEEVE_SOURCE/.agents"/*; do
+    for item in "$NEEVE_SOURCE/.agents/skills"/*; do
         if [ -d "$item" ]; then
             basename=$(basename "$item")
-            safe_link "$item" "$HOME/.agents/$basename"
+            safe_link "$item" "$HOME/.agents/skills/$basename"
         fi
     done
 fi

@@ -8,8 +8,8 @@ export COPILOT_HOME="$HOME/.copilot"
 export NEEVE_SOURCE="$HOME/.neeve-copilot"
 export AWESOME_SOURCE="$HOME/.awesome-copilot-source"
 
-mkdir -p "$NEEVE_SOURCE/.agents/dummy-skill"
-touch "$NEEVE_SOURCE/.agents/dummy-skill/SKILL.md"
+mkdir -p "$NEEVE_SOURCE/.agents/skills/dummy-skill"
+touch "$NEEVE_SOURCE/.agents/skills/dummy-skill/SKILL.md"
 
 mkdir -p "$AWESOME_SOURCE/agents/some-agent"
 mkdir -p "$AWESOME_SOURCE/skills/some-skill"
@@ -22,8 +22,8 @@ bash load_agents.sh
 
 echo "Asserting symlinks..."
 
-if [ ! -L "$HOME/.agents/dummy-skill" ]; then
-    echo "FAILED: Internal skill not linked to ~/.agents"
+if [ ! -L "$HOME/.agents/skills/dummy-skill" ]; then
+    echo "FAILED: Internal skill not linked to ~/.agents/skills/dummy-skill"
     exit 1
 fi
 

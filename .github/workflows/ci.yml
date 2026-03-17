@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   validate-agents:
@@ -22,6 +23,17 @@ jobs:
               if [ ! -f "$skills_dir/SKILL.md" ]; then
                 echo "::error::Agent directory $skills_dir is missing a SKILL.md file."
                 FAIL=1
+              else
+                # Extract frontmatter (content between the first two '---' lines)
+                fm=$(awk '/^---/{c++; if(c==2) exit; next} c==1{print}' "$skills_dir/SKILL.md")
+                if ! echo "$fm" | grep -qE "^name:[[:space:]]*[^[:space:]]"; then
+                  echo "::error::Agent directory $skills_dir SKILL.md is missing 'name' in frontmatter."
+                  FAIL=1
+                fi
+                if ! echo "$fm" | grep -qE "^description:[[:space:]]*[^[:space:]]"; then
+                  echo "::error::Agent directory $skills_dir SKILL.md is missing 'description' in frontmatter."
+                  FAIL=1
+                fi
               fi
             fi
           done

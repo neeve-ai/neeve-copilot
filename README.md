@@ -7,7 +7,7 @@ Welcome to the `neeve-copilot` repository! This project centralizes Neeve-specif
 To install `neeve-copilot` into your local environment:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | sh
 ```
 
 You can then restart your terminal or manually source your `.zshrc` / `.bashrc`.
@@ -18,6 +18,14 @@ To update the directory anytime, simply type:
 
 ```bash
 update-neeve-copilot
+```
+
+## 🗑️ Uninstalling
+
+If you need to completely remove `neeve-copilot` and the underlying `awesome-copilot` agents from your system, you can run the uninstaller. This will selectively erase the folders and safely clean the configuration out of your `~/.bashrc` or `~/.zshrc`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/uninstall.sh | sh
 ```
 
 ## 🛠️ Adding New Skills

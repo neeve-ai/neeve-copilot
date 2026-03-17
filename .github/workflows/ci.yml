@@ -45,9 +45,14 @@ jobs:
       - name: Run Install Script Tests
         run: |
           echo "Running tests/test_install.sh..."
-          bash tests/test_install.sh
+          sh tests/test_install.sh
 
       - name: Run Loader Script Tests
         run: |
           echo "Running tests/test_load_agents.sh..."
-          bash tests/test_load_agents.sh
+          sh tests/test_load_agents.sh
+
+      - name: Run Uninstall Script Tests
+        run: |
+          echo "Running tests/test_uninstall.sh..."
+          sh tests/test_uninstall.sh

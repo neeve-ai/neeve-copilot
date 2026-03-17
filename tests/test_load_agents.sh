@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # Setup mock environment
@@ -18,7 +18,7 @@ echo "Running load_agents.sh..."
 # Pass the contents of load_agents.sh slightly modified or just run it as a block?
 # Running it as a script is easiest since env vars are passed down, except the script redefines them.
 # So we need to evaluate the script text with our HOME variable.
-bash load_agents.sh
+sh load_agents.sh
 
 echo "Asserting symlinks..."
 

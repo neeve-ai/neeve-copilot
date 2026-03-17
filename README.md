@@ -20,6 +20,14 @@ To update the directory anytime, simply type:
 update-neeve-copilot
 ```
 
+## 🗑️ Uninstalling
+
+If you need to completely remove `neeve-copilot` and the underlying `awesome-copilot` agents from your system, you can run the uninstaller. This will selectively erase the folders and safely clean the configuration out of your `~/.bashrc` or `~/.zshrc`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/uninstall.sh | sh
+```
+
 ## 🛠️ Adding New Skills
 
 We organize our internal skills inside `.agents/skills/`.

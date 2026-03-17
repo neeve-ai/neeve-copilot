@@ -68,7 +68,7 @@ if [ -n "$DETECTED_PROFILE" ]; then
 
 # Neeve Copilot Configuration
 [ -f ~/.neeve-copilot/load_agents.sh ] && source ~/.neeve-copilot/load_agents.sh
-alias update-neeve-copilot='sh ~/.neeve-copilot/install.sh'
+alias update-neeve-copilot='curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | sh'
 EOF
     else
         printf "%b\n" "${GREEN}✅ Loader already present in $DETECTED_PROFILE${NC}"
@@ -77,7 +77,7 @@ else
     printf "%b\n" "${RED}⚠️ Could not detect a suitable shell profile to update.${NC}"
     echo "Please manually add the following to your shell configuration:"
     echo "  [ -f ~/.neeve-copilot/load_agents.sh ] && source ~/.neeve-copilot/load_agents.sh"
-    echo "  alias update-neeve-copilot='sh ~/.neeve-copilot/install.sh'"
+    echo "  alias update-neeve-copilot='curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | sh'"
 fi
 
 # 4. Finalize

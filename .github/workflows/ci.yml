@@ -15,12 +15,12 @@ jobs:
 
       - name: Verify Agent Directory Structure
         run: |
-          echo "Validating .agents directory..."
+          echo "Validating .agents/skills directory..."
           FAIL=0
-          for agent_dir in .agents/*; do
-            if [ -d "$agent_dir" ]; then
-              if [ ! -f "$agent_dir/SKILL.md" ]; then
-                echo "::error::Agent directory $agent_dir is missing a SKILL.md file."
+          for skills_dir in .agents/skills/*; do
+            if [ -d "$skills_dir" ]; then
+              if [ ! -f "$skills_dir/SKILL.md" ]; then
+                echo "::error::Agent directory $skills_dir is missing a SKILL.md file."
                 FAIL=1
               fi
             fi

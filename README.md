@@ -7,7 +7,7 @@ Welcome to the `neeve-copilot` repository! This project centralizes Neeve-specif
 To install `neeve-copilot` into your local environment:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neeve/neeve-copilot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | bash
 ```
 
 You can then restart your terminal or manually source your `.zshrc` / `.bashrc`.
@@ -22,9 +22,9 @@ update-neeve-copilot
 
 ## 🛠️ Adding New Skills
 
-We organize our internal skills inside `.agents/`.
+We organize our internal skills inside `.agents/skills/`.
 To propose a new agent or skill:
-1. Create a directory for your skill: `.agents/my-skill/`
+1. Create a directory for your skill: `.agents/skills/my-skill/`
 2. Define a `SKILL.md` file following the Open Agent Skills specification.
 3. Commit and submit a Pull Request.
 

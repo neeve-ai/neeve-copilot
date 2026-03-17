@@ -2,7 +2,7 @@
 set -e
 
 # Configuration
-REPO_URL="https://github.com/neeve/neeve-copilot.git"
+REPO_URL="https://github.com/neeve-ai/neeve-copilot.git"
 INSTALL_DIR="$HOME/.neeve-copilot"
 AWESOME_URL="https://github.com/github/awesome-copilot.git"
 AWESOME_DIR="$HOME/.awesome-copilot-source"
@@ -57,7 +57,7 @@ if [ -n "$DETECTED_PROFILE" ]; then
     # Add payload if missing
     if ! grep -q "Neeve Copilot Configuration" "$DETECTED_PROFILE"; then
         echo -e "${GREEN}✍️ Adding loader to $DETECTED_PROFILE${NC}"
-        
+
         cat << 'EOF' >> "$DETECTED_PROFILE"
 
 # Neeve Copilot Configuration

@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # Setup mock environment
 export HOME="$(mktemp -d)"
-export SHELL="/bin/bash"
+export SHELL="/bin/sh"
 
 touch "$HOME/.bashrc"
 
@@ -15,7 +15,7 @@ export AWESOME_DIR="$HOME/.awesome-copilot-source"
 
 # Run install.sh but mock out the git calls
 sed -E 's/git clone/echo "Mock git clone"/g; s/git fetch/echo "Mock git fetch"/g; s/git reset/echo "Mock git reset"/g' install.sh > install_mocked.sh
-bash install_mocked.sh
+sh install_mocked.sh
 
 if [ ! -d "$HOME/.awesome-copilot-source" ]; then
     echo "FAILED: .awesome-copilot-source directory not created."

@@ -7,7 +7,7 @@ Welcome to the `neeve-copilot` repository! This project centralizes Neeve-specif
 To install `neeve-copilot` into your local environment:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | sh
 ```
 
 You can then restart your terminal or manually source your `.zshrc` / `.bashrc`.

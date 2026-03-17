@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/bin/sh
+# shellcheck shell=dash
+# shellcheck disable=SC2039  # local is non-POSIX
+# shellcheck disable=SC2268  # no harm in supporting older shells
 # Sourced by user profile (~/.zshrc or ~/.bashrc)
 # Loads Awesome Copilot and Neeve Copilot skills dynamically.
 
@@ -8,6 +11,7 @@ AWESOME_SOURCE="$HOME/.awesome-copilot-source"
 
 # Ensure core directory exists
 # mkdir -p "$COPILOT_HOME/system_instructions"
+mkdir -p "$COPILOT_HOME"
 mkdir -p "$HOME/.agents/skills"
 
 # Safety Link Function

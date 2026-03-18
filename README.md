@@ -20,6 +20,22 @@ To update the directory anytime, simply type:
 update-neeve-copilot
 ```
 
+## 💡 Usage
+
+Once installed, your Copilot Chat is automatically enriched with Neeve-specific and community capabilities.
+
+### Custom Agents
+Custom Agents change the overarching behavior, default tools, and system instructions of your Copilot session.
+Select a custom agent directly from the **agent dropdown menu** at the top of your Copilot Chat view:
+
+![Selecting an agent](assets/agents.png)
+
+### Agent Skills
+Skills teach Copilot how to execute highly specific routines or workflows.
+You can explicitly invoke a skill by typing `/` followed by the skill name in chat, or just ask Copilot a question naturally—it will dynamically load the correct skill based on your context!
+
+![Using a skill](assets/skills.png)
+
 ## 🗑️ Uninstalling
 
 If you need to completely remove `neeve-copilot` and the underlying `awesome-copilot` agents from your system, you can run the uninstaller. This will selectively erase the folders and safely clean the configuration out of your `~/.bashrc` or `~/.zshrc`.

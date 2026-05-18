@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement Spec"
+  short_description: "Implement Neeve-style work items with proof, contracts, and runtime safety"
+  default_prompt: "Use $implement-spec to consume this approved handoff, confirm FR ownership and task size first, then implement it with proof, invariant preservation, and runtime validation."

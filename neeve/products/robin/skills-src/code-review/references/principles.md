@@ -1,0 +1,271 @@
+# Neeve SDLC And Production Principles
+
+This reference turns repository conventions into review rules. It is derived from the strongest
+patterns repeated across `robin-ai`, `robin-kb-service`, `robin-web`, `robin-helm`, and
+`robin-adr`.
+
+Use it to decide whether a change is aligned with how Neeve systems are designed, verified, and
+deployed.
+
+## 1. Delivery Discipline: ADR -> Spec -> Implementation
+
+Neeve work is expected to leave a traceable design trail.
+
+### What reviewers should expect
+
+- **ADR first** for architectural decisions, cross-service behavior, authz, eventing, data model
+  shifts, or major operational changes.
+- **Spec or contract next** for feature behavior, acceptance criteria, and owned interfaces.
+- **Implementation after design** with tests and deployment wiring following the agreed scope.
+
+### Review implications
+
+- Flag implementation that outruns design.
+- Flag scope creep that is not reflected in the spec/work item.
+- Flag changes that alter runtime or deployment behavior without updating the Helm/docs layer.
+
+### Strong repo signals
+
+- `robin-adr/README.md`: ADR workflow is propose -> discuss -> accept -> implement.
+- `robin-ai/specs/*.md`: work is split into scope, non-goals, interfaces, TDD order, acceptance
+  criteria.
+- `robin-web/docs/contracts/`: versioned contracts and changelogs are part of the delivery model.
+
+## 2. Interface-Driven Architecture
+
+Neeve favors explicit contracts and swappable boundaries.
+
+### Expected patterns
+
+- Protocol/interface-driven boundaries instead of hard concrete coupling
+- Pydantic/OpenAPI contracts at service and API edges
+- constructor injection or explicit dependency factories
+- small, named abstractions with one business reason to change
+- domain logic separated from framework and infrastructure concerns
+
+### Review implications
+
+Flag:
+
+- business logic coupled directly to framework/global state
+- hidden singletons or import-time side effects
+- untyped or implicit payloads crossing process boundaries
+- HTTP or NATS handlers that bypass domain/service contracts
+- layer violations such as domain code importing infrastructure/web concerns
+
+### Strong repo signals
+
+- `robin-adr/adr/0002-interface-driven-architecture.md`
+- `robin-kb-service/docs/architecture.md`
+- `robin-ai/CONTRACTS.md`
+
+## 3. Contracts Are Owned Surfaces
+
+Public and inter-service behavior must be explicit and versionable.
+
+### Expected patterns
+
+- OpenAPI or equivalent versioned contracts for HTTP integrations
+- documented event payloads for NATS/async flows
+- typed DTOs or Pydantic models at boundaries
+- changelogs/examples for externally consumed contracts
+
+### Review implications
+
+Flag:
+
+- response/request shape drift from the contract
+- new fields or semantic changes with no contract update
+- consumer-visible behavior hidden only in tests or implementation
+- route/event additions that do not appear in owned interface docs
+
+### Strong repo signals
+
+- `robin-web/docs/CONTRACT_TESTING_GUIDE.md`
+- `robin-web/docs/contracts/`
+- `robin-ai/specs/CBWebhookEnterpriseOrgProvisioning.md`
+
+## 4. Correctness Means Replay Safety, Ordering, And Tenant Safety
+
+Many Neeve services are asynchronous, retried, or multi-tenant. Correctness is not just "passes the
+happy path."
+
+### Expected patterns
+
+- idempotency for webhook, billing, provisioning, and retry-prone flows
+- publish-after-commit or equivalent ordering when durable state and events interact
+- explicit retry and failure-classification behavior
+- strict tenant scoping by `organization_id` or equivalent owner key
+- no authorization decisions based solely on client-controlled data
+
+### Review implications
+
+Flag:
+
+- duplicate side effects under replay
+- state updates and event publication in the wrong order
+- partial writes across transaction boundaries
+- queries or cache keys missing tenant scope
+- authz decisions that fail open or trust stale cache without fallback
+
+### Strong repo signals
+
+- `robin-adr/Enterprise_Readiness_Workitems.md`
+- `robin-ai/specs/SPEC-WI-R02-R03.md`
+- `robin-kb-service/docs/architecture.md`
+
+## 5. Failures Must Be Observable And Contained
+
+Services are expected to degrade predictably, not silently.
+
+### Expected patterns
+
+- structured logging with enough context to correlate failures
+- metrics on critical paths and external dependencies
+- health endpoints separated by startup/liveness/readiness concerns
+- explicit timeout and retry policy on external calls
+- graceful shutdown and startup lifecycle handling
+
+### Review implications
+
+Flag:
+
+- missing timeout on network or external service calls
+- retries without backoff or retries on non-idempotent operations
+- swallowed exceptions or lost exception context
+- no logs/metrics around business-critical failures
+- health endpoints that are unsuitable for Kubernetes semantics
+
+### Strong repo signals
+
+- `robin-adr/adr/0001-observability-platform-selection.md`
+- `robin-adr/adr/0003-structured-logging-with-loguru.md`
+- `robin-helm/docs/PRODUCTION.md`
+- `robin-helm/README.md`
+
+## 6. Quality Gates Are Part Of The Feature
+
+The test and static-analysis bar is intentionally high.
+
+### Expected patterns
+
+- strict typing (`mypy`, TypeScript strict mode)
+- lint/format gates (`ruff`, `black`, `eslint`, `prettier`)
+- 95% coverage target for production code paths unless an exception is documented
+- behavior-oriented tests, often in Given/When/Then form
+- contract tests where interfaces are versioned or consumed by other services
+
+### Review implications
+
+Flag:
+
+- important behavior changes with no test delta
+- tests that only prove mocks behave like mocks
+- broad mocking that hides integration boundaries
+- uncovered negative/failure/replay paths in event-driven or billing/authz code
+- loosened type or lint posture without justification
+
+### Strong repo signals
+
+- `robin-adr/adr/0004-code-standards-and-quality-gates.md`
+- `robin-kb-service/docs/contributing.md`
+- `robin-web/docs/TESTING_GUIDE.md`
+- `robin-ai/README.md`
+
+## 7. Helm/Kubernetes Is Part Of The System, Not An Afterthought
+
+Everything is deployed in Kubernetes via Helm. Code review is incomplete if it ignores deployment
+reality.
+
+### Expected patterns
+
+- hierarchical values structure with env-specific overrides
+- startup, liveness, and readiness probes
+- resource requests/limits
+- secure pod/container security context
+- metrics / ServiceMonitor / observability wiring
+- rolling upgrade and disruption controls where appropriate
+- secrets sourced via refs, not inlined literals
+
+### Review implications
+
+Flag:
+
+- code requiring new runtime config that is not wired through Helm
+- chart drift between app assumptions and env values
+- missing or weak security context on production workloads
+- new service endpoints/ports with no probe or ServiceMonitor consideration
+- rollout settings that can cause downtime for stateful or critical services
+- changes to vendored/source subcharts without handling packaged chart usage when that repo layout
+  requires it
+
+### Strong repo signals
+
+- `robin-helm/docs/CONFIGURATION.md`
+- `robin-helm/docs/PRODUCTION.md`
+- `robin-helm/docs/GUIDELINES.md`
+- `robin-helm/README.md`
+
+## 8. Release Safety Matters
+
+Neeve repositories document release/hotfix discipline because production safety includes the path to
+ship and backport fixes.
+
+### Expected patterns
+
+- branch/release flow respected
+- versioned contracts and changelogs updated when needed
+- release notes/runbooks updated for operationally meaningful changes
+
+### Review implications
+
+Flag:
+
+- release-sensitive behavior changes with no release note/runbook consideration
+- contract version changes without changelog/version policy updates
+- fixes on release/hotfix paths that are likely to diverge from mainline branches
+
+### Strong repo signals
+
+- `robin-adr/adr/0012-branching-release-strategy.md`
+- `robin-web/docs/RELEASE_RUNBOOK.md`
+- `robin-web/docs/RELEASE_VERSIONING_STRATEGY.md`
+
+## 9. Severity Heuristics For Neeve Reviews
+
+Use these heuristics when deciding whether a principle breach is a real finding.
+
+### Usually `CRITICAL`
+
+- broken tenant boundary
+- broken authz or fail-open behavior
+- event ordering that can permanently desync durable state and downstream consumers
+- deploy config that can crash-loop or expose secrets/root privileges unsafely
+- contract or migration error that can corrupt or lose production data
+
+### Usually `HIGH`
+
+- missing spec/ADR trail for a cross-service or architectural change
+- non-idempotent implementation on replay-prone workflows
+- missing timeout/retry/failure handling on critical integrations
+- tests that give false confidence on billing/provisioning/authz paths
+- Helm/config drift that will make the code change non-deployable or silently wrong
+
+### Usually `MEDIUM`
+
+- local behavior change with weak documentation of intent
+- incomplete observability or edge-case coverage
+- architecture drift that is contained but trending the wrong way
+
+### Usually `LOW`
+
+- naming, layout, or small refactors with little production effect
+
+## 10. Review Principle
+
+The bar is simple:
+
+`If this merged today and rolled out through Helm to Kubernetes, would the team have peace in production?`
+
+If the answer depends on hope, missing documentation, unverified contracts, or fragile runtime
+assumptions, that is the finding.

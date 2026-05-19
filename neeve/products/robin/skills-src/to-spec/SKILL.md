@@ -6,7 +6,7 @@ description: >
   "turn this into a work item", "plan this implementation", "write requirements", "convert this bug
   into a spec", "design the fix", "break this into tasks", or any request to transform a problem or
   design direction into structured engineering work. Prioritize the style and decision discipline
-  used in `robin-ai/specs/`: clarify the goal first, capture assumptions, state scope and
+  used in `specs/`: clarify the goal first, capture assumptions, state scope and
   boundaries, explain the wiring story end-to-end, make consequences explicit, and derive concrete
   tests from the intended behavior.
 ---
@@ -15,7 +15,7 @@ description: >
 
 This skill writes specs the way Neeve work should be understood by humans before code is written.
 
-The primary style source is `robin-ai/specs/`. That means:
+The primary style source is `specs/`. That means:
 
 - understand the ask before writing structure
 - state what is in scope and out of scope
@@ -58,9 +58,9 @@ Before writing the spec, first establish:
 If the ask is ambiguous, stop and clarify before proceeding. If the ask is mostly clear, restate
 it crisply and list assumptions before drafting.
 
-### Rule 2: Default to `robin-ai/specs/` style
+### Rule 2: Default to `specs/` style
 
-`robin-ai/specs/` is the primary style guide, not the more generic industry template.
+`specs/` is the primary style guide, not the more generic industry template.
 
 That means specs should usually emphasize:
 
@@ -157,7 +157,7 @@ Do not write the full spec until this phase is done.
 
 Read the best available sources before inventing structure:
 
-- `robin-ai/specs/` first when the style decision is in doubt
+- reachable examples in `specs/` first when the style decision is in doubt
 - ADRs or design docs
 - existing repo docs / README / contracts
 - current code structure and reusable components
@@ -190,16 +190,9 @@ A3. ...
 
 ### Phase 3 — Choose the spec shape
 
-Do not force every request into one template. Choose the minimum shape that still makes the change
-safe and reviewable.
-
-#### Shape A: Concise work-item spec
-
-Use this for single work items, narrow features, focused bug fixes, or isolated implementation
-planning. This should resemble `CBWebhookEnterpriseOrgProvisioning.md`.
+Do not force every request into one template. Choose the minimum shape that still makes the change safe and reviewable. if SPEC-WI-R02-R03.md is accessible use it to ground the template and style decision. If not found, default to the concise work-item spec structure given below.
 
 Required sections:
-
 1. Title
 2. Summary
 3. In Scope
@@ -216,36 +209,6 @@ Required sections:
 14. Acceptance Criteria
 15. Consequences / Follow-on Work
 16. Implementation Handoff
-
-#### Shape B: Full systems spec
-
-Use this for cross-service, cross-runtime, or architecture-heavy work. This should resemble
-`SPEC-WI-R02-R03.md`.
-
-Required sections:
-
-1. Title
-2. Metadata
-3. Summary
-4. Goals
-5. Non-Goals
-6. Definitions
-7. Assumptions
-8. Reuse Inventory
-9. Use Cases
-10. Functional Requirements
-11. Invariants
-12. Workflow / Wiring Story
-13. Security
-14. Interfaces
-15. Data Model
-16. Edge Cases
-17. Non-Functional Requirements
-18. Build / Task Order
-19. Required Tests
-20. Acceptance Criteria
-21. Consequences / Follow-on Work
-22. Implementation Handoff
 
 ### Phase 4 — Write the spec
 
@@ -346,6 +309,16 @@ Do not turn a bug fix into a disguised architecture rewrite without explicit app
 
 Every spec must include a compact handoff block for `implement-spec`.
 
+Before writing this block, verify all of the following:
+
+- every assumption is confirmed or explicitly marked unverified
+- every owned FR maps to at least one required test
+- task sizing has been assessed
+
+If any of these checks fail, do not write the handoff block yet. Resolve the ambiguity, mark the
+assumption status explicitly, add the missing test mapping, or split the task further before
+handoff. Do not pass hidden gaps to `implement-spec`.
+
 This handoff must state:
 
 - owned task / slice
@@ -424,6 +397,8 @@ Use this default outline:
 ## Consequences / Follow-on Work
 - ...
 
+<!-- Handoff gate: confirm or explicitly mark assumption status, map each owned FR to at least one required test, and assess task sizing before writing the block. -->
+
 ## Implementation Handoff
 - **Owned task:** ...
 - **Owned FRs:** ...
@@ -437,7 +412,7 @@ Use this default outline:
 
 ### Full systems spec structure
 
-Use this for multi-component work:
+Use this for multi-component work. When reachable, `SPEC-WI-R02-R03.md` is the anchor example for how these sections should read in practice:
 
 ```markdown
 # [Spec Title]
@@ -517,6 +492,8 @@ Use this for multi-component work:
 
 ## Consequences / Follow-on Work
 - ...
+
+<!-- Handoff gate: confirm or explicitly mark assumption status, map each owned FR to at least one required test, and assess task sizing before writing the block. -->
 
 ## Implementation Handoff
 - **Owned task or slice:** ...

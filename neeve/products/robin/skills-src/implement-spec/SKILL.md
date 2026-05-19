@@ -18,7 +18,7 @@ damaging production behavior.
 The default source of truth is:
 
 1. the task or work item being implemented
-2. the parent spec, especially `robin-ai/specs/` style specs
+2. the parent spec, especially `specs/` style specs
 3. the actual surrounding codebase
 4. repo-local implementation conventions (`AGENTS.md`, `CLAUDE.md`, docs, tests, Helm config)
 
@@ -129,17 +129,26 @@ If a spec exists, read the relevant parts, especially:
 - Consequences or follow-on work
 - Implementation Handoff
 
-For Neeve specs, assume `robin-ai/specs/` style until the repo proves otherwise.
+For Neeve specs, assume `specs/` style until the repo proves otherwise.
 
-If no formal spec exists, reconstruct the minimum source of truth from:
+If no formal spec exists, do not treat reconstruction from code as a general fallback.
 
-- ADR or bug report
-- issue description
-- existing tests
-- contracts / docs
-- surrounding code
+Use reconstruction only for bug fixes with clear prior behavior and bounded scope. In that case:
 
-Normalize the source into this intake contract:
+- acknowledge explicitly that no formal spec exists
+- name the prior behavior being restored
+- reconstruct the minimum source of truth from:
+  - ADR or bug report
+  - issue description
+  - existing tests
+  - contracts / docs
+  - surrounding code
+
+If the work is a non-trivial feature, a behavior change, or anything that requires inferred scope,
+stop and ask the human to invoke `to-spec` first. Do not route around spec creation by inferring
+the work from surrounding code alone.
+
+When reconstruction is legitimate, normalize the source into this intake contract:
 
 - owned task
 - owned FRs

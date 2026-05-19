@@ -11,6 +11,8 @@ every agent. Skills layer on top for task-specific depth.
 
 - **Spec first.** The spec owns scope, sequencing, interfaces, and invariants.
   Read it before writing code.
+  For non-trivial changes, the expected SDL path is `to-spec` -> human review of the spec ->
+  `implement-spec` -> `code-review`; do not skip straight to implementation.
 - **Reuse first.** Verify no existing component covers the need before creating a
   new class, service, table, or helper. In Neeve repos, duplicate helpers and DTOs
   are a design failure.

@@ -7,7 +7,8 @@ set -euo pipefail
 
 SKILLS="code-review to-spec implement-spec"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ZIP_DIR="${SCRIPT_DIR}/zips"
+ZIP_DIR="${SKILLS_ZIP_DIR:-}"
+SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()  { echo -e "  ${GREEN}✓${NC} $*"; }
@@ -104,24 +105,55 @@ if ! $DO_CLAUDE && ! $DO_CODEX && ! $DO_ANTIGRAVITY && ! $DO_COPILOT && ! $DO_CU
   fi
 fi
 
-# ── Verify zips ───────────────────────────────────────────────────────────────
-hdr "Verifying skill packages"
-missing=0
-for skill in $SKILLS; do
-  zip="${ZIP_DIR}/${skill}.zip"
-  if [[ -f "$zip" ]]; then
-    size=$(du -h "$zip" | cut -f1)
-    ok "${skill}.zip (${size})"
-  else
-    err "${skill}.zip not found in ${ZIP_DIR}/"
-    missing=$((missing + 1))
+ensure_skill_packages() {
+  if [[ -z "${ZIP_DIR}" ]]; then
+    if [[ -d "${SCRIPT_DIR}/zips" ]]; then
+      ZIP_DIR="${SCRIPT_DIR}/zips"
+    elif [[ -d "${SCRIPT_DIR}/dist/zips" ]]; then
+      ZIP_DIR="${SCRIPT_DIR}/dist/zips"
+    else
+      ZIP_DIR="${SCRIPT_DIR}/dist/zips"
+    fi
   fi
-done
-if [[ $missing -gt 0 ]]; then
-  echo ""
-  err "Place the missing zip files in: ${ZIP_DIR}/"
-  exit 1
-fi
+
+  local missing=0 skill zip
+  for skill in $SKILLS; do
+    zip="${ZIP_DIR}/${skill}.zip"
+    [[ -f "${zip}" ]] || missing=$((missing + 1))
+  done
+
+  if [[ "${missing}" -gt 0 ]]; then
+    if [[ -d "${SCRIPT_DIR}/skills-src" && -f "${SYNC_SCRIPT}" ]]; then
+      mkdir -p "${ZIP_DIR}"
+      warn "Skill packages not found; rebuilding from local skills-src into ${ZIP_DIR}"
+      SKILLS_ZIP_DIR="${ZIP_DIR}" bash "${SYNC_SCRIPT}" pack
+    else
+      err "Skill packages are missing and no local skills-src packer is available."
+      err "Download the GitHub release bundle or clone the full repository checkout."
+      exit 1
+    fi
+  fi
+
+  hdr "Verifying skill packages"
+  missing=0
+  for skill in $SKILLS; do
+    zip="${ZIP_DIR}/${skill}.zip"
+    if [[ -f "$zip" ]]; then
+      size=$(du -h "$zip" | cut -f1)
+      ok "${skill}.zip (${size})"
+    else
+      err "${skill}.zip not found in ${ZIP_DIR}/"
+      missing=$((missing + 1))
+    fi
+  done
+  if [[ $missing -gt 0 ]]; then
+    echo ""
+    err "Unable to prepare the required zip files in: ${ZIP_DIR}/"
+    exit 1
+  fi
+}
+
+ensure_skill_packages
 
 # ── Install one skill into one directory ─────────────────────────────────────
 install_to() {

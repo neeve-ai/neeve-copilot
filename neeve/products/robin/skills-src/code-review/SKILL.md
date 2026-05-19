@@ -102,11 +102,21 @@ Verify the change has the right level of design trail.
 - Deployment behavior change:
   - expect Helm/config/docs changes where appropriate
 
+If a design trail exists, verify the implementation still matches it:
+
+- check that the implemented scope stays within the accepted work item/spec
+- check that stated acceptance criteria are satisfied by the implementation and its tests
+
 Flag the absence of design trail when it blocks safe review:
 
 - `HIGH`: behavior changed across service boundaries, authz, billing, data model, or deployment with
   no spec/ADR trail
 - `MEDIUM`: local behavior changed and intent must be inferred from tests/code only
+
+Flag spec-fidelity failures here, not later:
+
+- `HIGH`: implementation scope exceeds the accepted spec or work item
+- `HIGH`: spec exists but the implementation does not satisfy stated acceptance criteria
 
 ### Gate 1: Contract And Architecture Integrity
 

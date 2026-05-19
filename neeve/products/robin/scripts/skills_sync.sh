@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_DIR="${ROOT_DIR}/skills-src"
-ZIP_DIR="${ROOT_DIR}/zips"
+ZIP_DIR="${SKILLS_ZIP_DIR:-${ROOT_DIR}/dist/zips}"
 SKILLS=()
 shopt -s nullglob
 
@@ -12,8 +12,8 @@ usage() {
 Usage: $(basename "$0") <check|pack>
 
 Commands:
-  check   Verify zips and skills-src are in sync (content-level)
-  pack    Rebuild zips from skills-src
+  check   Verify skills-src can be packaged into valid zip archives
+  pack    Build zip archives from skills-src
 USAGE
 }
 
@@ -53,10 +53,6 @@ validate_layout() {
     echo "Missing skills source directory: ${SRC_DIR}" >&2
     exit 1
   fi
-  if [[ ! -d "${ZIP_DIR}" ]]; then
-    echo "Missing zip directory: ${ZIP_DIR}" >&2
-    exit 1
-  fi
 
   for skill in "${SKILLS[@]}"; do
     if [[ ! -d "${SRC_DIR}/${skill}" ]]; then
@@ -67,25 +63,11 @@ validate_layout() {
       echo "Missing SKILL.md in: ${SRC_DIR}/${skill}" >&2
       exit 1
     fi
-    if [[ ! -f "${ZIP_DIR}/${skill}.zip" ]]; then
-      echo "Missing zip archive: ${ZIP_DIR}/${skill}.zip" >&2
-      exit 1
-    fi
-  done
-
-  local zip_file zip_name
-  for zip_file in "${ZIP_DIR}"/*.zip; do
-    zip_name="$(basename "${zip_file}" .zip)"
-    if ! contains_skill "${zip_name}"; then
-      echo "Stale zip archive not represented in skills-src: ${zip_file}" >&2
-      exit 1
-    fi
   done
 }
 
 compare_one() {
-  local skill="$1"
-  local zip_file="${ZIP_DIR}/${skill}.zip"
+  local skill="$1" zip_file="$2"
   local src_skill_dir="${SRC_DIR}/${skill}"
   local tmp_dir
 
@@ -111,8 +93,8 @@ compare_one() {
 }
 
 pack_one() {
-  local skill="$1"
-  local out_file="${ZIP_DIR}/${skill}.zip"
+  local skill="$1" out_dir="$2"
+  local out_file="${out_dir}/${skill}.zip"
   local tmp_dir tmp_zip
 
   tmp_dir="$(mktemp -d)"
@@ -130,6 +112,8 @@ pack_one() {
 }
 
 prune_stale_zips() {
+  [[ -d "${ZIP_DIR}" ]] || return 0
+
   local zip_file zip_name
   for zip_file in "${ZIP_DIR}"/*.zip; do
     zip_name="$(basename "${zip_file}" .zip)"
@@ -151,14 +135,19 @@ main() {
   local cmd="${1:-}"
   case "${cmd}" in
     check)
+      local tmp_zip_dir
+      tmp_zip_dir="$(mktemp -d)"
       for skill in "${SKILLS[@]}"; do
-        compare_one "${skill}"
+        pack_one "${skill}" "${tmp_zip_dir}"
+        compare_one "${skill}" "${tmp_zip_dir}/${skill}.zip"
       done
+      rm -rf "${tmp_zip_dir}"
       ;;
     pack)
+      mkdir -p "${ZIP_DIR}"
       prune_stale_zips
       for skill in "${SKILLS[@]}"; do
-        pack_one "${skill}"
+        pack_one "${skill}" "${ZIP_DIR}"
       done
       ;;
     *)

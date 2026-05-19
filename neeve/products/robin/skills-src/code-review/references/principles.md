@@ -31,6 +31,9 @@ Neeve work is expected to leave a traceable design trail.
   criteria.
 - `robin-web/docs/contracts/`: versioned contracts and changelogs are part of the delivery model.
 
+If these files do not exist, look for equivalent ADRs, architecture decision records, specs, or
+contract definitions in the current repo.
+
 ## 2. Interface-Driven Architecture
 
 Neeve favors explicit contracts and swappable boundaries.
@@ -57,7 +60,10 @@ Flag:
 
 - `robin-adr/adr/0002-interface-driven-architecture.md`
 - `robin-kb-service/docs/architecture.md`
-- `robin-ai/CONTRACTS.md`
+- `robin-ai/specs/`
+
+If these files do not exist, look for equivalent ADRs, architecture decision records, or contract
+definitions in the current repo.
 
 ## 3. Contracts Are Owned Surfaces
 
@@ -83,7 +89,10 @@ Flag:
 
 - `robin-web/docs/CONTRACT_TESTING_GUIDE.md`
 - `robin-web/docs/contracts/`
-- `robin-ai/specs/CBWebhookEnterpriseOrgProvisioning.md`
+- `robin-ai/specs/`
+
+If these files do not exist, look for equivalent ADRs, architecture decision records, or contract
+definitions in the current repo.
 
 ## 4. Correctness Means Replay Safety, Ordering, And Tenant Safety
 
@@ -114,6 +123,9 @@ Flag:
 - `robin-ai/specs/SPEC-WI-R02-R03.md`
 - `robin-kb-service/docs/architecture.md`
 
+If these files do not exist, look for equivalent ADRs, architecture decision records, specs, or
+contract definitions in the current repo.
+
 ## 5. Failures Must Be Observable And Contained
 
 Services are expected to degrade predictably, not silently.
@@ -143,6 +155,9 @@ Flag:
 - `robin-helm/docs/PRODUCTION.md`
 - `robin-helm/README.md`
 
+If these files do not exist, look for equivalent ADRs, architecture decision records, runbooks, or
+operability definitions in the current repo.
+
 ## 6. Quality Gates Are Part Of The Feature
 
 The test and static-analysis bar is intentionally high.
@@ -171,6 +186,9 @@ Flag:
 - `robin-kb-service/docs/contributing.md`
 - `robin-web/docs/TESTING_GUIDE.md`
 - `robin-ai/README.md`
+
+If these files do not exist, look for equivalent ADRs, architecture decision records, testing
+guides, or quality-gate definitions in the current repo.
 
 ## 7. Helm/Kubernetes Is Part Of The System, Not An Afterthought
 
@@ -206,6 +224,9 @@ Flag:
 - `robin-helm/docs/GUIDELINES.md`
 - `robin-helm/README.md`
 
+If these files do not exist, look for equivalent ADRs, architecture decision records,
+configuration guides, or deployment definitions in the current repo.
+
 ## 8. Release Safety Matters
 
 Neeve repositories document release/hotfix discipline because production safety includes the path to
@@ -230,6 +251,9 @@ Flag:
 - `robin-adr/adr/0012-branching-release-strategy.md`
 - `robin-web/docs/RELEASE_RUNBOOK.md`
 - `robin-web/docs/RELEASE_VERSIONING_STRATEGY.md`
+
+If these files do not exist, look for equivalent ADRs, architecture decision records, release
+runbooks, or versioning definitions in the current repo.
 
 ## 9. Severity Heuristics For Neeve Reviews
 

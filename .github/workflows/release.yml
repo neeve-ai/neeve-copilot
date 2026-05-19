@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "robin-skills-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_DIR: ${{ runner.temp }}/robin-skills-release
+      ZIP_DIR: ${{ runner.temp }}/robin-skills-release/zips
+      BUNDLE_DIR: ${{ runner.temp }}/robin-skills-release/neeve-skills
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build release zip assets
+        run: |
+          mkdir -p "${ZIP_DIR}"
+          SKILLS_ZIP_DIR="${ZIP_DIR}" neeve/products/robin/scripts/skills_sync.sh pack
+
+      - name: Validate release zip assets
+        run: |
+          neeve/products/robin/scripts/skills_sync.sh check
+
+      - name: Smoke test installer against release assets
+        run: |
+          tmp_home="$(mktemp -d)"
+          HOME="${tmp_home}" SKILLS_ZIP_DIR="${ZIP_DIR}" bash neeve/products/robin/install.sh --codex
+          test -f "${tmp_home}/.codex/skills/code-review/SKILL.md"
+          test -f "${tmp_home}/.codex/skills/to-spec/SKILL.md"
+          test -f "${tmp_home}/.codex/skills/implement-spec/SKILL.md"
+          rm -rf "${tmp_home}"
+
+      - name: Assemble release bundle
+        run: |
+          mkdir -p "${BUNDLE_DIR}/zips"
+          cp neeve/products/robin/install.sh "${BUNDLE_DIR}/install.sh"
+          cp neeve/products/robin/AGENTS.md "${BUNDLE_DIR}/AGENTS.md"
+          cp neeve/products/robin/README.md "${BUNDLE_DIR}/README.md"
+          cp "${ZIP_DIR}"/*.zip "${BUNDLE_DIR}/zips/"
+          (
+            cd "${RELEASE_DIR}"
+            zip -rq robin-skills-bundle.zip neeve-skills
+          )
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: robin-skills-release-assets
+          path: |
+            ${{ runner.temp }}/robin-skills-release/zips/*.zip
+            ${{ runner.temp }}/robin-skills-release/robin-skills-bundle.zip
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/robin-skills-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ runner.temp }}/robin-skills-release/zips/*.zip
+            ${{ runner.temp }}/robin-skills-release/robin-skills-bundle.zip
+          generate_release_notes: true
+          make_latest: true
+
+      - name: Publish latest prerelease
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: robin-skills-latest
+          target_commitish: ${{ github.sha }}
+          name: Robin Skills Latest
+          prerelease: true
+          files: |
+            ${{ runner.temp }}/robin-skills-release/zips/*.zip
+            ${{ runner.temp }}/robin-skills-release/robin-skills-bundle.zip
+          generate_release_notes: true
+
+      - name: Move latest prerelease tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f robin-skills-latest "${GITHUB_SHA}"
+          git push origin refs/tags/robin-skills-latest --force

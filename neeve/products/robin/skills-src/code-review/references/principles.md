@@ -1,8 +1,8 @@
 # Neeve SDLC And Production Principles
 
 This reference turns repository conventions into review rules. It is derived from the strongest
-patterns repeated across `robin-ai`, `robin-kb-service`, `robin-web`, `robin-helm`, and
-`robin-adr`.
+patterns repeated across service repositories, frontend/BFF repositories, shared libraries,
+deployment-chart repositories, and ADR/design-document repositories.
 
 Use it to decide whether a change is aligned with how Neeve systems are designed, verified, and
 deployed.
@@ -26,10 +26,10 @@ Neeve work is expected to leave a traceable design trail.
 
 ### Strong repo signals
 
-- `robin-adr/README.md`: ADR workflow is propose -> discuss -> accept -> implement.
-- `robin-ai/specs/*.md`: work is split into scope, non-goals, interfaces, TDD order, acceptance
+- `adr/README.md`: ADR workflow is propose -> discuss -> accept -> implement.
+- `specs/*.md`: work is split into scope, non-goals, interfaces, TDD order, and acceptance
   criteria.
-- `robin-web/docs/contracts/`: versioned contracts and changelogs are part of the delivery model.
+- `docs/contracts/`: versioned contracts and changelogs are part of the delivery model.
 
 If these files do not exist, look for equivalent ADRs, architecture decision records, specs, or
 contract definitions in the current repo.
@@ -58,9 +58,9 @@ Flag:
 
 ### Strong repo signals
 
-- `robin-adr/adr/0002-interface-driven-architecture.md`
-- `robin-kb-service/docs/architecture.md`
-- `robin-ai/specs/`
+- `adr/*interface*architecture*.md`
+- `docs/architecture.md`
+- `specs/`
 
 If these files do not exist, look for equivalent ADRs, architecture decision records, or contract
 definitions in the current repo.
@@ -87,9 +87,9 @@ Flag:
 
 ### Strong repo signals
 
-- `robin-web/docs/CONTRACT_TESTING_GUIDE.md`
-- `robin-web/docs/contracts/`
-- `robin-ai/specs/`
+- `docs/CONTRACT_TESTING_GUIDE.md`
+- `docs/contracts/`
+- `specs/`
 
 If these files do not exist, look for equivalent ADRs, architecture decision records, or contract
 definitions in the current repo.
@@ -119,9 +119,9 @@ Flag:
 
 ### Strong repo signals
 
-- `robin-adr/Enterprise_Readiness_Workitems.md`
-- `robin-ai/specs/SPEC-WI-R02-R03.md`
-- `robin-kb-service/docs/architecture.md`
+- `adr/Workitems.md` or equivalent backlog/work-item source-of-truth document
+- `specs/SPEC-*.md`
+- `docs/architecture.md`
 
 If these files do not exist, look for equivalent ADRs, architecture decision records, specs, or
 contract definitions in the current repo.
@@ -150,10 +150,10 @@ Flag:
 
 ### Strong repo signals
 
-- `robin-adr/adr/0001-observability-platform-selection.md`
-- `robin-adr/adr/0003-structured-logging-with-loguru.md`
-- `robin-helm/docs/PRODUCTION.md`
-- `robin-helm/README.md`
+- `adr/*observability*.md`
+- `adr/*logging*.md`
+- `charts/docs/PRODUCTION.md` or `deploy/docs/PRODUCTION.md`
+- `charts/README.md` or `deploy/README.md`
 
 If these files do not exist, look for equivalent ADRs, architecture decision records, runbooks, or
 operability definitions in the current repo.
@@ -182,10 +182,10 @@ Flag:
 
 ### Strong repo signals
 
-- `robin-adr/adr/0004-code-standards-and-quality-gates.md`
-- `robin-kb-service/docs/contributing.md`
-- `robin-web/docs/TESTING_GUIDE.md`
-- `robin-ai/README.md`
+- `adr/*code-standards*quality-gates*.md`
+- `docs/contributing.md`
+- `docs/TESTING_GUIDE.md`
+- `README.md`
 
 If these files do not exist, look for equivalent ADRs, architecture decision records, testing
 guides, or quality-gate definitions in the current repo.
@@ -219,10 +219,10 @@ Flag:
 
 ### Strong repo signals
 
-- `robin-helm/docs/CONFIGURATION.md`
-- `robin-helm/docs/PRODUCTION.md`
-- `robin-helm/docs/GUIDELINES.md`
-- `robin-helm/README.md`
+- `charts/docs/CONFIGURATION.md` or `deploy/docs/CONFIGURATION.md`
+- `charts/docs/PRODUCTION.md` or `deploy/docs/PRODUCTION.md`
+- `charts/docs/GUIDELINES.md` or `deploy/docs/GUIDELINES.md`
+- `charts/README.md` or `deploy/README.md`
 
 If these files do not exist, look for equivalent ADRs, architecture decision records,
 configuration guides, or deployment definitions in the current repo.
@@ -248,9 +248,9 @@ Flag:
 
 ### Strong repo signals
 
-- `robin-adr/adr/0012-branching-release-strategy.md`
-- `robin-web/docs/RELEASE_RUNBOOK.md`
-- `robin-web/docs/RELEASE_VERSIONING_STRATEGY.md`
+- `adr/*branching*release*strategy*.md`
+- `docs/RELEASE_RUNBOOK.md`
+- `docs/RELEASE_VERSIONING_STRATEGY.md`
 
 If these files do not exist, look for equivalent ADRs, architecture decision records, release
 runbooks, or versioning definitions in the current repo.

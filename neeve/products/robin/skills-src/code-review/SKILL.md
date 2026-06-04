@@ -69,7 +69,7 @@ Before reviewing, gather enough context to understand the change in-system.
 
 1. Read the changed files and the nearest surrounding code.
 2. Read the strongest design sources that exist for that area:
-   - ADRs in `robin-adr/` or repo-local design docs
+  - ADRs in `adr/`, `architecture/`, or repo-local design docs
    - `specs/`, `docs/contracts/`, `openapi.yaml`, or feature docs
    - `README*`, `docs/`, `AGENTS.md`, `CLAUDE.md`, release/testing guides
    - Helm chart docs and values when runtime behavior is affected
@@ -192,7 +192,7 @@ or failure handling.
 
 ### Gate 5: Helm/Kubernetes Production Readiness
 
-Always run this gate for services deployed through `robin-helm` or any manifest/chart change.
+Always run this gate for services deployed through Helm charts or any manifest/chart change.
 
 Check:
 
@@ -288,13 +288,13 @@ Start with findings. Findings are the product.
 ## Findings
 
 1. [HIGH] Missing idempotency guard on provisioning replay
-   - File: `robin-ai/app/.../handler.py:88`
+  - File: `services/auth/handler.py:88`
    - Why it matters: duplicate webhook delivery can create multiple jobs and divergent downstream state.
    - Evidence: spec requires durable idempotent reuse, but the implementation always inserts.
    - Fix: enforce lookup-or-create on the durable key and add a replay test.
 
 2. [MEDIUM] Contract drift between response model and OpenAPI
-   - File: `robin-web/backend/...`
+  - File: `web/backend/api/...`
    - Why it matters: clients and contract tests can disagree in staging/production.
    - Evidence: code now returns `registered_domain`; contract does not declare it.
    - Fix: update the versioned contract and matching tests, or remove the field.

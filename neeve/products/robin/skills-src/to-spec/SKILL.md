@@ -104,6 +104,91 @@ The spec must tell humans what proof is required.
 - include regression tests for existing behavior that must remain true
 - include failure-path tests when the change touches retries, persistence, messaging, authz, or
   external integrations
+- every AC must map to at least one named test: a unit test name or an `IT-N` integration test identifier
+- every test case listed in Required Tests must carry a `# spec: AC-xx` annotation instruction so the CI coverage script can enforce traceability
+
+### Rule 7: ACs must be in Given/When/Then form
+
+Every acceptance criterion must be binary and testable.
+
+Required format:
+```
+AC-01: Given [precondition] When [action] Then [observable outcome]
+```
+
+Rules:
+- Never write ACs as prose assertions ("The system writes a row") — these will be rejected as 🔴 Critical by the spec reviewer.
+- ACs must be binary: the test either passes or fails, with no ambiguity.
+- IDs must be sequential: `AC-01`, `AC-02`, `AC-03`, …
+- Retired ACs must be struck through (`~~AC-05~~ (removed: reason)`), never silently deleted.
+- Every AC must map to a named test in the Required Tests section.
+
+### Rule 8: Specs must satisfy the 8 spec-review checks before handoff
+
+#### Check 1 — Scope Accuracy
+Map every acceptance criterion to the source of truth (e.g., FR text, bug report, ADR section). If any AC cannot be traced to a specific claim in the source material, either delete it or move it to a named future work item. If the source material is ambiguous, clarify it before writing the ACs. Do not add ACs that have no basis in the source of truth.
+
+#### Check 2 — Scope Bleed
+Every FR, NFR, DoD item, and metric must be traceable to the source of truth. Do not add:
+- Prometheus metrics the work item does not mention
+- performance baselines the work item does not require
+- routes or behavior owned by a different named work item
+
+For each addition beyond the source of truth, decide: delete it or move it to a named future work item.
+
+#### Check 3 — Reuse First
+Before specifying a new pattern, read the relevant files in the codebase and ask:
+- Is there an existing component I can reuse as-is?
+- Is there an existing component I can extend?
+- Do I really need a new component, or can I wire the existing ones together in a new way?
+
+#### Check 4 — Integration Test as AC
+Every AC must map to either a unit test or a named `IT-N` integration test. Check:
+- No unmapped ACs.
+- Mock session lists in each IT-N are consistent with the FR logic (the COUNT path runs only on no-match; do not include a COUNT session in a group-match IT).
+- No AC or DoD item says "test DB" or "real Postgres" when the repo pattern is mocked sessions.
+
+#### Check 5 — AC Robustness
+For every FR, the Required Tests and Acceptance Criteria together must cover:
+- [ ] Happy path
+- [ ] Concurrent access (same-user race, two-replica race)
+- [ ] Infrastructure failure (Redis unavailable, DB connection error)
+- [ ] Missing/null inputs (`groups=None`, `org_id=""`, absent optional fields)
+- [ ] Idempotency (second request sees sentinel / provisioning blocked)
+- [ ] Incorrect data (invalid role, mismatched constraint)
+- [ ] Pre-existing state (already provisioned by another path)
+- [ ] Re-raise vs. swallow (race → catch and continue; data bug → re-raise)
+
+A concurrency or idempotency path named in FR text but absent from ACs is a 🔴. A negative path in Edge Cases with no AC or test is a 🟡.
+
+#### Check 6 — Technical Accuracy
+Before finalising the spec:
+- Every file listed in File / Module Impact either exists or is marked `NEW`.
+- Every field name in Data Model tables and IT-N assertions matches the ORM column name in the model file.
+- Exception class names must exist in SQLAlchemy (`sqlalchemy.exc.IntegrityError`, not `UniqueConstraintViolationError`).
+- Python truth-value claims must be correct (`bool(" ") == True` — whitespace strings are truthy).
+- Pydantic version: if the model uses `class Config` it is v1; `model_config` dict is v2.
+- NFR SELECT counts must match the actual number of `get_session()` calls through the FR sequence.
+- Redis key patterns must match how existing code writes them.
+
+#### Check 7 — Cross-Repo and Cross-Spec Citations
+- When citing "ADR-NNNN §Section", verify the section heading exists in the ADR file.
+- When citing "WI-XXX owns …", verify the claim in the work item text or ACs.
+- When referencing another spec section, verify the heading exists.
+
+#### Check 8 — Template Compliance
+Before handoff, verify the spec satisfies all structural requirements:
+
+| Requirement | Rule |
+|---|---|
+| AC format | Every AC is `Given … When … Then …` (binary) |
+| AC IDs | Sequential, no silent gaps; retired IDs struck through |
+| `# spec: AC-xx` annotations | Every test in Required Tests carries an annotation instruction |
+| Named CHECK constraints | Every DB constraint has an explicit `name="ck_…"` |
+| Bounded context | Metadata or Definitions identifies the owning domain (`auth`, `task`, `membership`, …) |
+| Type aliases | `NewType` aliases named for typed identifiers (OrgId, UserUuid, …) |
+| Definition of Done | Must include: ≥ 95% line + branch coverage · zero `mypy --strict` errors · every AC has ≥ 1 annotated test · named constraints · observability metrics |
+| CONTEXT.md alignment | New domain terms introduced in Definitions should appear in `CONTEXT.md` |
 
 ### Rule 6: Specs must decompose into implementation-sized tasks
 
@@ -190,7 +275,7 @@ A3. ...
 
 ### Phase 3 — Choose the spec shape
 
-Do not force every request into one template. Choose the minimum shape that still makes the change safe and reviewable. if SPEC-WI-R02-R03.md is accessible use it to ground the template and style decision. If not found, default to the concise work-item spec structure given below.
+Do not force every request into one template. Choose the minimum shape that still makes the change safe and reviewable. If a strong existing multi-component spec (for example, `specs/SPEC-*.md`) is accessible, use it to ground the template and style decision. If not found, default to the concise work-item spec structure given below.
 
 Required sections:
 1. Title
@@ -233,6 +318,34 @@ After the spec body is written, derive tests from:
 - regression risk
 
 Load `references/testing.md` when enumerating tests.
+
+For each FR, verify the Required Tests section covers all 8 robustness paths from Rule 8 Check 5
+(happy path, concurrent access, infrastructure failure, null inputs, idempotency, incorrect data,
+pre-existing state, re-raise vs. swallow). A FR with fewer than the applicable paths is incomplete.
+
+### Phase 6 — Spec Review Self-Check
+
+This phase is mandatory before writing the Implementation Handoff block.
+
+Run all 8 checks from Rule 8 on the draft spec and emit a compact self-review:
+
+```markdown
+## Spec Self-Review (pre-handoff)
+
+| Check | Status | Notes |
+|---|---|---|
+| 1 Scope Accuracy | ✅ / ⚠️ | [any gap] |
+| 2 Scope Bleed | ✅ / ⚠️ | [any addition beyond source of truth] |
+| 3 Reuse First | ✅ / ⚠️ | [any pattern mismatch] |
+| 4 Integration Test as AC | ✅ / ⚠️ | [any unmapped AC] |
+| 5 AC Robustness | ✅ / ⚠️ | [any missing path] |
+| 6 Technical Accuracy | ✅ / ⚠️ | [any wrong field/exception/count] |
+| 7 Cross-Repo Citations | ✅ / ⚠️ | [any unverified citation] |
+| 8 Template Compliance | ✅ / ⚠️ | [any missing structural element] |
+```
+
+Do not write the Implementation Handoff block until every check is ✅ or any ⚠️ items are
+explicitly resolved or deferred with a note.
 
 ## What Good Looks Like
 
@@ -392,12 +505,38 @@ Use this default outline:
 - ...
 
 ## Acceptance Criteria
-- ...
+<!-- Every AC must be: Given [precondition] When [action] Then [observable outcome] -->
+<!-- IDs must be sequential (AC-01, AC-02, …). Retired IDs: ~~AC-N~~ (removed: reason) -->
+- AC-01: Given … When … Then …
+
+## Definition of Done
+- [ ] ≥ 95% line + branch coverage
+- [ ] Zero `mypy --strict` errors
+- [ ] Every AC has ≥ 1 annotated test (`# spec: AC-xx`)
+- [ ] All DB constraints use explicit `name="ck_…"` syntax
+- [ ] Observability metrics specified (or N/A with justification)
 
 ## Consequences / Follow-on Work
 - ...
 
-<!-- Handoff gate: confirm or explicitly mark assumption status, map each owned FR to at least one required test, and assess task sizing before writing the block. -->
+<!-- Handoff gate:
+     1. Run all 8 spec-review checks (Rule 8) and emit Spec Self-Review table.
+     2. Confirm or explicitly mark assumption status.
+     3. Map each owned FR to at least one required test.
+     4. Assess task sizing.
+     Do not write the block until all 8 checks are ✅ or deferred with a note. -->
+
+## Spec Self-Review (pre-handoff)
+| Check | Status | Notes |
+|---|---|---|
+| 1 Scope Accuracy | ✅ / ⚠️ | |
+| 2 Scope Bleed | ✅ / ⚠️ | |
+| 3 Reuse First | ✅ / ⚠️ | |
+| 4 Integration Test as AC | ✅ / ⚠️ | |
+| 5 AC Robustness | ✅ / ⚠️ | |
+| 6 Technical Accuracy | ✅ / ⚠️ | |
+| 7 Cross-Repo Citations | ✅ / ⚠️ | |
+| 8 Template Compliance | ✅ / ⚠️ | |
 
 ## Implementation Handoff
 - **Owned task:** ...
@@ -412,7 +551,7 @@ Use this default outline:
 
 ### Full systems spec structure
 
-Use this for multi-component work. When reachable, `SPEC-WI-R02-R03.md` is the anchor example for how these sections should read in practice:
+Use this for multi-component work. When reachable, an existing production-grade multi-component spec in `specs/` should be used as the anchor example for how these sections should read in practice:
 
 ```markdown
 # [Spec Title]
@@ -488,12 +627,38 @@ Use this for multi-component work. When reachable, `SPEC-WI-R02-R03.md` is the a
 |---|---|---|---|
 
 ## Acceptance Criteria
-- ...
+<!-- Every AC must be: Given [precondition] When [action] Then [observable outcome] -->
+<!-- IDs must be sequential (AC-01, AC-02, …). Retired IDs: ~~AC-N~~ (removed: reason) -->
+- AC-01: Given … When … Then …
+
+## Definition of Done
+- [ ] ≥ 95% line + branch coverage
+- [ ] Zero `mypy --strict` errors
+- [ ] Every AC has ≥ 1 annotated test (`# spec: AC-xx`)
+- [ ] All DB constraints use explicit `name="ck_…"` syntax
+- [ ] Observability metrics specified (or N/A with justification)
 
 ## Consequences / Follow-on Work
 - ...
 
-<!-- Handoff gate: confirm or explicitly mark assumption status, map each owned FR to at least one required test, and assess task sizing before writing the block. -->
+<!-- Handoff gate:
+     1. Run all 8 spec-review checks (Rule 8) and emit Spec Self-Review table.
+     2. Confirm or explicitly mark assumption status.
+     3. Map each owned FR to at least one required test.
+     4. Assess task sizing.
+     Do not write the block until all 8 checks are ✅ or deferred with a note. -->
+
+## Spec Self-Review (pre-handoff)
+| Check | Status | Notes |
+|---|---|---|
+| 1 Scope Accuracy | ✅ / ⚠️ | |
+| 2 Scope Bleed | ✅ / ⚠️ | |
+| 3 Reuse First | ✅ / ⚠️ | |
+| 4 Integration Test as AC | ✅ / ⚠️ | |
+| 5 AC Robustness | ✅ / ⚠️ | |
+| 6 Technical Accuracy | ✅ / ⚠️ | |
+| 7 Cross-Repo Citations | ✅ / ⚠️ | |
+| 8 Template Compliance | ✅ / ⚠️ | |
 
 ## Implementation Handoff
 - **Owned task or slice:** ...
@@ -530,6 +695,14 @@ Do not:
 - hide assumptions
 - omit regression tests for bug fixes or production incidents
 - force every request into the heaviest possible spec format
+- write ACs as prose assertions — every AC must be `Given … When … Then …`
+- silently delete an AC ID — retire it with `~~AC-N~~ (removed: reason)`
+- add Prometheus metrics, performance baselines, or DoD items that have no basis in the source of truth (scope bleed)
+- invent new error-handling patterns when `IntegrityError`, `MagicMock`, or session patterns already exist in the codebase
+- say "test DB" or "real Postgres" when the repo uses mocked sessions
+- introduce a new library or global singleton the codebase does not already use
+- omit the bounded context or type aliases from the template sections
+- write the Implementation Handoff block before the Spec Self-Review table is completed
 
 ## Reference Files
 

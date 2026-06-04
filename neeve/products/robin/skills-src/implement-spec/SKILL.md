@@ -4,8 +4,8 @@ description: >
   Implement a scoped engineering spec or work item in the Neeve style. Trigger on: "implement this
   spec", "implement task N", "build this from the spec", "write the code for this work item", "now
   code it", or any request to turn an approved spec or task into production code. Prioritize the
-  implementation patterns repeated across `robin-ai`, `robin-kb-service`, `robin-web`, and
-  `robin-helm`: understand the owned scope first, reuse before creating, preserve ADR/spec
+  implementation patterns repeated across backend services, frontend/BFF applications, shared
+  libraries, and deployment charts: understand the owned scope first, reuse before creating, preserve ADR/spec
   invariants, use Protocol/contract boundaries, write behaviour-driven tests, maintain strict type
   and quality gates, and verify runtime/Helm consequences before declaring the work done.
 ---

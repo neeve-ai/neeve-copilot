@@ -1,14 +1,15 @@
 # Neeve Engineering Skills
 
-Three skills that work identically across every agent on the team.
+Skills that work identically across every agent on the team.
 
 | Skill | What it does |
 |-------|-------------|
 | `code-review` | SMART production review: ADR/spec alignment, contracts, correctness, security, Helm |
 | `to-spec` | Turns a feature, bug, or ADR into a Neeve-style spec with handoff for `implement-spec` |
 | `implement-spec` | Implements a spec task: context-first, reuse-first, typed contracts, behaviour tests |
+| `neeve-dls` | Pixel-perfect changes to the `dls-neeve` design system and shared `@neeve/fonts` package |
 
-The three form a pipeline: **`to-spec` → `implement-spec` → `code-review`**
+The first three form a pipeline: **`to-spec` → `implement-spec` → `code-review`**
 
 ---
 

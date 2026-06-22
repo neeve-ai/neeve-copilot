@@ -5,7 +5,7 @@
 # =============================================================================
 set -euo pipefail
 
-SKILLS="code-review to-spec implement-spec"
+SKILLS="code-review to-spec implement-spec neeve-dls"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZIP_DIR="${SKILLS_ZIP_DIR:-}"
 SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
@@ -116,18 +116,20 @@ ensure_skill_packages() {
     fi
   fi
 
-  local missing=0 skill zip
-  for skill in $SKILLS; do
-    zip="${ZIP_DIR}/${skill}.zip"
-    [[ -f "${zip}" ]] || missing=$((missing + 1))
-  done
-
-  if [[ "${missing}" -gt 0 ]]; then
-    if [[ -d "${SCRIPT_DIR}/skills-src" && -f "${SYNC_SCRIPT}" ]]; then
-      mkdir -p "${ZIP_DIR}"
-      warn "Skill packages not found; rebuilding from local skills-src into ${ZIP_DIR}"
-      SKILLS_ZIP_DIR="${ZIP_DIR}" bash "${SYNC_SCRIPT}" pack
-    else
+  # Prefer a fresh rebuild from skills-src so source edits always propagate.
+  # (Reusing pre-built zips silently installs stale skills when sources change.)
+  if [[ -d "${SCRIPT_DIR}/skills-src" && -f "${SYNC_SCRIPT}" ]]; then
+    mkdir -p "${ZIP_DIR}"
+    warn "Rebuilding skill packages from local skills-src into ${ZIP_DIR}"
+    SKILLS_ZIP_DIR="${ZIP_DIR}" bash "${SYNC_SCRIPT}" pack
+  else
+    # No local sources — fall back to whatever zips were shipped in the bundle.
+    local missing=0 skill zip
+    for skill in $SKILLS; do
+      zip="${ZIP_DIR}/${skill}.zip"
+      [[ -f "${zip}" ]] || missing=$((missing + 1))
+    done
+    if [[ "${missing}" -gt 0 ]]; then
       err "Skill packages are missing and no local skills-src packer is available."
       err "Download the GitHub release bundle or clone the full repository checkout."
       exit 1
@@ -256,5 +258,5 @@ echo "  Copilot (VS Code):      /skills  (Copilot chat)"
 echo "  Antigravity:            @skills"
 echo ""
 echo "Invoke manually:"
-echo "  /code-review  |  /to-spec  |  /implement-spec"
-echo "  \$code-review  |  \$to-spec  |  \$implement-spec  (Codex)"
+echo "  /code-review  |  /to-spec  |  /implement-spec  |  /neeve-dls"
+echo "  \$code-review  |  \$to-spec  |  \$implement-spec  |  \$neeve-dls  (Codex)"

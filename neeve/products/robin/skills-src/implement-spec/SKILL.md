@@ -449,3 +449,32 @@ Load on demand:
 | `references/async-patterns.md` | When code touches workers, async I/O, retries, lifecycle, or concurrency |
 | `references/ds-algorithms.md` | When data structure or algorithm choice materially affects correctness/perf |
 | `references/frontend-impl.md` | When the change touches UI, BFF, or browser-facing logic |
+| `references/quality-gates.md` | Always — load before writing any code; all 7 gates must pass before done |
+
+---
+
+## Skill Chain
+
+`implement-spec` turns an approved spec into production code. It must not start until
+a spec exists and must not finish until all quality gates pass.
+
+| Situation | Prior skill to run first |
+|---|---|
+| No spec exists yet for the task | → `to-spec` first — do not implement without a spec |
+| Spec references unfamiliar code that must be reused | → `repo-ask` to trace the existing pattern |
+| Spec references a DLS component | → `neeve-dls` for exact token and component context |
+
+| Situation | Action before declaring done |
+|---|---|
+| All code written | → run `code-review` skill on the change before marking done |
+| Any quality gate fails | → fix and rerun — do not skip or defer |
+| A gate is N/A | → write a one-line justification in the Gate Sign-off |
+
+**Feeds into:** `code-review` (always), `to-spec` (if implementation reveals spec gaps)
+**Fed by:** `to-spec`, `repo-ask`, `neeve-dls`
+
+## Quality Gate Requirement
+
+Load `references/quality-gates.md` at the start of every implementation task.
+All 7 gates must pass. Emit the Gate Summary Checklist before declaring the task done.
+A task with any ❌ gate is not done — it is blocked.

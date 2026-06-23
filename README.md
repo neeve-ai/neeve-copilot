@@ -1,68 +1,89 @@
 # Neeve Copilot
 
-Welcome to the `neeve-copilot` repository! This project centralizes Neeve-specific AI agents, workflows, and tools that seamlessly integrate into the standard AI coding assistant experience along with the wider `awesome-copilot` ecosystem.
+AI skills and agents for the Neeve engineering team. One install, every agent
+(Claude Code, Copilot, Cursor, Codex, Antigravity).
 
-## 🚀 Installation
-
-To install `neeve-copilot` into your local environment:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | sh
-```
-
-You can then restart your terminal or manually source your `.zshrc` / `.bashrc`.
-
-### 🔄 Updating
-
-To update the directory anytime, simply type:
+## Day 1 Setup
 
 ```bash
-update-neeve-copilot
+# 1. Clone this repo
+git clone git@github.com:neeve-ai/neeve-copilot.git ~/Projects/src/neeve/neeve-copilot
+
+# 2. Install all engineering skills across every agent on your machine
+bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh
+
+# 3. Verify in Claude Code
+#    Open any project, type: /skills
 ```
 
-## 💡 Usage
+That's it. The skills are now available in every project on your machine.
 
-Once installed, your Copilot Chat is automatically enriched with Neeve-specific and community capabilities.
+> **Keep skills up to date:** run `sync_skills.sh` any time — it pulls the latest
+> from this repo and reinstalls everything. Bookmark it or alias it.
+> ```bash
+> alias sync-skills='bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh'
+> ```
 
-### Custom Agents
-Custom Agents change the overarching behavior, default tools, and system instructions of your Copilot session.
-Select a custom agent directly from the **agent dropdown menu** at the top of your Copilot Chat view:
-
-![Selecting an agent](assets/agents.png)
-
-### Agent Skills
-Skills teach Copilot how to execute highly specific routines or workflows.
-You can explicitly invoke a skill by typing `/` followed by the skill name in chat, or just ask Copilot a question naturally—it will dynamically load the correct skill based on your context!
-
-![Using a skill](assets/skills.png)
-
-## 🗑️ Uninstalling
-
-If you need to completely remove `neeve-copilot` and the underlying `awesome-copilot` agents from your system, you can run the uninstaller. This will selectively erase the folders and safely clean the configuration out of your `~/.bashrc` or `~/.zshrc`.
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/uninstall.sh | sh
-```
-
-## 🛠️ Adding New Skills
-
-We organize our internal skills inside `.agents/skills/`.
-To propose a new agent or skill:
-1. Create a directory for your skill: `.agents/skills/my-skill/`
-2. Define a `SKILL.md` file following the Open Agent Skills specification.
-3. Commit and submit a Pull Request.
-
-Our CI workflow checks and validates skills before they merge!
-
-### Example `SKILL.md`
-
-```md
----
-name: Database Architect
-description: Assists the developer in modeling database interactions
-disabled: false
 ---
 
-# Instructions
-When discussing the database...
+## What's Installed
+
+Six engineering skills that work across every agent:
+
+| Skill | Trigger phrase | What it does |
+|-------|---------------|-------------|
+| `repo-intel` | "map this repo", "document this project" | Full codebase scan → CONTEXT.md, README gaps, ADR stubs |
+| `repo-ask` | "how does X work", "why does X fail", "trace X" | Targeted code trace — always clarifies intent first |
+| `to-spec` | "spec this", "write a work item" | Turns a problem into a production-grade Neeve spec |
+| `implement-spec` | "implement task N", "build this from the spec" | Implements a spec with tests, types, and quality gates |
+| `code-review` | "review this PR", "review these changes" | Production code review: correctness, security, contracts |
+| `neeve-dls` | "update this component", "fix this DLS issue" | Pixel-perfect DLS changes with localhost visual verification |
+
+### How they chain
+
 ```
+repo-ask / repo-intel          ← start here on unfamiliar code
+        ↓
+     to-spec                   ← turn the problem into a spec
+        ↓
+  implement-spec                ← build it (linter + types + tests must pass)
+        ↓
+   code-review                  ← quality gate before done
+```
+
+Every implementation task must pass **7 quality gates**: linter (zero warnings),
+strict type checking (zero errors), unit tests (≥95% coverage), integration tests,
+scale check, security check, and code review. The skills enforce this automatically.
+
+---
+
+## Detailed Setup and Agent Notes
+
+See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for:
+
+- Per-agent install paths and verification commands
+- Always-on context files (CLAUDE.md, AGENTS.md, .cursorrules)
+- Project-scoped skill installation (commit skills to a repo for team sharing)
+- Troubleshooting
+
+---
+
+## Contributing Skills
+
+Skills live in [`neeve/products/robin/skills-src/`](neeve/products/robin/skills-src/).
+Each skill is a directory with a `SKILL.md` and optional `references/` files.
+
+```bash
+# Edit a skill
+code neeve/products/robin/skills-src/to-spec/SKILL.md
+
+# Test your change locally (reinstalls all skills)
+bash sync_skills.sh
+
+# Commit and push — the post-commit hook pushes automatically
+git add neeve/products/robin/skills-src/
+git commit -m "skills: describe your change"
+```
+
+See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for the full
+maintainer workflow and CI/release process.

@@ -4,12 +4,33 @@ Skills that work identically across every agent on the team.
 
 | Skill | What it does |
 |-------|-------------|
-| `code-review` | SMART production review: ADR/spec alignment, contracts, correctness, security, Helm |
+| `repo-intel` | Full codebase scan → CONTEXT.md, README gaps, ADR stubs, spec stubs |
+| `repo-ask` | Targeted question-driven code trace — clarifies intent, code is always source of truth |
 | `to-spec` | Turns a feature, bug, or ADR into a Neeve-style spec with handoff for `implement-spec` |
 | `implement-spec` | Implements a spec task: context-first, reuse-first, typed contracts, behaviour tests |
+| `code-review` | SMART production review: ADR/spec alignment, contracts, correctness, security, Helm |
 | `neeve-dls` | Pixel-perfect changes to the `dls-neeve` design system and shared `@neeve/fonts` package |
 
-The first three form a pipeline: **`to-spec` → `implement-spec` → `code-review`**
+### Skill chain
+
+```
+repo-ask / repo-intel     ← understand the codebase first
+        ↓
+     to-spec              ← turn the problem into an approved spec
+        ↓
+  implement-spec          ← build it; all 7 quality gates must pass
+        ↓
+   code-review            ← final quality checkpoint; loops back if findings require changes
+```
+
+`neeve-dls` sits alongside `implement-spec` for any UI/DLS surface; always followed by `code-review`.
+
+### Quality gates (enforced by `implement-spec` and `code-review`)
+
+Every implementation must pass all 7 gates before it is done:
+linter (zero warnings) · strict type checker (zero errors) · unit tests (≥95% coverage) ·
+integration tests (primary flow) · scale/N+1 check · security (inputs, auth, secrets, deps) ·
+code review (no 🔴/🟠 unresolved).
 
 ---
 
@@ -29,6 +50,21 @@ The SKILL.md format is an open standard. One set of files, every agent.
 ---
 
 ## Setup
+
+### Fastest path (recommended)
+
+From the root of the `neeve-copilot` repo checkout:
+
+```bash
+bash sync_skills.sh
+```
+
+This pulls the latest from the repo and installs all skills for every agent on your machine.
+Run it any time to pick up changes. See the root `README.md` for the one-liner alias.
+
+### Manual install
+
+If you need to install without pulling (e.g. offline, or from a specific state):
 
 ### What you need
 
@@ -118,20 +154,25 @@ Skills load **automatically** when the agent matches your request to a skill des
 
 | What you say | Skill loaded |
 |-------------|-------------|
-| "review this PR for production readiness" | `code-review` |
-| "audit these changes against the spec" | `code-review` |
-| "review my Helm changes" | `code-review` |
-| "spec this feature" | `to-spec` |
-| "turn this bug into a work item" | `to-spec` |
-| "break this ADR into tasks" | `to-spec` |
-| "implement task 3" | `implement-spec` |
-| "build the outbox worker from the spec" | `implement-spec` |
+| "map this repo", "document this project", "generate CONTEXT.md" | `repo-intel` |
+| "onboard me to this codebase", "what does this service do" | `repo-intel` |
+| "how does X work", "why does X fail", "trace X", "where is X defined" | `repo-ask` |
+| "what happens when X is called", "show me how X connects to Y" | `repo-ask` |
+| "spec this feature", "turn this bug into a work item" | `to-spec` |
+| "break this ADR into tasks", "write requirements for X" | `to-spec` |
+| "implement task 3", "build this from the spec" | `implement-spec` |
 | "write the code for this work item" | `implement-spec` |
+| "review this PR for production readiness" | `code-review` |
+| "audit these changes against the spec", "review my Helm changes" | `code-review` |
+| "update this DLS component", "fix this UI to match the design" | `neeve-dls` |
 
 **Manual invoke:**
 ```
-Claude Code / Copilot / Cursor / Antigravity:   /code-review  /to-spec  /implement-spec
-Codex CLI:                                       $code-review  $to-spec  $implement-spec
+Claude Code / Copilot / Cursor / Antigravity:
+  /repo-intel  /repo-ask  /to-spec  /implement-spec  /code-review  /neeve-dls
+
+Codex CLI:
+  $repo-intel  $repo-ask  $to-spec  $implement-spec  $code-review  $neeve-dls
 ```
 
 ---
@@ -264,6 +305,9 @@ Any top-level folder in `skills-src/` is treated as a skill package and must con
 ### Sync commands
 
 ```bash
+# Pull latest + reinstall all skills for every agent (recommended daily driver)
+bash sync_skills.sh                          # from repo root
+
 # Verify every skill packages cleanly into a release zip
 neeve/products/robin/scripts/skills_sync.sh check
 
@@ -294,7 +338,10 @@ Push a tag that matches `robin-skills-v*`:
 
 Both release paths build:
 
+- `repo-intel.zip`
+- `repo-ask.zip`
 - `code-review.zip`
 - `to-spec.zip`
 - `implement-spec.zip`
+- `neeve-dls.zip`
 - `robin-skills-bundle.zip` containing `install.sh`, `AGENTS.md`, `README.md`, and all skill zips

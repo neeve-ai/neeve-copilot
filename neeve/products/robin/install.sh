@@ -5,7 +5,7 @@
 # =============================================================================
 set -euo pipefail
 
-SKILLS="code-review to-spec implement-spec neeve-dls"
+SKILLS="code-review to-spec implement-spec neeve-dls repo-intel repo-ask"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZIP_DIR="${SKILLS_ZIP_DIR:-}"
 SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"

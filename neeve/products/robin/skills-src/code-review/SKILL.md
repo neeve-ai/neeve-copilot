@@ -343,3 +343,25 @@ Load these on demand while working through the gates:
 - `references/logic.md`: correctness, concurrency, ordering, idempotency
 - `references/smells.md`: maintainability and test-smell checks
 - `references/typing.md`: mypy/ruff/type-safety checks
+- `references/quality-gates.md`: production standard — verify all 7 gates are met by the change under review
+
+---
+
+## Skill Chain
+
+`code-review` is the final quality checkpoint before any change is declared done.
+It also feeds backward when findings require spec or implementation changes.
+
+| Situation | Action |
+|---|---|
+| 🔴 Critical or 🟠 High finding in logic, security, or correctness | → block; author must fix and resubmit to `implement-spec` |
+| Finding reveals the spec was wrong or incomplete | → feed back to `to-spec` to amend the spec first |
+| Finding reveals missing context about existing behavior | → use `repo-ask` to trace the relevant code before deciding |
+| Finding is a DLS visual or token issue | → feed back to `neeve-dls` |
+| All findings resolved, quality gates confirmed | → task is done |
+
+**Feeds into:** `implement-spec` (fix loop), `to-spec` (spec amendment)
+**Fed by:** `implement-spec` (always), `to-spec` (security-sensitive specs), `neeve-dls` (visual review)
+
+Load `references/quality-gates.md` to verify the change satisfies all 7 gates as part of
+every review. A review that does not check all applicable gates is incomplete.

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Auto-pushes when skills-src/ or sync_skills.sh changes are committed.
+# Install: bash setup-dev.sh
+
+set -euo pipefail
+
+SKILLS_PATH="neeve/products/robin/skills-src"
+CHANGED=$(git diff-tree --no-commit-id -r --name-only HEAD 2>/dev/null || true)
+
+if echo "$CHANGED" | grep -qE "^(${SKILLS_PATH}|sync_skills\.sh|neeve/products/robin/install\.sh|neeve/products/robin/README\.md|README\.md)"; then
+  BRANCH=$(git branch --show-current)
+  echo "  → skills changed — pushing to origin/${BRANCH}..."
+  git push origin "$BRANCH"
+  echo "  ✓ pushed"
+fi

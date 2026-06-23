@@ -277,23 +277,27 @@ A3. ...
 
 Do not force every request into one template. Choose the minimum shape that still makes the change safe and reviewable. If a strong existing multi-component spec (for example, `specs/SPEC-*.md`) is accessible, use it to ground the template and style decision. If not found, default to the concise work-item spec structure given below.
 
-Required sections:
+Required sections (must appear in this order):
 1. Title
-2. Summary
-3. In Scope
-4. Out of Scope
-5. System Boundaries
-6. Owned Interfaces
-7. End-to-End Flow
-8. Default Decisions
-9. Assumptions
-10. Reuse Inventory
-11. Build Order
-12. TDD Order
-13. Required Tests
-14. Acceptance Criteria
-15. Consequences / Follow-on Work
-16. Implementation Handoff
+2. Goal Check
+3. Summary
+4. In Scope
+5. Out of Scope
+6. System Boundaries
+7. Owned Interfaces
+8. Functional Requirements
+9. End-to-End Flow
+10. Default Decisions
+11. Assumptions
+12. Reuse Inventory
+13. Security
+14. Build Order
+15. TDD Order
+16. Required Tests (with FR-to-test mapping subsection)
+17. Acceptance Criteria
+18. Definition of Done
+19. Consequences / Follow-on Work
+20. Implementation Handoff
 
 ### Phase 4 — Write the spec
 
@@ -327,9 +331,9 @@ pre-existing state, re-raise vs. swallow). A FR with fewer than the applicable p
 
 This phase is mandatory before writing the Implementation Handoff block.
 
-Run all 8 checks from Rule 8 on the draft spec and emit a compact self-review:
+Run all 8 checks from Rule 8 on the draft spec and emit a compact self-review **in your response** (not in the spec file):
 
-```markdown
+```
 ## Spec Self-Review (pre-handoff)
 
 | Check | Status | Notes |
@@ -447,10 +451,17 @@ This handoff must state:
 
 ### Concise work-item spec structure
 
-Use this default outline:
+Use this default outline. Headings are canonical — do not rename, reorder, or omit them.
 
 ```markdown
-# [Work Item / Feature Name]
+# [WI-XXX: Work Item / Feature Name]
+
+## Goal Check
+
+- **Ask type:** [feature / bug / ADR implementation / etc.]
+- **What I think the goal is:** [plain-English restatement]
+- **What this spec should produce:** [work-item spec or full systems spec]
+- **What is still unclear:** [short list or "nothing material"]
 
 ## Summary
 [What this work item does and why.]
@@ -462,54 +473,102 @@ Use this default outline:
 - ...
 
 ## System Boundaries
+- **[Role]:** [what this system/dependency owns]
 - ...
 
 ## Owned Interfaces
+
 ### Input interface
 - ...
 
-### Persistence interface
+### External API interface
 - ...
 
-### Async / downstream interface
+### Configuration interface
 - ...
+
+### Dependency wiring interface
+- ...
+
+## Functional Requirements
+
+- **FR-1.** ...
+- **FR-2.** ...
 
 ## End-to-End Flow
+
 1. ...
 2. ...
 
 ## Default Decisions
+
 - ...
 
 ## Assumptions
-- A1. ...
+
+- **A1.** ...
 
 ## Reuse Inventory
+
 | Component | Location | How used |
 |---|---|---|
 
+## Security
+
+### Fail-closed model
+- ...
+
+### Authentication and authorization
+- ...
+
+### PII handling
+- ...
+
+### Secret management
+- ...
+
+### Input validation surface
+- ...
+
+### Audit trail
+- ...
+
 ## Build Order
-1. ...
+
+1. **Slice 1 (...):**
+   - ...
+2. **Slice 2 (...):**
+   - ...
 
 ## TDD Order
+
 1. ...
 
 ## Required Tests
+
 ### Unit
-- ...
+- **T-01:** ...
 
 ### Integration
-- ...
+- **T-N:** ...
 
 ### Regression
-- ...
+- **T-N:** ...
+
+### FR-to-test mapping
+
+| FR | Tests |
+|---|---|
+| FR-1 | T-N, T-N |
 
 ## Acceptance Criteria
+
 <!-- Every AC must be: Given [precondition] When [action] Then [observable outcome] -->
 <!-- IDs must be sequential (AC-01, AC-02, …). Retired IDs: ~~AC-N~~ (removed: reason) -->
 - AC-01: Given … When … Then …
 
 ## Definition of Done
+
 - [ ] ≥ 95% line + branch coverage
 - [ ] Zero `mypy --strict` errors
 - [ ] Every AC has ≥ 1 annotated test (`# spec: AC-xx`)
@@ -517,36 +576,29 @@ Use this default outline:
 - [ ] Observability metrics specified (or N/A with justification)
 
 ## Consequences / Follow-on Work
+
 - ...
 
 <!-- Handoff gate:
-     1. Run all 8 spec-review checks (Rule 8) and emit Spec Self-Review table.
+     1. Run all 8 spec-review checks (Rule 8) and emit Spec Self-Review table in your response (not in the file).
      2. Confirm or explicitly mark assumption status.
      3. Map each owned FR to at least one required test.
      4. Assess task sizing.
-     Do not write the block until all 8 checks are ✅ or deferred with a note. -->
-
-## Spec Self-Review (pre-handoff)
-| Check | Status | Notes |
-|---|---|---|
-| 1 Scope Accuracy | ✅ / ⚠️ | |
-| 2 Scope Bleed | ✅ / ⚠️ | |
-| 3 Reuse First | ✅ / ⚠️ | |
-| 4 Integration Test as AC | ✅ / ⚠️ | |
-| 5 AC Robustness | ✅ / ⚠️ | |
-| 6 Technical Accuracy | ✅ / ⚠️ | |
-| 7 Cross-Repo Citations | ✅ / ⚠️ | |
-| 8 Template Compliance | ✅ / ⚠️ | |
+     Do not write the Implementation Handoff block until all 8 checks are ✅ or deferred with a note. -->
 
 ## Implementation Handoff
+
 - **Owned task:** ...
 - **Owned FRs:** ...
-- **Implement now:** ...
-- **Do not implement now:** ...
-- **Invariants to preserve:** ...
-- **Required tests before done:** ...
+- **Implement now:**
+  - ...
+- **Do not implement now:**
+  - ...
+- **Invariants to preserve:**
+  - ...
+- **Required tests before done:** T-01 through T-N.
 - **Runtime / Helm impact:** ...
-- **Task sizing:** [fits 1-3 files / up to 5 modified files / requires split]
+- **Task sizing / decomposition note:** [fits 1-3 files / up to 5 modified files / requires split]
 ```
 
 ### Full systems spec structure
@@ -648,7 +700,8 @@ Use this for multi-component work. When reachable, an existing production-grade 
      4. Assess task sizing.
      Do not write the block until all 8 checks are ✅ or deferred with a note. -->
 
-## Spec Self-Review (pre-handoff)
+<!-- Spec Self-Review: emit this table in your response before writing the Implementation Handoff block — do NOT include it in the spec file.
+
 | Check | Status | Notes |
 |---|---|---|
 | 1 Scope Accuracy | ✅ / ⚠️ | |
@@ -659,6 +712,7 @@ Use this for multi-component work. When reachable, an existing production-grade 
 | 6 Technical Accuracy | ✅ / ⚠️ | |
 | 7 Cross-Repo Citations | ✅ / ⚠️ | |
 | 8 Template Compliance | ✅ / ⚠️ | |
+-->
 
 ## Implementation Handoff
 - **Owned task or slice:** ...
@@ -714,3 +768,28 @@ Load on demand:
 | `references/frontend.md` | When the spec touches frontend, BFF, or browser behavior |
 | `references/ddd-patterns.md` | When the spec touches aggregates, repositories, or layered architecture |
 | `references/security-checklist.md` | Always when writing security-sensitive specs |
+| `references/quality-gates.md` | When writing Definition of Done and Required Tests — ensures all 7 gates are specced |
+
+---
+
+## Skill Chain
+
+`to-spec` turns a problem into a structured, reviewable spec. It sits between context
+gathering and implementation. Never write a spec without first understanding the codebase.
+
+| Situation | Prior skill to run first |
+|---|---|
+| Codebase is unfamiliar — need to understand existing patterns before speccing | → run `repo-ask` first |
+| Need a full picture of a service before speccing a change to it | → run `repo-intel` first |
+| Spec involves a UI/DLS surface | → consult `neeve-dls` for component/token context first |
+
+| Situation | Next skill after spec is approved |
+|---|---|
+| Spec is approved and ready to build | → `implement-spec` |
+| Spec reveals a security concern requiring dedicated review | → `code-review` with security focus after implementation |
+
+**Feeds into:** `implement-spec`, `code-review`
+**Fed by:** `repo-ask`, `repo-intel`
+
+The spec's Definition of Done must reference all 7 gates in `references/quality-gates.md`.
+The spec is not approvable if any gate is absent without a written justification.

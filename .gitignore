@@ -16,6 +16,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Generated skill archives
+neeve/products/robin/dist/
+
 # Agent IDE/Editor
 .idea/
 .vscode/

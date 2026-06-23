@@ -42,6 +42,11 @@ jobs:
           fi
           echo "Agent subdirectories look good."
 
+      - name: Verify Robin Skill Packaging
+        run: |
+          echo "Checking Robin skills-src packages cleanly into release zips..."
+          neeve/products/robin/scripts/skills_sync.sh check
+
       - name: Run Install Script Tests
         run: |
           echo "Running tests/test_install.sh..."

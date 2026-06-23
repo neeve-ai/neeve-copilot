@@ -1,0 +1,4 @@
+interface:
+  display_name: "To Spec"
+  short_description: "Turn ideas, bugs, and ADRs into Neeve-style engineering specs"
+  default_prompt: "Use $to-spec to clarify the goal first and then draft a Neeve-style spec with a clean implementation-ready handoff, assumptions, wiring story, tests, and consequences."

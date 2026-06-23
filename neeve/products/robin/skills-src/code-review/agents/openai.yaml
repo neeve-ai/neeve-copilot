@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Review"
+  short_description: "Review code, contracts, and Helm changes for production risk"
+  default_prompt: "Use $code-review to review these changes for ADR/spec alignment, production risk, and Helm/Kubernetes readiness."

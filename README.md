@@ -89,7 +89,7 @@ can be taught how Neeve works. In short:
 
 Full explanation (written for a non-technical reader too) and the process for
 onboarding a repo or changing the shared template:
-[`neeve/products/robin/README.md`](neeve/products/robin/README.md#the-whole-system-in-plain-english).
+[`neeve/products/robin/README.md`](neeve/products/robin/README.md#the-short-version).
 
 ---
 

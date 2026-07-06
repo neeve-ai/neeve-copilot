@@ -1,4 +1,5 @@
 repo: robin-commons
+product_role: "Shared Python library (resilience, observability, messaging helpers) used across robin-ai and the other backend services to avoid duplicated infrastructure code."
 stack:
   - "Python (Poetry, published to internal PyPI as robin-commons)"
   - "Shared resilience / observability / messaging library"

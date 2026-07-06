@@ -1,4 +1,5 @@
 repo: robin
+product_role: "The Robin Chrome extension itself — the AI co-pilot surface an end user (facilities/security-ops staff) actually installs and uses inside their existing OT web apps."
 stack:
   - "TypeScript"
   - "WXT (Chrome extension framework, Manifest V3)"

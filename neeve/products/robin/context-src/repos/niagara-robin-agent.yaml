@@ -1,4 +1,5 @@
 repo: niagara-robin-agent
+product_role: "Niagara N4/BQL agent — exposes Tridium Niagara station data (alarms, points, schedules, history) to Robin via read-only MCP tools."
 stack:
   - "Java 8"
   - "Tridium Niagara 4 (N4) framework"

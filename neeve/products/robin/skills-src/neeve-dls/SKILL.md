@@ -156,6 +156,12 @@ This checklist is **mandatory**. Emit it in your response — filled in — befo
 | Tablet breakpoint (768px–1279px) verified | ✅ / ❌ / N/A | |
 | Mobile breakpoint (< 768px) verified | ✅ / ❌ / N/A | |
 | No overflow, truncation, or alignment drift at any breakpoint | ✅ / ❌ | |
+
+Production consequence & gaps:
+- **Customer-visible consequence if this deviation ships:** [what an end user
+  or operator would actually notice — a broken layout, an inaccessible
+  control, a mismatched brand surface]
+- **Breakpoints/states not yet verified:** [name them] — or "none, all rows above are ✅"
 ```
 
 ---

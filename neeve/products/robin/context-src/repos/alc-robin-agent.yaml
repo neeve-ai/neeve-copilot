@@ -1,4 +1,5 @@
 repo: alc-robin-agent
+product_role: "WebCTRL agent — exposes ALC WebCTRL building-automation data/actions to Robin."
 stack:
   - "Java"
   - "Gradle"

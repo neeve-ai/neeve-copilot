@@ -1,4 +1,5 @@
 repo: robin-testbench
+product_role: "Automated browser-based test harness that exercises Robin's Chrome extension flows end-to-end."
 stack:
   - "Python >=3.11"
   - "Poetry"

@@ -1,4 +1,5 @@
 repo: robin-kb-service
+product_role: "Knowledge-base / long-term-memory service backing Robin's AI features."
 stack:
   - "Python 3.12"
   - "FastAPI"

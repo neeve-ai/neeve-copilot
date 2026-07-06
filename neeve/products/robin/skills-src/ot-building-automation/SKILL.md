@@ -86,6 +86,22 @@ lifecycle (`ServletContextListener`) layered on top of the station.
 - Any module manifest, Niagara SDK version, or WebCTRL SDK version change —
   station/server compatibility can't be verified from source alone.
 
+## Production Consequence & Gaps — required for any change here
+
+Unlike a typical backend service, "production" here means a live building —
+state the consequence in those terms, not just request/response terms:
+
+- **What physical/operational effect could this have** if wrong — a stalled
+  station engine thread, a schedule or override reaching real equipment, a
+  point read returning stale data treated as fresh.
+- **Blast radius**: one point, one station, every station on this integration,
+  or (if a module/SDK version change) every deployment running that module.
+- **Rollback story**: can this be reverted without a station restart /
+  re-provisioning cycle, or does undoing it require physical/on-site access?
+- **Gaps**: anything that "can't be verified from source alone" (see "When to
+  stop and ask" above) is a gap, not a non-issue — name it rather than
+  letting it pass silently because the code compiles.
+
 ## References
 
 - `references/in-repo-sources.md` — direct links to the files in the table

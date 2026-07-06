@@ -32,6 +32,14 @@ should shape every suggestion and every review comment:
 These are judgment defaults, not a checklist — apply them where they change a
 decision, not as boilerplate to append to every response.
 
+Full reasoning lineage for these defaults, plus the fuller Product/Design/
+Engineering charter (each principle traced to a named industry practice) and
+customer/buyer-persona detail: `neeve/org/PRINCIPLES.md`.
+
+{{PRODUCT_OVERVIEW_FRAGMENT}}
+
+{{PRODUCTION_CONSEQUENCE_FRAGMENT}}
+
 ---
 
 ## This Repo

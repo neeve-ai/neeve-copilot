@@ -1,4 +1,5 @@
 repo: wstunnel-reverse-proxy
+product_role: "WebSocket tunnel reverse proxy — exposes MCP servers sitting behind NAT (e.g. an OT-side Niagara connection) back to robin-ai."
 stack:
   - "Python >=3.12"
   - "aiohttp"

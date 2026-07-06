@@ -1,4 +1,5 @@
 repo: neeve-web
+product_role: "Placeholder repo — not yet built out; stack/role to be filled in once work starts here."
 stack:
   - "Unknown / placeholder — repo currently only has a README stub"
 layers: []

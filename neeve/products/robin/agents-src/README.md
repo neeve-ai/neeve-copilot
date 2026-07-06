@@ -18,6 +18,7 @@ workflow needs something a skill can't express:
   every session in the repo (see `hooks-src/` for the repo-wide baseline).
 
 If none of those apply, it's a skill. Org-wide, always-available custom
-agents (not tied to any one repo's skill install) live in the enterprise
-`.github-private/agents/` repo instead — see `neeve/products/robin/README.md`
-§ Enterprise governance.
+agents (not tied to any one repo's skill install) are maintained at
+`neeve/org/` instead (source for the enterprise `neeve-ai/.github-private`
+repo) — see `neeve/org/README.md` and `neeve/products/robin/README.md`
+§ Company-wide specialist reviewers.

@@ -1,4 +1,5 @@
 repo: mcp-nats-handler
+product_role: "NATS-to-MCP bridge — exposes internal NATS-based services as MCP tools other Robin components can call."
 stack:
   - "Python >=3.12"
   - "aiohttp"

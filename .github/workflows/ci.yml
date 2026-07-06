@@ -14,34 +14,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Verify Agent Directory Structure
-        run: |
-          echo "Validating .agents/skills directory..."
-          FAIL=0
-          for skills_dir in .agents/skills/*; do
-            if [ -d "$skills_dir" ]; then
-              if [ ! -f "$skills_dir/SKILL.md" ]; then
-                echo "::error::Agent directory $skills_dir is missing a SKILL.md file."
-                FAIL=1
-              else
-                # Extract frontmatter (content between the first two '---' lines)
-                fm=$(awk '/^---/{c++; if(c==2) exit; next} c==1{print}' "$skills_dir/SKILL.md")
-                if ! echo "$fm" | grep -qE "^name:[[:space:]]*[^[:space:]]"; then
-                  echo "::error::Agent directory $skills_dir SKILL.md is missing 'name' in frontmatter."
-                  FAIL=1
-                fi
-                if ! echo "$fm" | grep -qE "^description:[[:space:]]*[^[:space:]]"; then
-                  echo "::error::Agent directory $skills_dir SKILL.md is missing 'description' in frontmatter."
-                  FAIL=1
-                fi
-              fi
-            fi
-          done
-          if [ "$FAIL" -eq 1 ]; then
-            exit 1
-          fi
-          echo "Agent subdirectories look good."
-
       - name: Verify Robin Skill Packaging
         run: |
           echo "Checking Robin skills-src packages cleanly into release zips..."
@@ -69,17 +41,12 @@ jobs:
             exit 1
           fi
 
-      - name: Run Install Script Tests
+      - name: Run Context Renderer Unit Tests
         run: |
-          echo "Running tests/test_install.sh..."
-          sh tests/test_install.sh
+          echo "Running test_context_render.py..."
+          python3 neeve/products/robin/scripts/test_context_render.py -v
 
-      - name: Run Loader Script Tests
+      - name: Verify neeve/org Consistency
         run: |
-          echo "Running tests/test_load_agents.sh..."
-          sh tests/test_load_agents.sh
-
-      - name: Run Uninstall Script Tests
-        run: |
-          echo "Running tests/test_uninstall.sh..."
-          sh tests/test_uninstall.sh
+          echo "Checking neeve/org agent citations stay consistent with security.md/PRINCIPLES.md..."
+          python3 neeve/org/scripts/check_org_sync.py

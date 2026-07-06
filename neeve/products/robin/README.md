@@ -310,10 +310,12 @@ point warning about a spec-only branch in a repo that doesn't have one.
 ### Company-wide specialist reviewers
 
 A handful of always-available reviewers (a security specialist, a product
-specialist, a design specialist, plus the general one) live in a separate,
+specialist, a design specialist, plus the general one) are maintained at
+[`neeve/org/`](../org/README.md) in this repo, and exported to a separate,
 private repo — `neeve-ai/.github-private` — so they're available even in a
-repo that hasn't set any of this up yet. See that repo's own README. This is
-additional to everything above, not a replacement for it.
+repo that hasn't set any of this up yet. See `neeve/org/README.md` for the
+export steps. This is additional to everything above, not a replacement
+for it.
 
 ---
 

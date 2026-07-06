@@ -31,6 +31,12 @@ A good `CONTEXT.md` lets anyone answer these questions without reading source fi
 - What patterns does the codebase enforce (error handling, auth, DI, async)?
 - What architectural decisions have been made and why?
 - What is out of scope or deliberately deferred?
+- Where are this service's trust boundaries (auth entry points, tenant-scoping,
+  external network calls, secrets), and what would the production consequence be
+  if one of them were misconfigured?
+- What security/compliance gaps are known and unaddressed (missing audit log,
+  missing rate limit, a disabled or absent CI security gate) — named explicitly,
+  not left for the reader to discover?
 
 If the output cannot answer these, it is not done.
 
@@ -207,6 +213,8 @@ After writing all outputs, emit a compact report:
 | Internal interfaces | ✅ / ⚠️ / N/A | |
 | Error handling pattern | ✅ / ⚠️ | |
 | Auth / authz pattern | ✅ / ⚠️ / N/A | |
+| Trust boundaries / tenant-scoping identified | ✅ / ⚠️ / N/A | |
+| Security CI gates present (secrets/SAST/SCA scanning) | ✅ / ⚠️ / ❌ | |
 | DI / wiring pattern | ✅ / ⚠️ / N/A | |
 | Naming conventions | ✅ / ⚠️ | |
 | Linter — command confirmed | ✅ / ⚠️ / N/A | |
@@ -221,11 +229,17 @@ After writing all outputs, emit a compact report:
 
 Gaps requiring human input:
 - [List anything marked [inferred] or [unknown] in the outputs]
+
+Security/production gaps found (or "none identified — verified via [what was checked]"):
+- [A missing security CI gate, an undocumented trust boundary, a tenant-scoping
+  pattern that couldn't be confirmed — named explicitly, per the `code-review`
+  skill's `references/security.md` Security Gates table where applicable]
 ```
 
 A ⚠️ means the area was found but is incomplete (e.g. partial schema, no spec file — routes
 read instead). An ❌ means not found and not written. Any gap listed must be called out
-explicitly so the owner knows what to fill in manually.
+explicitly so the owner knows what to fill in manually. The security/production gaps line
+must never be left blank by omission — state what was checked if nothing was found.
 
 ## Quality Rules
 

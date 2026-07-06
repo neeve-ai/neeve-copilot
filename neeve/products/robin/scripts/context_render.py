@@ -161,6 +161,30 @@ def render_code_review_fragment() -> str:
     return (FRAGMENTS_DIR / "code-review-checklist.md").read_text()
 
 
+def render_production_consequence_fragment() -> str:
+    return (FRAGMENTS_DIR / "production-consequence-and-gaps.md").read_text()
+
+
+def render_product_repo_table() -> str:
+    """Assemble the repo-contribution table from every registered repo's
+    `product_role:` — single source of truth (the repo yaml), no
+    hand-maintained table to drift out of sync."""
+    rows = []
+    for repo_yaml in sorted(REPOS_DIR.glob("*.yaml")):
+        v = parse_simple_yaml(repo_yaml.read_text())
+        repo = v.get("repo") or repo_yaml.stem
+        role = v.get("product_role") or "_role not yet documented_"
+        rows.append((repo, role))
+    header = "| Repo | Contribution to Robin |\n|---|---|\n"
+    body = "\n".join(f"| `{repo}` | {role} |" for repo, role in rows)
+    return header + body
+
+
+def render_product_overview_fragment() -> str:
+    text = (CONTEXT_SRC / "product-overview.md").read_text()
+    return text.replace("{{PRODUCT_REPO_TABLE}}", render_product_repo_table())
+
+
 def render_ot_domain_fragment(v: dict) -> str:
     if v.get("domain_extension") != "ot-building-automation":
         return ""
@@ -186,7 +210,8 @@ This file is rendered from `context-src/base.md` (minimal variant) by
 
 Neeve builds the security and control layer for smart buildings and critical
 infrastructure. Even in a docs/scratch repo: prefer simplicity over accretion,
-and name operational stakes when they're relevant.
+and name operational stakes and known gaps explicitly when they're relevant
+rather than leaving them unstated.
 
 ---
 
@@ -212,7 +237,9 @@ def render(repo: str) -> dict[str, str]:
 
     base = BASE_MD.read_text()
     rendered = (
-        base.replace("{{REPO_STACK_BLOCK}}", render_stack_block(v) or "_Stack not yet documented._")
+        base.replace("{{PRODUCT_OVERVIEW_FRAGMENT}}", render_product_overview_fragment())
+        .replace("{{PRODUCTION_CONSEQUENCE_FRAGMENT}}", render_production_consequence_fragment())
+        .replace("{{REPO_STACK_BLOCK}}", render_stack_block(v) or "_Stack not yet documented._")
         .replace("{{REPO_LOCAL_DEV_BLOCK}}", render_local_dev_block(v))
         .replace("{{REPO_COMMANDS_BLOCK}}", render_commands_block(v))
         .replace("{{REPO_DO_NOT_MODIFY_BLOCK}}", render_do_not_modify_block(v))

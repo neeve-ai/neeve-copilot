@@ -1,25 +1,40 @@
 {
-  "$schema_note": "Based on VS Code Agent Hooks (Preview) as documented mid-2026: lowerCamelCase event names below are mapped by VS Code to PascalCase (preToolUse -> PreToolUse, sessionStart -> SessionStart). This feature is Preview and its schema may change — re-verify against https://code.visualstudio.com/docs/agent-customization/hooks before relying on this in CI.",
-  "warnOnly": true,
+  "$schema_note": "Matches the GitHub Copilot hooks reference (https://docs.github.com/en/copilot/reference/hooks-reference) as of 2026-07: top-level 'version', hook entries use 'bash' (not 'command'), paths are relative to the repo root (no ${workspaceFolder} templating — that's a VS Code task/launch variable, not a hooks.json field), and matcher values are the real tool names (bash/edit/create, plus Claude Code's PascalCase equivalents Bash/Edit/Write since this same file is read by both). All three scripts unconditionally exit 0 — preToolUse hooks fail-closed (deny) on any other non-zero exit, so exit-0 is what makes these actually warn-only rather than merely intended to be. Re-verify this schema before relying on new fields; hooks are still Public Preview.",
+  "version": 1,
   "hooks": {
     "sessionStart": [
       {
-        "name": "neeve-session-banner",
-        "command": "${workspaceFolder}/.github/hooks/scripts/session-banner.sh"
+        "type": "command",
+        "bash": "bash .github/hooks/scripts/session-banner.sh",
+        "timeoutSec": 10
       }
     ],
     "preToolUse": [
       {
-        "name": "neeve-dangerous-command-guard",
-        "matcher": "run_in_terminal|Bash|terminal",
-        "command": "${workspaceFolder}/.github/hooks/scripts/dangerous-command-guard.sh",
-        "blocking": false
+        "type": "command",
+        "bash": "bash .github/hooks/scripts/dangerous-command-guard.sh",
+        "matcher": "bash|Bash",
+        "timeoutSec": 10
       },
       {
-        "name": "neeve-spec-branch-purity-warn",
-        "matcher": "edit_file|write_file|Edit|Write",
-        "command": "${workspaceFolder}/.github/hooks/scripts/spec-branch-purity-warn.sh",
-        "blocking": false
+        "type": "command",
+        "bash": "bash .github/hooks/scripts/spec-branch-purity-warn.sh",
+        "matcher": "edit|create|Edit|Write",
+        "timeoutSec": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "bash .github/hooks/scripts/skill-usage-audit.sh",
+        "matcher": "view|Read",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "bash": "bash .github/hooks/scripts/change-impact-log.sh",
+        "matcher": "edit|create|Edit|Write",
+        "timeoutSec": 10
       }
     ]
   }

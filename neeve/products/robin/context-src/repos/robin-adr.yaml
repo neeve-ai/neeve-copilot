@@ -1,4 +1,5 @@
 repo: robin-adr
+product_role: "Product-wide planning repo — ADRs, work-item breakdowns, and (new) PRDs/ERDs live here; the source of truth for what's being built and why, one level above any single repo."
 stack:
   - "Markdown only — Architecture Decision Records"
 layers:

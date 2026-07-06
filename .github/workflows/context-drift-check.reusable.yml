@@ -35,3 +35,19 @@ jobs:
         run: |
           python3 neeve-copilot/neeve/products/robin/scripts/context_render.py \
             "${{ inputs.repo }}" --check "${{ github.workspace }}/target"
+
+      - name: Guard against gitignored rendered files
+        working-directory: target
+        run: |
+          echo "Confirming none of the 4 rendered instruction files can be silently excluded from git..."
+          FAIL=0
+          for f in AGENTS.md CLAUDE.md .cursorrules .github/copilot-instructions.md; do
+            if git check-ignore -q "$f"; then
+              echo "::error::$f is gitignored in this repo — it can never be committed, breaking the one-render/four-synced-files guarantee. Remove the matching .gitignore rule."
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "None of the 4 rendered files are gitignored."

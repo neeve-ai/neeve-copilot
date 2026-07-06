@@ -533,6 +533,11 @@ Use this default outline. Headings are canonical — do not rename, reorder, or 
 ### Audit trail
 - ...
 
+### Production consequence if this is wrong
+- **Blast radius:** [one request / one session / one tenant / cross-tenant / platform-wide]
+- **Who notices:** [operator / end customer / on-call / no one]
+- **Rollback / kill-switch:** [feature flag, revertable migration, config toggle — or "revert the deploy" if nothing faster exists]
+
 ## Build Order
 
 1. **Slice 1 (...):**
@@ -574,9 +579,12 @@ Use this default outline. Headings are canonical — do not rename, reorder, or 
 - [ ] Every AC has ≥ 1 annotated test (`# spec: AC-xx`)
 - [ ] All DB constraints use explicit `name="ck_…"` syntax
 - [ ] Observability metrics specified (or N/A with justification)
+- [ ] Production consequence and gaps stated below — not left blank
 
 ## Consequences / Follow-on Work
 
+- **Production consequence:** [what breaks/degrades, what's exposed, blast radius, rollback story — see Security § Production consequence above]
+- **Gaps / residual risk:** [named gap — missing security control, untested path, missing CI gate — or "none identified, verified via [what was checked]"]
 - ...
 
 <!-- Handoff gate:
@@ -656,6 +664,11 @@ Use this for multi-component work. When reachable, an existing production-grade 
 ## Security
 ...
 
+### Production consequence if this is wrong
+- **Blast radius:** [one request / one session / one tenant / cross-tenant / platform-wide]
+- **Who notices:** [operator / end customer / on-call / no one]
+- **Rollback / kill-switch:** [feature flag, revertable migration, config toggle — or "revert the deploy" if nothing faster exists]
+
 ## Interfaces
 ### Events / HTTP / etc.
 ...
@@ -689,8 +702,11 @@ Use this for multi-component work. When reachable, an existing production-grade 
 - [ ] Every AC has ≥ 1 annotated test (`# spec: AC-xx`)
 - [ ] All DB constraints use explicit `name="ck_…"` syntax
 - [ ] Observability metrics specified (or N/A with justification)
+- [ ] Production consequence and gaps stated below — not left blank
 
 ## Consequences / Follow-on Work
+- **Production consequence:** [what breaks/degrades, what's exposed, blast radius, rollback story — see Security § Production consequence above]
+- **Gaps / residual risk:** [named gap — missing security control, untested path, missing CI gate — or "none identified, verified via [what was checked]"]
 - ...
 
 <!-- Handoff gate:

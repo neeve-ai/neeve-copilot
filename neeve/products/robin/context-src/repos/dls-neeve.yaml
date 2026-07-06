@@ -1,4 +1,5 @@
 repo: dls-neeve
+product_role: "Shared design system (@neeve/dls) and fonts package — the single source of pixel-perfect components/tokens consumed by robin-web and robin."
 stack:
   - "React 18"
   - "TypeScript"

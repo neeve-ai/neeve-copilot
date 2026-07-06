@@ -313,6 +313,17 @@ Start with findings. Findings are the product.
 
 - Mention only real strengths.
 
+## Production Consequence & Gaps
+
+- **If this ships as-is:** [what breaks/degrades, what's exposed, blast radius —
+  one request / one session / one tenant / cross-tenant / platform-wide]
+- **Rollback story:** [feature flag / revertable migration / config toggle /
+  "revert the deploy" if nothing faster exists]
+- **Gaps found beyond the findings above:** a missing security CI gate
+  (`references/security.md`'s Security Gates table), an untested concurrency
+  or cross-tenant case, a deferred compliance control — or "none identified,
+  verified via [what was checked]". Never leave this blank by omission.
+
 ## Review Coverage
 
 - Reviewed: specs/docs/files/tests/config you actually inspected

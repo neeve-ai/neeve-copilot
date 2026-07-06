@@ -1,4 +1,5 @@
 repo: robin-ai
+product_role: "Main backend — the policy/API authority for Robin; owns the primary database schema and orchestrates the other services."
 stack:
   - "Python 3.12"
   - "FastAPI"

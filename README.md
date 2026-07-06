@@ -84,8 +84,11 @@ can be taught how Neeve works. In short:
 - **Hooks** (`.github/hooks/`) give a warning before a risky action (force-push
   to `main`, editing code on a spec-only branch) — deliberately warn-only;
   CI is still the only thing that actually blocks a bad merge.
-- **Custom agents** are reserved for specialist, org-wide use cases and live
-  in a separate `neeve-ai/.github-private` repo.
+- **Custom agents** are reserved for specialist, org-wide use cases. Their
+  source lives in this repo at
+  [`neeve/org/`](neeve/org/README.md) and is exported to a separate
+  `neeve-ai/.github-private` repo when the org enables enterprise custom
+  agents — see that folder's README for the export steps.
 
 Full explanation (written for a non-technical reader too) and the process for
 onboarding a repo or changing the shared template:

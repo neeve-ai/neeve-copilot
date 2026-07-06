@@ -1,4 +1,5 @@
 repo: robin-expirements
+product_role: "Scratch space for AI/eval research experiments — not a shipped product surface."
 stack:
   - "Mixed Python research/eval experiments — no fixed stack per experiment"
 layers:

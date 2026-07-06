@@ -1,4 +1,5 @@
 repo: robin-web
+product_role: "Admin portal — the enterprise/org-management frontend (React) and its BFF backend (FastAPI), used by facilities/security-ops admins, not end users of the extension."
 stack:
   - "Backend: Python 3.12 / FastAPI / Poetry / Auth0 JWT (BFF)"
   - "Frontend: React / TypeScript / Vite / CASL"

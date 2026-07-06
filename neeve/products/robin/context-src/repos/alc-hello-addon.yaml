@@ -1,4 +1,5 @@
 repo: alc-hello-addon
+product_role: "Example/scaffold WebCTRL add-on — reference implementation for building-automation integrations, not a production Robin surface."
 stack:
   - "Java 11"
   - "Gradle"

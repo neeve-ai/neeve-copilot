@@ -1,4 +1,5 @@
 repo: robin-helm
+product_role: "Helm charts that deploy the full Robin stack (robin-ai, robin-web, gateway, observability) to Kubernetes, including each developer's own sandbox namespace."
 stack:
   - "Helm charts (parent/subchart composition)"
   - "Kubernetes"

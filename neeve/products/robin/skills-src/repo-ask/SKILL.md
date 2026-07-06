@@ -137,6 +137,10 @@ Write the answer in the most useful form for the user's stated outcome:
 - If the question cannot be fully answered from available source, state exactly what is
   missing and where a human would need to look (e.g. "this crosses a NATS boundary —
   the consumer is in service X which was not scanned").
+- If the traced path touches auth, a trust boundary, tenant-scoping, secrets, or any
+  production config, state the production consequence of what the code actually does —
+  even if the question didn't ask about security. A trace that reveals a missing
+  tenant-scope check is a finding, not just an answer.
 
 ### Phase 4 — Confidence and Gap Report
 

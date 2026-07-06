@@ -312,7 +312,11 @@ external calls, check:
 - logging / PII exposure
 - audit obligations
 
-Load `references/security-impl.md` when relevant.
+Load `references/security-impl.md` when relevant, and the `code-review` skill's
+`references/security.md` for the full OWASP/pentest-mindset/gates/multi-tenancy
+checklist rather than re-deriving it. Whatever this gate finds — checked or
+skipped — carries forward into the Residual Risks section below; do not let a
+check performed here go unstated at completion.
 
 ## Async / Worker Gate
 
@@ -414,16 +418,25 @@ Before closing the task, verify:
 - runtime/deployment consequences were accounted for
 - any intentional shortcut is named explicitly
 
-Use this shape when relevant:
+Emit this block on every completion, not only when something is outstanding —
+an empty-looking "no risks" is a claim that must be backed by what was
+verified, the same discipline as this repo's Production Consequence and Gaps
+requirement:
 
 ```markdown
+## Production Consequence
+
+- **What breaks/degrades if this is wrong:** ...
+- **Blast radius:** [one request / one session / one tenant / cross-tenant / platform-wide]
+- **Rollback story:** [feature flag / revertable migration / config toggle / "revert the deploy"]
+
 ## Residual Risks
 
-- [risk not fully validated]
+- [risk not fully validated] — or "none identified, verified via [what was checked]"
 
 ## Follow-Up Debt
 
-- [intentional shortcut or deferred cleanup]
+- [intentional shortcut or deferred cleanup] — or "none"
 ```
 
 ## Anti-Patterns

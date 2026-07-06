@@ -1,0 +1,10 @@
+repo: neeve-web
+stack:
+  - "Unknown / placeholder — repo currently only has a README stub"
+layers: []
+test_cmd: null
+lint_cmd: null
+do_not_modify: []
+minimal: true
+spec_based_development: false
+domain_extension: null

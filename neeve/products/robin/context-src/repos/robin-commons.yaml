@@ -1,0 +1,12 @@
+repo: robin-commons
+stack:
+  - "Python (Poetry, published to internal PyPI as robin-commons)"
+  - "Shared resilience / observability / messaging library"
+layers:
+  - "This is a shared library consumed by mcp-nats-handler, wstunnel-reverse-proxy, robin-ai, robin-kb-service — breaking changes ripple across all of them"
+test_cmd: "pytest -x -v --cov=robin_commons --cov-fail-under=95"
+lint_cmd: "mypy robin_commons/ --strict && ruff check robin_commons/ tests/"
+do_not_modify:
+  - "Public API surface (exported symbols) — treat any signature change as a breaking change requiring a version bump and consumer coordination"
+spec_based_development: false
+domain_extension: null

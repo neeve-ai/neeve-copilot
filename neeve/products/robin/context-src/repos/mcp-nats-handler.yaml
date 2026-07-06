@@ -1,0 +1,24 @@
+repo: mcp-nats-handler
+stack:
+  - "Python >=3.12"
+  - "aiohttp"
+  - "nats-py"
+  - "depends on robin-commons"
+layers:
+  - "NATS <-> MCP bridge microservice — keep handlers thin, delegate shared concerns to robin-commons"
+test_cmd: "pytest -x -v --cov=app --cov-fail-under=95 && make format && make check"
+lint_cmd: "mypy app/ --strict && ruff check app/ tests/"
+do_not_modify:
+  - "message schema shared with wstunnel-reverse-proxy — coordinate changes across both repos"
+spec_based_development: false
+domain_extension: null
+
+local_dev_env_setup: "No root .env.example — config is via environment variables read directly by the service; check `example/docker-compose.yml` for the variables the demo harness sets."
+local_dev_start_cmd: "`make install` (poetry deps + pre-commit) for library/unit development. For an end-to-end demo/integration harness: `cd example && docker-compose up` — brings up NATS, a NATS CLI debug client, Postgres, and this service together so you can exercise real message flows instead of mocking NATS."
+local_dev_run_cmd: null
+local_dev_status_cmd: "`make check` (lint + typecheck + test — the full local CI gate, run this before pushing)"
+local_dev_services:
+  - "nats — message broker this service bridges to MCP"
+  - "natscli — debug/inspection client for NATS subjects"
+  - "pgsql"
+  - "mcp-nats-handler — the service itself, containerized"

@@ -1,0 +1,26 @@
+{
+  "$schema_note": "Based on VS Code Agent Hooks (Preview) as documented mid-2026: lowerCamelCase event names below are mapped by VS Code to PascalCase (preToolUse -> PreToolUse, sessionStart -> SessionStart). This feature is Preview and its schema may change — re-verify against https://code.visualstudio.com/docs/agent-customization/hooks before relying on this in CI.",
+  "warnOnly": true,
+  "hooks": {
+    "sessionStart": [
+      {
+        "name": "neeve-session-banner",
+        "command": "${workspaceFolder}/.github/hooks/scripts/session-banner.sh"
+      }
+    ],
+    "preToolUse": [
+      {
+        "name": "neeve-dangerous-command-guard",
+        "matcher": "run_in_terminal|Bash|terminal",
+        "command": "${workspaceFolder}/.github/hooks/scripts/dangerous-command-guard.sh",
+        "blocking": false
+      },
+      {
+        "name": "neeve-spec-branch-purity-warn",
+        "matcher": "edit_file|write_file|Edit|Write",
+        "command": "${workspaceFolder}/.github/hooks/scripts/spec-branch-purity-warn.sh",
+        "blocking": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+repo: dls-neeve
+stack:
+  - "React 18"
+  - "TypeScript"
+  - "Radix UI"
+  - "Tailwind"
+  - "Vite"
+  - "Storybook / Chromatic"
+layers:
+  - "@neeve/dls component library — Figma -> shadcn -> Storybook -> Chromatic is the contribution workflow, follow it rather than ad hoc component changes"
+test_cmd: "vitest --coverage"
+lint_cmd: "tsc --noEmit && eslint . --max-warnings=0"
+do_not_modify:
+  - "published component public props/API — breaking changes ripple to every consuming repo"
+notes: "Minimal treatment only: prompts + drift-check, no new AGENTS.md/CLAUDE.md — coordinate with the neeve-dls skill's references/repo-map.md rather than duplicating the design team's workflow docs."
+minimal: true
+spec_based_development: false
+domain_extension: null
+
+local_dev_start_cmd: "`npm run local-dev` (Vite dev server + Storybook in parallel) · `npm run dev` (Vite only) · `npm run storybook` (Storybook only, port 6006)."
+local_dev_run_cmd: "`npm run build` (tsc + vite build + `build:styles` for the compiled CSS) · `npm run build-storybook` · `npm run chromatic` (visual regression, requires the project's Chromatic token already configured in package.json)."

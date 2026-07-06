@@ -1,0 +1,27 @@
+repo: robin-web
+stack:
+  - "Backend: Python 3.12 / FastAPI / Poetry / Auth0 JWT (BFF)"
+  - "Frontend: React / TypeScript / Vite / CASL"
+layers:
+  - "backend/domain — entities, protocols"
+  - "backend/application — use cases"
+  - "backend/infrastructure — repositories, HTTP clients"
+  - "backend/api — FastAPI routers"
+  - "frontend/src — components, hooks, CASL ability rules"
+test_cmd: "pytest -x -v (backend) · vitest --coverage (frontend)"
+lint_cmd: "mypy backend/ --strict && ruff check backend/ (backend) · eslint frontend/src --max-warnings=0 (frontend)"
+do_not_modify:
+  - "contract tests / published API contract docs — coordinate before changing shape"
+spec_based_development: false
+domain_extension: null
+dls_extension: true
+
+local_dev_env_setup: "Copy `.env.example` -> `.env` at repo root, plus `backend/.env.example` -> `backend/.env` and `frontend/.env.example` -> `frontend/.env`. Frontend vars are Vite-prefixed (`VITE_*`); `.env.example` values are placeholders, not real credentials. Building the frontend image requires `FONTAWESOME_NPM_TOKEN` exported in your shell (Font Awesome Pro kit registry token) — see `frontend/README.md`."
+local_dev_start_cmd: "**Connected mode (preferred — real robin-ai, not mocks):** start `robin-ai` first (`cd ../robin-ai && make dev-up`, which creates the shared external `robin-network`), then from this repo: `docker compose -f docker-compose.robin-ai.yml up -d --build robin-frontend robin-backend`. This sets `USE_MOCK_SERVICES=false` and points the backend at `robin-ai`'s real `robin-api-dev` container — do not merge this file with the base `docker-compose.yml`, they define conflicting backend port bindings and mock wiring. **Isolated/mocked mode:** `make dev-minimal` (core + user/profile mocks) or `make dev-testing` (adds billing/analytics mocks) via the base `docker-compose.yml`, for frontend-only or contract-test work that doesn't need a real robin-ai backend."
+local_dev_run_cmd: null
+local_dev_stop_cmd: "`make dev-stop` · `make dev-clean` (remove containers+volumes) · `make dev-reset` (full reset)"
+local_dev_status_cmd: "`make status` · `make dev-logs`"
+local_dev_services:
+  - "Connected mode: robin-frontend (:3000, proxied through robin-ai's gateway at https://localhost) + robin-backend (:9080 direct) talking to robin-ai's real API/NATS/Redis on the shared robin-network"
+  - "Isolated mode: APISIX gateway + oauth2-proxy, robin-frontend/robin-backend, NATS, Redis, and mock user/profile/billing/analytics services"
+  - "Prometheus, Jaeger (observability, isolated mode)"

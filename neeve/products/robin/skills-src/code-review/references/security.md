@@ -359,3 +359,155 @@ Before finalizing security findings, verify:
 | Missing Content-Security-Policy | 🟡 MEDIUM |
 | Missing HSTS header | 🟡 MEDIUM |
 | Secrets logged at DEBUG level | 🟡 MEDIUM |
+
+---
+
+## OWASP Top 10 (2021) — Coverage Map
+
+Every rule above maps to an OWASP category. Use this table to sanity-check
+coverage before closing out a security review — if a category has no
+corresponding finding *and* no explicit "checked, not applicable" note, treat
+that as a gap, not a clean bill of health.
+
+| OWASP Category | Covered by | Gaps to check manually |
+|---|---|---|
+| A01 Broken Access Control | `[CG-AUTHZ]` (IDOR, mass assignment, deny-by-default) | CORS misconfiguration (`Access-Control-Allow-Origin: *` with credentials); path traversal (`../` in file params) |
+| A02 Cryptographic Failures | `[CG-CRYPTO]` | TLS termination point (is plaintext HTTP used internally, e.g. pod-to-pod, and is that acceptable given the zero-trust default?) |
+| A03 Injection | `[CG-INJECT]` (SQL, OS command, XSS, deserialization, prototype pollution) | **SSRF** — see below, not otherwise covered; template injection (SSTI) in Jinja2/Handlebars if user input reaches a template string |
+| A04 Insecure Design | Judgment call, not a pattern grep — see "Pentest Mindset" below | Threat-model the feature: what happens if this endpoint/queue message is called by an authenticated-but-malicious actor, not just an unauthenticated one? |
+| A05 Security Misconfiguration | `[CG-K8S-SEC]` | Debug/admin endpoints reachable in production (`/docs`, `/__debug__`, Django admin, Swagger UI exposed publicly); default credentials left on any bundled service (Redis, MinIO, Vault dev mode) |
+| A06 Vulnerable and Outdated Components | `[CG-SUPPLY]` | — |
+| A07 Identification and Authentication Failures | `[CG-AUTHN]` | Session fixation (session ID not rotated on login); missing logout/session revocation on password change |
+| A08 Software and Data Integrity Failures | `[CG-SUPPLY]` (SBOM, image signing), deserialization rules in `[CG-INJECT]` | CI/CD pipeline itself — does a PR from a fork run with secrets access? Unsigned/unverified webhook payloads processed as trusted input |
+| A09 Security Logging and Monitoring Failures | `[CG-LOG]` | Is there alerting on repeated auth failures / privilege-escalation attempts, or only passive logging? |
+| A10 Server-Side Request Forgery (SSRF) | Not covered above — see next section | Any code path where the server fetches a URL supplied (directly or indirectly) by a user, webhook config, or integration setting |
+
+### SSRF (the OWASP gap this repo needs explicit coverage for)
+
+Relevant anywhere a service fetches a user- or tenant-supplied URL: webhook
+delivery, integration configs, "test connection" endpoints, image/file
+fetch-by-URL, health-check probes against customer-supplied hosts.
+
+```python
+# CRITICAL — server-side fetch of an unvalidated, user-supplied URL
+resp = requests.get(user_supplied_webhook_url)
+
+# CORRECT — resolve, then validate against a deny-list before connecting
+# (block RFC1918 ranges, link-local 169.254.0.0/16 — cloud metadata endpoints —
+# and 0.0.0.0/localhost) and re-validate after DNS resolution, not just the
+# hostname string, to defend against DNS-rebinding
+```
+
+🔴 CRITICAL if a server-side request target is attacker/tenant-influenced with
+no network-level or allow-list validation — this is a live concern for any
+integration/webhook feature, not a theoretical one.
+
+---
+
+## Pentest Mindset — Adversarial Checks (beyond static pattern-matching)
+
+Everything above is pattern-matchable in a diff. These are not — they require
+actively trying to break the feature the way an attacker (or a pentester)
+would, from the perspective of each actor below. Apply this whenever a change
+adds or modifies an endpoint, queue handler, or anything reachable by an
+external actor:
+
+- **Unauthenticated actor**: What happens if every auth header is stripped
+  from this request? Does it fail closed (401/403), or does a missing-auth
+  code path silently fall through to a default?
+- **Authenticated, wrong-tenant actor**: Swap the tenant/org ID in the request
+  to one the actor doesn't belong to. Does authorization check tenant
+  ownership, or only "is this ID's format valid"? (This is IDOR's SaaS-shaped
+  sibling — see Enterprise SaaS section below.)
+- **Authenticated, low-privilege actor**: Attempt every action a higher role
+  can do. Does the check happen server-side, or only in UI conditional
+  rendering?
+- **Replay/idempotency actor**: Resend the same request/webhook twice. Does a
+  side effect (charge, provisioning, alert) happen twice?
+- **Malformed/oversized input actor**: Extremely long strings, deeply nested
+  JSON, unexpected types (`null` for a required field, an array where an
+  object is expected). Does it 500 with a stack trace (information
+  disclosure), or fail with a clean validation error?
+- **Timing/enumeration actor**: Does response time or error message differ
+  between "resource doesn't exist" and "resource exists but you can't access
+  it"? Either can leak information an attacker can enumerate against.
+
+Findings from this section are usually 🔴/🟠 **Insecure Design** (OWASP A04) —
+there's often no single bad line to point at, so state the scenario, the
+actor, and the missing check explicitly rather than citing a line number.
+
+---
+
+## Security Gates — What Actually Blocks a Merge
+
+Code review catches what a human or agent reads; these are the automated
+gates that catch what reading a diff can miss (a vulnerable transitive
+dependency, a secret that slipped past review, a container running as root).
+A repo's CI should run all of these — if `robin-ai/.github/workflows-disabled/`
+or an equivalent exists, treat its absence as an open finding, not silently
+acceptable:
+
+| Gate | Tooling examples | Blocks on |
+|---|---|---|
+| Secrets scanning | gitleaks, trufflehog, GitHub secret scanning | Any credential pattern from `[CG-CRED]` found in the diff or history |
+| SAST | Semgrep, CodeQL | Injection/authn/authz patterns from this file found statically |
+| Dependency / SCA scanning | `pip-audit`, `npm audit`, Dependabot, Snyk | Known CVEs at HIGH/CRITICAL severity in a direct or transitive dependency |
+| Container image scanning | Trivy, Grype | CVEs in the base image; root user; missing `USER` directive |
+| IaC scanning | checkov, tfsec, `kube-score` | Missing NetworkPolicy, privileged containers, overly broad RBAC (see `[CG-K8S-SEC]`) |
+| DAST / periodic pentest | OWASP ZAP (automated), scheduled third-party pentest (manual) | Internet-facing surfaces only; cadence is a product/compliance decision, not a per-PR gate |
+
+None of these replace the others — a clean SAST scan does not mean secrets
+scanning or dependency scanning are redundant, and vice versa. If a repo is
+missing one of these gates entirely, name that explicitly as a finding rather
+than only reviewing what's in the diff.
+
+---
+
+## Enterprise SaaS Multi-Tenancy & Operational Security
+
+Neeve's products are multi-tenant SaaS serving enterprise customers with
+real building infrastructure behind them. These are the security properties
+that matter specifically because of that shape, on top of everything above:
+
+- **Tenant isolation is not the same check as ownership (IDOR).** IDOR asks
+  "does user X own resource Y". Multi-tenancy asks "does resource Y belong to
+  the same org/tenant as the authenticated session" — a query can pass an
+  ownership check and still leak across tenants if `tenant_id`/`org_id`
+  scoping is missing from the query itself. Every query against
+  tenant-scoped data must filter by tenant ID derived from the authenticated
+  session — never from a client-supplied field — as a WHERE clause, not an
+  application-layer post-filter (post-filtering after an unscoped query still
+  leaks via timing, error messages, or a missed code path).
+- **Row-level security as defense in depth**: where the database supports it
+  (e.g. Postgres RLS), tenant-scoping at the database layer catches the case
+  where an application-layer scoping check is missed in one code path.
+- **Per-tenant rate limiting / noisy-neighbor protection**: a rate limit
+  keyed only by IP or global to the service lets one tenant degrade service
+  for every other tenant. Rate limits on shared infrastructure should be
+  keyed by tenant/org ID.
+- **Webhook and integration security**: outbound webhooks to customer
+  endpoints should be HMAC-signed so the customer can verify authenticity;
+  inbound webhooks from third parties must verify the provider's signature
+  before trusting the payload — an unverified inbound webhook is untrusted
+  input like any other (see Injection rules above) and a fetch-back-to-a-URL
+  from a webhook config is an SSRF vector (see above).
+- **Least-privilege service credentials per integration**: a service account
+  or API key used for one integration/tenant should not have blanket access
+  to all tenants' data — scope credentials as narrowly as the integration
+  needs, matching the zero-trust default in this repo's engineering
+  principles.
+- **Audit logging for compliance**: who did what, to which tenant's data,
+  when — as an append-only/immutable trail, not just a debug log line. This
+  is a customer-facing compliance requirement for enterprise buyers (SOC2 and
+  similar), not just an internal nice-to-have — treat a missing audit trail
+  on a sensitive action (role change, data export, credential rotation) as a
+  finding, not a follow-up.
+- **Secrets rotation and vault integration**: prefer short-lived credentials
+  fetched from a secrets manager (Vault, cloud KMS) over long-lived static
+  keys in config, and flag any new static long-lived credential as a
+  candidate for rotation-capable storage instead.
+- **Service-to-service auth (zero-trust internal traffic)**: internal
+  service-to-service calls should authenticate (mTLS or service tokens), not
+  rely on network position ("it's inside the VPC, so it's trusted") — this is
+  the same zero-trust default from this repo's culture/ethos section, applied
+  at the infrastructure level.

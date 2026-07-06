@@ -47,6 +47,28 @@ jobs:
           echo "Checking Robin skills-src packages cleanly into release zips..."
           neeve/products/robin/scripts/skills_sync.sh check
 
+      - name: Verify Robin Prompt Files
+        run: |
+          echo "Checking Robin prompts-src frontmatter..."
+          neeve/products/robin/scripts/prompts_sync.sh check
+
+      - name: Verify Context Renderer
+        run: |
+          echo "Smoke-testing context_render.py against every registered repo..."
+          FAIL=0
+          for repo_yaml in neeve/products/robin/context-src/repos/*.yaml; do
+            repo="$(basename "$repo_yaml" .yaml)"
+            tmp_dir="$(mktemp -d)"
+            if ! python3 neeve/products/robin/scripts/context_render.py "$repo" --write "$tmp_dir"; then
+              echo "::error::context_render.py failed to render repo: $repo"
+              FAIL=1
+            fi
+            rm -rf "$tmp_dir"
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+
       - name: Run Install Script Tests
         run: |
           echo "Running tests/test_install.sh..."

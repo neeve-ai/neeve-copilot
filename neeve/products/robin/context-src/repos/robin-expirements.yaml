@@ -1,0 +1,11 @@
+repo: robin-expirements
+stack:
+  - "Mixed Python research/eval experiments — no fixed stack per experiment"
+layers:
+  - "Each experiment is its own scratch directory; no shared architecture to enforce"
+test_cmd: null
+lint_cmd: null
+do_not_modify: []
+minimal: true
+spec_based_development: false
+domain_extension: null

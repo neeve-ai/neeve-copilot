@@ -2,12 +2,11 @@
 
 Read by: GitHub Copilot · OpenAI Codex · Google Antigravity · Claude Code · Cursor
 
-This is the generic seed shipped in the release bundle for repos not yet
-onboarded to the `context-src` rendering system (see `context-src/base.md`,
-the actual canonical source, and this repo's `README.md` § "The Whole System,
-In Plain English"). Once a repo is onboarded, its `AGENTS.md` is generated
-from `context-src/base.md` + that repo's `context-src/repos/<repo>.yaml` and
-this seed no longer applies to it. Place this at the repo root as `AGENTS.md`.
+This file is rendered, not hand-edited, into every repo's `AGENTS.md`,
+`.github/copilot-instructions.md`, `CLAUDE.md`, and `.cursorrules` by
+`scripts/context_render.sh`. Edit `context-src/base.md` and the relevant
+`context-src/repos/<repo>.yaml` — never edit a rendered file directly, it will
+be overwritten and flagged as drift by `context-drift-check` CI.
 
 ---
 
@@ -32,6 +31,14 @@ should shape every suggestion and every review comment:
 
 These are judgment defaults, not a checklist — apply them where they change a
 decision, not as boilerplate to append to every response.
+
+---
+
+## This Repo
+
+{{REPO_STACK_BLOCK}}
+
+{{REPO_LOCAL_DEV_BLOCK}}
 
 ---
 
@@ -81,6 +88,8 @@ helm lint [chart]
 helm template [chart] | kubectl apply --dry-run=client -f -
 ```
 
+{{REPO_COMMANDS_BLOCK}}
+
 ---
 
 ## Architecture Layer Rules
@@ -99,7 +108,17 @@ Never put business logic in route handlers.
 Never import infrastructure concerns into the domain layer.
 Inject dependencies through typed protocols, never instantiate inside business logic.
 
+{{REPO_DO_NOT_MODIFY_BLOCK}}
+
 ---
+
+{{SPEC_REVIEW_FRAGMENT}}
+
+{{CODE_REVIEW_FRAGMENT}}
+
+{{OT_DOMAIN_FRAGMENT}}
+
+{{DLS_FRAGMENT}}
 
 ## Skills Available
 
@@ -127,13 +146,3 @@ same six workflows are available as `/to-spec`, `/implement-spec`,
 `/code-review`, `/repo-ask`, `/repo-intel`, `/neeve-dls` — thin wrappers around
 the skills above, useful where automatic skill-matching doesn't trigger (e.g.
 inline chat).
-
----
-
-## Onboarding this repo onto the full system
-
-This seed gives you always-on context only. To get the full picture (this
-repo's own stack/layer rules rendered in, drift-checked CI, prompts, and
-optional hooks), onboard it in `neeve-copilot`'s `context-src/` — see
-`neeve/products/robin/README.md` § "The Whole System, In Plain English" and
-§ "Process: bring a repo onto this system for the first time".

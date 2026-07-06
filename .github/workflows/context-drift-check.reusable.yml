@@ -1,0 +1,37 @@
+name: Context Drift Check (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      repo:
+        description: >
+          Repo name, must match a file in
+          neeve-copilot/neeve/products/robin/context-src/repos/<repo>.yaml
+        required: true
+        type: string
+      neeve_copilot_ref:
+        description: Ref of neeve-ai/neeve-copilot to check against
+        required: false
+        type: string
+        default: main
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout calling repo
+        uses: actions/checkout@v4
+        with:
+          path: target
+
+      - name: Checkout neeve-copilot
+        uses: actions/checkout@v4
+        with:
+          repository: neeve-ai/neeve-copilot
+          ref: ${{ inputs.neeve_copilot_ref }}
+          path: neeve-copilot
+
+      - name: Render and diff against committed context files
+        run: |
+          python3 neeve-copilot/neeve/products/robin/scripts/context_render.py \
+            "${{ inputs.repo }}" --check "${{ github.workspace }}/target"

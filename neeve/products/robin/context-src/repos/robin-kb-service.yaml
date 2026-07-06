@@ -1,0 +1,33 @@
+repo: robin-kb-service
+stack:
+  - "Python 3.12"
+  - "FastAPI"
+  - "DDD / Clean Architecture"
+  - "SQLAlchemy (async)"
+  - "Redis"
+  - "NATS JetStream"
+  - "Hindsight memory backend"
+layers:
+  - "domain — entities, value objects, invariants, protocols; ZERO external imports"
+  - "application — use cases, command/query handling"
+  - "infrastructure — repositories, ORM, NATS/HTTP/Redis clients"
+  - "api — FastAPI routers, thin glue only"
+test_cmd: "pytest -x -v --cov=app --cov-fail-under=95"
+lint_cmd: "mypy app/ --strict && ruff check app/ tests/"
+do_not_modify:
+  - "docs/adr/ — service-local ADRs, do not edit past entries"
+notes: "This repo already maintains CONTEXT.md and docs/adr/ — reference them, do not duplicate their content in rendered context files."
+spec_based_development: false
+domain_extension: null
+
+local_dev_env_setup: "Copy `.env.example` -> `.env`. `SECRET_KEY` and `REDIS_PASSWORD` placeholders must be replaced for anything beyond local use; auth provider vars need configuring per `.env.example`'s Auth section."
+local_dev_start_cmd: "`make setup` (once) then `make dev-up` (Postgres + Redis only) · `make dev-up-app` (full stack with the app itself, hot reload) · `make dev-up-observability` (adds Grafana Alloy)."
+local_dev_run_cmd: "`make run` — runs the app locally against whatever `make dev-up` started (expects Postgres/Redis already up)."
+local_dev_stop_cmd: "`make dev-down` · `make dev-destroy` (DESTRUCTIVE — also deletes data volumes)"
+local_dev_status_cmd: "`make dev-status` · `make dev-logs`"
+local_dev_db_cmd: "`make db-init` (create + migrate) · `make migrate` (apply pending) · `make db-current` (show revision)"
+local_dev_services:
+  - "PostgreSQL"
+  - "Redis"
+  - "NATS"
+  - "Hindsight (long-term memory backend)"

@@ -1,0 +1,12 @@
+repo: robin-adr
+stack:
+  - "Markdown only — Architecture Decision Records"
+layers:
+  - "adr/ — numbered ADRs (NNNN-kebab-case-title.md), MADR-style (Status/Date/Context/Decision/Consequences)"
+test_cmd: null
+lint_cmd: "adr-lint.yml CI validates filename pattern + required H1/Status/Date fields"
+do_not_modify:
+  - "Existing ADR files — ADRs are immutable once accepted; supersede with a new ADR, don't edit history"
+minimal: true
+spec_based_development: false
+domain_extension: null

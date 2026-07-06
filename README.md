@@ -62,9 +62,34 @@ scale check, security check, and code review. The skills enforce this automatica
 See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for:
 
 - Per-agent install paths and verification commands
-- Always-on context files (CLAUDE.md, AGENTS.md, .cursorrules)
+- Always-on context files (CLAUDE.md, AGENTS.md, .cursorrules) — **now generated**,
+  not hand-authored, from `context-src/`; see that README's "Whole System, In Plain
+  English" section for what changed and why
 - Project-scoped skill installation (commit skills to a repo for team sharing)
+- Prompts (`.github/prompts/`) and warn-only hooks (`.github/hooks/`)
 - Troubleshooting
+
+---
+
+## Beyond Skills: Instructions, Prompts, and Hooks
+
+Skills are one of five ways GitHub Copilot (and Claude Code, Cursor, Codex)
+can be taught how Neeve works. In short:
+
+- **Instructions** (`AGENTS.md` / `copilot-instructions.md` / `CLAUDE.md` /
+  `.cursorrules`) are always-on context, generated per repo from a shared
+  template so they can't drift out of sync by hand.
+- **Prompts** (`.github/prompts/`) are slash-command shortcuts to the six
+  skills above.
+- **Hooks** (`.github/hooks/`) give a warning before a risky action (force-push
+  to `main`, editing code on a spec-only branch) — deliberately warn-only;
+  CI is still the only thing that actually blocks a bad merge.
+- **Custom agents** are reserved for specialist, org-wide use cases and live
+  in a separate `neeve-ai/.github-private` repo.
+
+Full explanation (written for a non-technical reader too) and the process for
+onboarding a repo or changing the shared template:
+[`neeve/products/robin/README.md`](neeve/products/robin/README.md#the-whole-system-in-plain-english).
 
 ---
 

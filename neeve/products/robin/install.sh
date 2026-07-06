@@ -9,6 +9,8 @@ SKILLS="code-review to-spec implement-spec neeve-dls repo-intel repo-ask"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZIP_DIR="${SKILLS_ZIP_DIR:-}"
 SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
+PROMPTS_SRC_DIR="${SCRIPT_DIR}/prompts-src"
+HOOKS_SRC_DIR="${SCRIPT_DIR}/hooks-src"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()  { echo -e "  ${GREEN}✓${NC} $*"; }
@@ -235,11 +237,36 @@ if [[ -n "$PROJECT_ROOT" ]]; then
     $DO_COPILOT     && install_project_agent "copilot"
     $DO_CURSOR      && install_project_agent "cursor"
 
+    # Prompts and hooks are Copilot/VS Code-specific project artifacts (no
+    # global-scope equivalent), so they're only written when Copilot is selected.
+    if $DO_COPILOT; then
+      hdr "project  →  ${PROJECT_ROOT}/.github/prompts"
+      if [[ -d "${PROMPTS_SRC_DIR}" ]]; then
+        mkdir -p "${PROJECT_ROOT}/.github/prompts"
+        cp "${PROMPTS_SRC_DIR}"/*.prompt.md "${PROJECT_ROOT}/.github/prompts/"
+        ok "6 prompt files"
+      else
+        warn "No prompts-src/ found — skipping prompt file install"
+      fi
+
+      hdr "project  →  ${PROJECT_ROOT}/.github/hooks"
+      if [[ -f "${HOOKS_SRC_DIR}/baseline.hooks.json" ]]; then
+        mkdir -p "${PROJECT_ROOT}/.github/hooks/scripts"
+        cp "${HOOKS_SRC_DIR}/baseline.hooks.json" "${PROJECT_ROOT}/.github/hooks/hooks.json"
+        cp "${HOOKS_SRC_DIR}/scripts/"*.sh "${PROJECT_ROOT}/.github/hooks/scripts/"
+        chmod +x "${PROJECT_ROOT}/.github/hooks/scripts/"*.sh
+        ok "hooks.json + $(ls "${HOOKS_SRC_DIR}/scripts" | wc -l | tr -d ' ') hook scripts"
+      else
+        warn "No hooks-src/baseline.hooks.json found — skipping hooks install"
+      fi
+    fi
+
     echo ""
     warn "Commit project-scoped skills so your team gets them on git clone:"
     echo "       cd ${PROJECT_ROOT}"
     echo "       git add .claude/skills/ .github/skills/ .agents/skills/ .cursor/skills/"
-    echo "       git commit -m 'chore: add Neeve engineering skills'"
+    echo "       git add .github/prompts/ .github/hooks/"
+    echo "       git commit -m 'chore: add Neeve engineering skills, prompts, and hooks'"
   fi
 fi
 

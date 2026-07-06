@@ -1,0 +1,18 @@
+repo: alc-robin-agent
+stack:
+  - "Java"
+  - "Gradle"
+  - "WebCTRL add-on framework (agent APIs)"
+  - "React / TypeScript (companion UI, if present)"
+layers:
+  - "WebCTRL add-on exposing agent APIs — building-automation domain, not generic web backend"
+test_cmd: "./gradlew test"
+lint_cmd: "./gradlew check"
+do_not_modify: []
+spec_based_development: false
+domain_extension: ot-building-automation
+
+local_dev_env_setup: "`gradle.properties` sets `webctrl_home` to your local WebCTRL install (default is a Windows path, override for macOS/Linux) and signing keystore config (defaults are placeholder dev values). Config persisted at runtime lives in `config.dat` (atomic write via temp-file-then-replace — see README.md Configuration Lifecycle). No docker-compose: this is a WebCTRL add-on, not a containerized service."
+local_dev_start_cmd: "`./gradlew war` (build the `.addon`) then `./gradlew signWar` + `./gradlew verifyWarSignature`. Install the signing cert into `WebCTRL8.0/programdata/addons` and the built `.addon` into the WebCTRL server, then configure via `POST /api/config` (domain/apiKey/userName) and test with `POST /api/config/test` (see README.md API Endpoints)."
+local_dev_run_cmd: null
+local_dev_services: []

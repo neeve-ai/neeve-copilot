@@ -1,0 +1,22 @@
+repo: robin
+stack:
+  - "TypeScript"
+  - "WXT (Chrome extension framework, Manifest V3)"
+  - "Husky + lint-staged pre-commit"
+layers:
+  - "entrypoints/ — background, content scripts, popup"
+  - "src/ — shared logic, no direct DOM/browser API access outside entrypoints"
+test_cmd: "vitest --coverage"
+lint_cmd: "tsc --noEmit && eslint . --max-warnings=0"
+do_not_modify:
+  - "manifest permissions — any new permission requires a security review before merge"
+spec_based_development: false
+domain_extension: null
+dls_extension: true
+
+local_dev_env_setup: "`make env-check` validates required env files exist before build/dev — run it if `dev`/`build` fails on missing config. `BROWSER` (chrome|firefox|safari, default chrome) and `MODE` (default production) env vars select the target for build/zip commands."
+local_dev_start_cmd: "`make install` (deps) then either `make dev` (Chrome live-reload dev server, default) / `make dev-firefox` / `make dev-safari` for active iteration, **or** `make build-dev` for a one-off development-mode build (no live server) that you load as an unpacked extension via `chrome://extensions` — use `build-dev` when you just need a loadable build, `dev` when you're actively iterating with hot reload."
+local_dev_run_cmd: null
+local_dev_stop_cmd: null
+local_dev_status_cmd: "`make status` · `make info`"
+local_dev_services: []

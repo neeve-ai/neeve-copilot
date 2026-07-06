@@ -46,6 +46,11 @@ jobs:
           echo "Running test_context_render.py..."
           python3 neeve/products/robin/scripts/test_context_render.py -v
 
+      - name: Run Context Sync Unit Tests
+        run: |
+          echo "Running test_context_sync.py..."
+          python3 neeve/products/robin/scripts/test_context_sync.py -v
+
       - name: Verify neeve/org Consistency
         run: |
           echo "Checking neeve/org agent citations stay consistent with security.md/PRINCIPLES.md..."

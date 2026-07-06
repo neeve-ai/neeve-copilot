@@ -77,10 +77,13 @@ Skills are one of five ways GitHub Copilot (and Claude Code, Cursor, Codex)
 can be taught how Neeve works. In short:
 
 - **Instructions** (`AGENTS.md` / `copilot-instructions.md` / `CLAUDE.md` /
-  `.cursorrules`) are always-on context, generated per repo from a shared
-  template so they can't drift out of sync by hand.
+  `.cursorrules`) are always-on context, generated from a shared template and
+  kept fresh automatically — a small trigger file in each product repo syncs
+  them (and prompts/hooks) fresh from this repo every time a PR merges to
+  that repo's `main`, opening a review PR if anything changed. Nothing is
+  bulk-pushed or hand-copied.
 - **Prompts** (`.github/prompts/`) are slash-command shortcuts to the six
-  skills above.
+  skills above, kept in sync the same way.
 - **Hooks** (`.github/hooks/`) give a warning before a risky action (force-push
   to `main`, editing code on a spec-only branch) — deliberately warn-only;
   CI is still the only thing that actually blocks a bad merge.

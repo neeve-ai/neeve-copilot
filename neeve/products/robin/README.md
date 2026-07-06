@@ -193,98 +193,147 @@ this repo's own facts (stack, test commands, what not to touch) live:
 **Important: don't write these by hand.** They used to be copied by hand into
 each repo, and they quietly drifted apart — two repos' `AGENTS.md` files
 differed by one missing line that nobody caught. Now all four files are
-generated from one shared template, so that can't happen silently again.
+generated from one shared template and kept fresh automatically every time
+a PR merges into that repo — nobody has to remember to regenerate anything.
 The next section explains how.
 
 ---
 
 ## How the Shared Template Works
 
+Everything stays centralized in this repo. Nothing gets bulk-pushed into the
+16 product repos by hand — each repo only ever gets **one small trigger
+file**, committed once, and from then on its content is regenerated and kept
+fresh automatically, every time a PR merges into that repo's `main`.
+
 ### The pieces, in one picture
 
 ```
-neeve/products/robin/
-  context-src/
-    base.md              ← the shared write-up: house rules, quality bar,
-                             layer rules, skill list. Edit this, not the
-                             generated files
-    fragments/           ← optional add-on sections, only included for
-                             repos that need them
-      spec-review-checklist.md
-      code-review-checklist.md
-      ot-domain-notes.md
-      dls-usage-notes.md
-    repos/<repo>.yaml    ← the facts specific to one repo: its stack, its
-                             layers, its test/lint commands, what not to
-                             touch, how to run it locally
-  prompts-src/*.prompt.md ← source for the `/to-spec`-style shortcuts
-  hooks-src/              ← source for the warning-only guardrails
-  scripts/
-    context_render.py/.sh ← turns base.md + one repo's yaml into that
-                             repo's four files
-    prompts_sync.sh       ← checks the shortcut files are well-formed
+neeve-copilot/
+  neeve/products/robin/
+    context-src/
+      base.md              ← the shared write-up: house rules, quality bar,
+                               layer rules, skill list, product overview.
+                               Edit this, not the generated files
+      fragments/           ← optional add-on sections, only included for
+                               repos that need them
+        spec-review-checklist.md
+        code-review-checklist.md
+        ot-domain-notes.md
+        dls-usage-notes.md
+        production-consequence-and-gaps.md
+      product-overview.md  ← what Robin offers + a repo-contribution table,
+                               generated from each repo's own product_role
+      repos/<repo>.yaml    ← the facts specific to one repo: its stack, its
+                               layers, its test/lint commands, what not to
+                               touch, how to run it locally, its product_role
+    prompts-src/*.prompt.md ← source for the `/to-spec`-style shortcuts
+    hooks-src/              ← source for the warning-only guardrails
+    scripts/
+      context_render.py     ← turns base.md + one repo's yaml into that
+                               repo's four instruction files
+      context_sync.py        ← the sync-on-merge engine: renders instructions
+                               + syncs prompts/hooks/project-skills into a
+                               target checkout, reports what changed
+      skills_sync.sh / prompts_sync.sh / hooks_sync.sh
+                               ← check-target modes diff an installed copy
+                               against source (used by CI drift checks)
+  .github/workflows/
+    context-sync.reusable.yml               ← does the actual regeneration
+                                                + opens the review PR
+    context-drift-check.reusable.yml        ← safety-net: fails a repo's CI
+                                                if committed files ever get
+                                                hand-edited between syncs
+    prompts-hooks-skills-drift-check.reusable.yml ← same, for prompts/hooks/
+                                                      project-scoped skills
+  neeve/products/robin/context-sync-trigger.yml.template
+                                              ← the thin file that's the ONLY
+                                                thing committed by hand into
+                                                each product repo
 ```
 
 ### Adding a new repo to this system
 
 1. Write `context-src/repos/<repo>.yaml` for that repo — copy the closest
    existing example and edit it: its stack, its layout, its test/lint
-   commands, anything that shouldn't be touched without asking, and (if it
-   applies) how to run it locally.
-2. Generate its files:
-   ```bash
-   bash scripts/context_render.sh <repo> ../<repo> --write
-   ```
-   Read the diff before committing — this will happily overwrite anything
-   already there, so check what changed.
-3. Add the shortcuts (and warning hooks, if this repo uses them — see
-   below):
-   ```bash
-   bash install.sh --copilot --project /path/to/<repo>
-   ```
-4. Add a small file so this repo automatically gets flagged if it ever falls
-   out of sync — `.github/workflows/context-drift.yml` in the target repo:
+   commands, its `product_role`, anything that shouldn't be touched without
+   asking, and (if it applies) how to run it locally.
+2. Commit **one small file** into that repo:
+   `.github/workflows/neeve-context-sync.yml`, copied from
+   `context-sync-trigger.yml.template` with `__REPO_NAME__` filled in:
    ```yaml
-   name: Context Drift Check
-   on: { push: { branches: [main] }, pull_request: {} }
+   name: Neeve Context Sync
+   on:
+     push:
+       branches: [main]
    jobs:
-     drift-check:
-       uses: neeve-ai/neeve-copilot/.github/workflows/context-drift-check.reusable.yml@main
-       with: { repo: <repo> }
+     sync:
+       uses: neeve-ai/neeve-copilot/.github/workflows/context-sync.reusable.yml@main
+       with:
+         repo: <repo>
    ```
-5. If that repo already has a `.vscode/settings.json`, add these lines to it
-   (don't replace the file, just add to it, and don't create the file if it
-   doesn't already exist):
+   That's the only manual step. This file basically never changes again —
+   it just points at the reusable workflow, it never contains content.
+3. The first real sync happens on that repo's *next* merge to `main` (or
+   trigger it immediately with `workflow_dispatch` / an empty merge if you
+   want it live right away). From then on, every merge keeps `AGENTS.md` /
+   `CLAUDE.md` / `.cursorrules` / `.github/copilot-instructions.md` (and
+   prompts, and — where applicable — hooks and the OT skill) in sync
+   automatically, via a small bot-opened PR you review before merging.
+4. If that repo already has a `.vscode/settings.json`, add these lines to it
+   by hand once (don't replace the file, don't create it if it doesn't
+   already exist — the sync mechanism doesn't touch `.vscode/`):
    ```json
    "chat.instructionsFilesLocations": { ".github/instructions": true },
    "chat.promptFiles": true,
    "chat.promptFilesLocations": { ".github/prompts": true },
    "github.copilot.chat.codeGeneration.useInstructionFiles": true
    ```
-6. Commit everything, including the four generated files.
 
 ### Changing something for every repo at once
 
 1. Edit `context-src/base.md` (or the relevant file under `fragments/`) —
-   never edit a generated file directly, it'll just get overwritten next
-   time someone regenerates it.
-2. Regenerate every repo that should pick up the change, and open a PR in
-   each:
-   ```bash
-   for repo in robin-ai robin-web robin-kb-service ...; do
-     bash scripts/context_render.sh "$repo" "../$repo" --write
-   done
-   ```
-3. If a change is really only relevant to one repo, it belongs in that
+   never edit a generated file directly in a product repo, it'll just get
+   regenerated and overwritten on that repo's next sync anyway.
+2. Merge that change to `neeve-copilot`'s own `main`.
+3. Do nothing else. Every onboarded repo picks up the change automatically
+   the next time something merges into *its* `main` — no loop over repos,
+   no manual re-render, no bulk push. If a repo needs the change sooner,
+   the fastest path is just merging any small PR there, which triggers a
+   sync as a side effect.
+4. If a change is really only relevant to one repo, it belongs in that
    repo's own `context-src/repos/<repo>.yaml`, not in the shared `base.md`.
 
-### How we catch drift automatically
+### What actually happens on a merge (`context-sync.reusable.yml`)
 
-Every onboarded repo has a small check in its own CI that regenerates its
-four files fresh and compares them to what's actually committed. If they
-don't match, the check turns red with the exact difference shown — nobody
-has to remember to check by hand, and nothing gets silently overwritten
-without a human seeing the diff first.
+1. Checks out the repo that just had a merge, and a fresh copy of
+   `neeve-copilot@main`.
+2. Runs `context_sync.py <repo> <checkout>` — it renders the four
+   instruction files, and syncs prompts (always), hooks (only if that
+   repo's yaml sets `spec_based_development: true`), and the
+   `ot-building-automation` skill (only for the three OT repos), comparing
+   each against what's currently there.
+3. If nothing differs, the job exits quietly — no PR, no noise.
+4. If something differs, it commits to a standing `neeve-context-sync`
+   branch, force-pushes it (this branch is always disposable and gets reset
+   each run, so history doesn't pile up), and opens a PR — or updates the
+   existing one if it's already open from a prior sync.
+5. **It never merges its own PR.** A human reviews and merges it like any
+   other change. This is deliberate: the previous design's failure mode was
+   a bulk push that landed things in 16 repos in one go with no per-repo
+   review; this one always keeps a human in the loop, just automatically
+   triggered instead of manually run.
+
+### The safety-net drift checks
+
+Two more reusable workflows exist purely as a backstop — they don't sync
+anything, they just fail CI loudly if a rendered file, prompt, hook, or
+project-scoped skill copy is ever hand-edited so it no longer matches
+source: `context-drift-check.reusable.yml` (the four instruction files) and
+`prompts-hooks-skills-drift-check.reusable.yml` (prompts/hooks/skills). In
+the steady state these should never actually fire, since the sync mechanism
+above keeps everything fresh on its own — they exist for the case where
+someone edits a generated file directly between merges.
 
 ### The shortcut files (prompts)
 
@@ -388,16 +437,25 @@ bash install.sh --all
 
 ## For People Maintaining This Repo
 
-There are four things you can edit here, and each has its own
+There are four source trees you can edit here, and each has its own
 check-it-still-works command. All four are checked automatically whenever
-someone pushes a change:
+someone pushes a change to this repo — and, separately, every product repo
+picks up the actual content change automatically on its own next merge, via
+the sync-on-merge mechanism described above.
 
-| You edit | It produces | Command to check/apply it |
+| You edit | It produces | Command to check it locally |
 |---|---|---|
-| `skills-src/` | Downloadable `.zip` files for each skill | `scripts/skills_sync.sh check` (verify) / `pack` (build) |
-| `context-src/` | A repo's `AGENTS.md` / `copilot-instructions.md` / `CLAUDE.md` / `.cursorrules` | `scripts/context_render.sh <repo> <path> --check` (verify) / `--write` (apply) |
-| `prompts-src/` | A repo's `.github/prompts/*.prompt.md` | `scripts/prompts_sync.sh check` |
-| `hooks-src/` | A repo's `.github/hooks/` | No build step — copied as-is by `install.sh --project` |
+| `skills-src/` | Downloadable `.zip` files for each skill, and (for project-scoped skills) a repo's `.github/skills/<name>/` | `scripts/skills_sync.sh check` (packaging) / `check-target <path>` (diff an installed copy against source) |
+| `context-src/` | A repo's `AGENTS.md` / `copilot-instructions.md` / `CLAUDE.md` / `.cursorrules` | `scripts/context_render.py <repo> --check <path>` (diff) / `--write <path>` (apply) |
+| `prompts-src/` | A repo's `.github/prompts/*.prompt.md` | `scripts/prompts_sync.sh check` (frontmatter) / `check-target <path>` (diff) |
+| `hooks-src/` | A repo's `.github/hooks/` | `scripts/hooks_sync.sh check-target <path>` (diff) |
+
+`scripts/context_sync.py <repo> <path>` runs all four at once (the same way
+`context-sync.reusable.yml` does) and reports `CHANGED`/`NO_CHANGE` — the
+quickest way to see exactly what a given repo's next sync would do.
+`scripts/test_context_render.py` and `scripts/test_context_sync.py`
+(stdlib `unittest`, no extra dependency) cover the rendering/syncing logic
+itself, and run in this repo's own CI.
 
 **Editing a skill:**
 ```bash

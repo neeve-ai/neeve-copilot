@@ -1,12 +1,14 @@
 # Agents: cross-tool custom agents, rendered from one source
 
 This directory holds Neeve's custom agents — `to-prd`, `to-erd`,
-`repo-guide` — each authored once as `agents-src/<name>/AGENT.md` and
-rendered by `scripts/agents_render.py` into every tool's own native format.
-It exists alongside `skills-src/` (six Agent Skills: `repo-intel`,
-`repo-ask`, `to-spec`, `implement-spec`, `code-review`, `neeve-dls`) for
-workflows that specifically need agent behavior — see "When to write an
-agent instead of a skill" below.
+`repo-guide`, and four specialist reviewers migrated from `neeve/org/`
+(`neeve-reviewer`, `neeve-security-partner`, `neeve-pm-partner`,
+`neeve-design-partner`) — each authored once as `agents-src/<name>/AGENT.md`
+and rendered by `scripts/agents_render.py` into every tool's own native
+format. It exists alongside `skills-src/` (seven Agent Skills: `repo-intel`,
+`repo-ask`, `to-spec`, `implement-spec`, `code-review`, `neeve-dls`,
+`ot-building-automation`) for workflows that specifically need agent
+behavior — see "When to write an agent instead of a skill" below.
 
 ## Why a render step, not one shared file
 
@@ -40,6 +42,14 @@ agents-src/
   to-erd/
     AGENT.md
   repo-guide/
+    AGENT.md
+  neeve-reviewer/
+    AGENT.md
+  neeve-security-partner/
+    AGENT.md
+  neeve-pm-partner/
+    AGENT.md
+  neeve-design-partner/
     AGENT.md
 ```
 
@@ -76,12 +86,17 @@ most new workflows.
 
 ## Relationship to `neeve/org/`
 
-`neeve/org/`'s 5 agents (`neeve-reviewer`, `neeve-security-partner`,
-`neeve-pm-partner`, `neeve-design-partner`, `neeve-ot-specialist`) are a
-separate, older mechanism: GitHub-Enterprise-only, exported to a
-`neeve-ai/.github-private` repo, reaching Copilot on github.com exclusively
-— and only once that (not-yet-started) Enterprise setup is live. They do not
-reach Claude Code, Cursor, Codex, or Antigravity at all today. This
-directory's render mechanism could plausibly replace that export path for
-those five too, since it actually reaches every tool globally — noted as a
-future option in `neeve/org/README.md`, not undertaken here.
+Four of `neeve/org/`'s original five agents (`neeve-reviewer`,
+`neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) have
+**migrated here**, retiring the GitHub-Enterprise-only `.github-private`
+export path they used to depend on — that path reached zero engineers in
+practice (the export was never started), while this mechanism reaches every
+engineer, every tool, immediately. `PRINCIPLES.md` (the reasoning lineage
+these agents are condensed from) stays in `neeve/org/`, referenced by
+pointer, same as before.
+
+`neeve-ot-specialist` stays in `neeve/org/.github/agents/` as a
+`[PLACEHOLDER]` — it's gated on SME content review (Niagara/BQL/WebCTRL),
+not distribution, so migrating it here today would just distribute
+unvalidated content faster. It moves the same way once it's validated.
+See `neeve/org/README.md` for the full story.

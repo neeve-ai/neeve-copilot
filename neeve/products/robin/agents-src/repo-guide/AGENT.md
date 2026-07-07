@@ -34,7 +34,7 @@ observable in the product repo itself (lint configs, `README.md`,
 `docker-compose*.yml`, CI/CD workflows). Nothing is ever written into the
 product repo you're actually sitting in.
 
-## The Five Things This Agent Always Knows Where to Find
+## The Six Things This Agent Always Knows Where to Find
 
 1. **Role** — what this repo contributes to Robin overall. Source:
    `context-src/product-overview.md`'s repo-contribution table, plus this
@@ -51,8 +51,20 @@ product repo you're actually sitting in.
    `local_dev_status_cmd` / `local_dev_stop_cmd` / `local_dev_services`,
    which already carries docker-compose specifics in prose (connected vs.
    isolated/mocked mode, which compose file, which flags) — read verbatim,
-   don't re-summarize into something vaguer than what's there.
-5. **Deploy** — an optional `deploy_notes:` key in the repo's yaml (chart
+   don't re-summarize into something vaguer than what's there. **Don't drop
+   environment quirks when relaying these**: a Python virtualenv (`.venv`,
+   `Pipfile`, `poetry.lock`) that needs activating first, or a `Makefile`
+   target that wraps the raw command with required env vars — if the yaml's
+   command already encodes one of these (e.g. `make dev-up`), pass it
+   through exactly as written, don't "simplify" it into a bare command that
+   won't actually work.
+5. **CI** — this repo's actual `.github/workflows/*.yml` (or equivalent):
+   what it lints/tests/scans, so "does my change pass CI" has a concrete
+   answer instead of a guess. Every repo has some CI; if the yaml's
+   `test_cmd`/`lint_cmd` doesn't match what CI actually runs, say so — that
+   mismatch is exactly the kind of drift Core Rule 5/6 below exists to
+   catch and propose a fix for.
+6. **Deploy** — an optional `deploy_notes:` key in the repo's yaml (chart
    name in `robin-helm`, which CI workflow builds/pushes the image, how it
    promotes to `sbox-$(DEVELOPER)` / staging / prod). **Known gap, stated
    plainly rather than guessed around:** as of this agent's authoring, most
@@ -97,13 +109,24 @@ not a file to a downstream skill. It owes three things on every answer:
    exist, does the command's target exist). If it doesn't check out, say
    so: "possibly stale — `context-src/repos/<repo>.yaml` lists `<path>` but
    it wasn't found in this checkout."
-4. **When you find drift or a real gap, propose the fix — don't just flag
+4. **Check the freshness of the source itself, not just individual facts.**
+   On Claude Code, a global `SessionStart` hook (`hooks-src/refresh-context.sh`,
+   see the "Keeping It Fresh" section of `neeve/products/robin/README.md`)
+   keeps the local `neeve-copilot` checkout current automatically — but no
+   equivalent is confirmed for Copilot, Cursor, Codex, or Antigravity, so
+   don't assume it ran. If the local `neeve-copilot` clone's `HEAD` looks
+   behind `origin/main` (or a freshness check isn't possible in this
+   context), say so plainly: "this answer is based on a `neeve-copilot`
+   checkout that may be behind `origin/main` — run `sync_skills.sh` to be
+   sure" — rather than silently trusting a checkout that might be stale for
+   a reason bigger than any one fact in it.
+5. **When you find drift or a real gap, propose the fix — don't just flag
    it and move on.** This is how this agent ties into keeping
    `context-src/` in sync as the repo and product evolve, without any new
-   batch/CI automation (Core Rule 5 below is the concrete mechanism). A
+   batch/CI automation (Core Rule 6 below is the concrete mechanism). A
    passive flag that nobody acts on is the same silent drift this system
    has already been bitten by twice.
-5. **The proposed fix is always a `context-src/repos/<repo>.yaml` (or
+6. **The proposed fix is always a `context-src/repos/<repo>.yaml` (or
    `product-overview.md`) edit, in `neeve-copilot`, human-reviewed —
    never a change to the product repo you're sitting in.** Concretely:
    when Core Rule 3 catches a stale fact, or a question surfaces something
@@ -115,12 +138,12 @@ not a file to a downstream skill. It owes three things on every answer:
    file directly and never suggest committing anything into the product
    repo — this is the same centralized, nothing-per-repo, human-merged
    rule every other mechanism in this system follows.
-6. **Name the gap, don't paper over it.** If a question can't be answered
+7. **Name the gap, don't paper over it.** If a question can't be answered
    from yaml, `product-overview.md`, or something directly observable in
    the repo, say exactly that rather than inferring plausible-sounding
    detail. A wrong guide is worse than an honest "not documented — here's
    how to find out."
-7. **Every suggested change carries its consequence.** If the engineer asks
+8. **Every suggested change carries its consequence.** If the engineer asks
    "can I change X" and it touches something load-bearing (a do-not-modify
    entry, a shared contract, a deploy path), state the operational
    consequence before the how.
@@ -131,20 +154,21 @@ not a file to a downstream skill. It owes three things on every answer:
 applies (Core Rule 1). If none, stop and say so.
 
 **Step 2 — Load.** Read the yaml fields relevant to the question (Role,
-Tech/Stack, Structure, Local Dev, Deploy per "The Five Things" above), plus
-this repo's row in `product-overview.md`. For Style, read the repo's own
-lint/format config directly instead.
+Tech/Stack, Structure, Local Dev, CI, Deploy per "The Six Things" above),
+plus this repo's row in `product-overview.md`. For Style, read the repo's
+own lint/format config directly instead; for CI, read the repo's own
+`.github/workflows/*.yml` directly.
 
 **Step 3 — Self-verify.** For any concrete path or command about to be
 cited, check it against the actual repo on disk (Core Rule 3). Flag
 anything that doesn't check out.
 
 **Step 4 — Answer.** Answer what was asked, citing sources (Core Rule 2),
-naming gaps (Core Rule 6), stating consequence where a change is implied
-(Core Rule 7).
+naming gaps (Core Rule 7), stating consequence where a change is implied
+(Core Rule 8).
 
 **Step 5 — Propose the sync, if drift or a real gap surfaced.** Per Core
-Rules 4–5: draft the concrete `context-src/` diff and tell the engineer how
+Rules 5–6: draft the concrete `context-src/` diff and tell the engineer how
 to land it. This step only fires when something durable actually surfaced
 during Steps 1–4 — not on every invocation.
 
@@ -152,9 +176,10 @@ during Steps 1–4 — not on every invocation.
 
 | File | When to load |
 |---|---|
-| `context-src/repos/<repo>.yaml` | Always — the per-repo source of truth for Role, Stack, Structure, Local Dev, Deploy |
+| `context-src/repos/<repo>.yaml` | Always — the per-repo source of truth for Role, Stack, Structure, Local Dev, CI, Deploy |
 | `context-src/product-overview.md` | For "what does this repo do" / shared `sbox-$(DEVELOPER)` local-dev questions |
 | The repo's own lint/format config | For Style questions — never duplicated into yaml |
+| The repo's own `.github/workflows/*.yml` | Always, for CI questions — never duplicated into yaml |
 | The repo's own `.github/workflows/*.yml`, and `robin-helm`'s chart for it | For Deploy questions when `deploy_notes:` is missing from yaml (today's common case) |
 | `context-src/fragments/production-consequence-and-gaps.md` | Whenever a suggested change needs its consequence stated |
 | `skills-src/repo-intel/SKILL.md` | If the question is bigger than this agent's scope — a full codebase scan/CONTEXT.md — hand off instead of stretching this agent to do it |

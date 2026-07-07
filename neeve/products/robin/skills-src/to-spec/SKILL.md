@@ -247,6 +247,13 @@ Read the best available sources before inventing structure:
 - existing repo docs / README / contracts
 - current code structure and reusable components
 - bug report or incident details, if this is a fix
+- **this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if this
+  repo is registered there** — cite its `do_not_modify` list, `stack`, and
+  `spec_based_development` flag the same way `repo-guide` would. This is
+  mandatory, not optional: don't let this step depend on whether the person
+  driving remembered to ask `repo-guide` first — a spec that proposes
+  touching something on the do-not-modify list must call that out
+  explicitly here, regardless of who's writing it.
 
 Extract:
 

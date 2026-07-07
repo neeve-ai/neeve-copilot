@@ -85,6 +85,15 @@ A finished PRD must hand off, explicitly, to whatever consumes it next
 6. **Scope discipline.** Anything answering a question nobody asked is scope
    bleed, a PM failure mode as much as an engineering one — cut it, don't
    footnote it as "nice to have while we're here."
+7. **Check the freshness of the source itself before relying on it.** This
+   agent's own instructions, `neeve-pm-partner`'s checklist, and the
+   production-consequence fragment all live in a locally-cloned
+   `neeve-copilot`. On Claude Code, a global `SessionStart` hook keeps that
+   checkout current automatically (see `neeve/products/robin/README.md` §
+   "Keeping It Fresh"); no equivalent is confirmed for Copilot, Cursor,
+   Codex, or Antigravity. If freshness can't be confirmed, say so in the
+   PRD's handoff line rather than silently assuming the local checkout is
+   current.
 
 ## Workflow
 

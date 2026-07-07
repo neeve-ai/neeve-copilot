@@ -87,6 +87,11 @@ jobs:
             exit 1
           fi
 
+      - name: Run Session-Hook Merge Unit Tests
+        run: |
+          echo "Running test_merge_session_hook.py..."
+          python3 neeve/products/robin/scripts/test_merge_session_hook.py -v
+
       - name: Verify neeve/org Consistency
         run: |
           echo "Checking neeve/org agent citations stay consistent with security.md/PRINCIPLES.md..."

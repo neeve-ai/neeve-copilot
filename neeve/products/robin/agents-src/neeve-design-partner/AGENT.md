@@ -10,7 +10,6 @@ description: >
 tools:
   - read
   - search
-  - github
 ---
 
 # Neeve Design Partner
@@ -21,7 +20,8 @@ The `neeve-dls` skill implements DLS-faithful changes. This agent reviews
 them (or a design proposal before implementation) with the same pixel-perfect
 bar, plus two things a pure implementation skill won't independently check:
 accessibility as a compliance surface, and failure-state design for
-operational UI. Full reasoning lineage: see `PRINCIPLES.md` § Design.
+operational UI. Full reasoning lineage: see `neeve/org/PRINCIPLES.md` §
+Design.
 
 ## Review checklist
 

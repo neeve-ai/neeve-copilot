@@ -74,7 +74,7 @@ See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for:
 
 ## Beyond Skills: House Rules and Agents
 
-Skills are one of four ways GitHub Copilot (and Claude Code, Cursor, Codex,
+Skills are one of three ways GitHub Copilot (and Claude Code, Cursor, Codex,
 Antigravity) get taught how Neeve works. In short:
 
 - **House rules** are always-on context — culture/ethos, engineering
@@ -84,20 +84,19 @@ Antigravity) get taught how Neeve works. In short:
   `~/.codex/AGENTS.md`, `~/.copilot/instructions/`). Re-running the
   installer refreshes it. Nothing is ever written into a product repo.
 - **Skills** are the deep how-to, loaded only when a task calls for them.
-- **Cross-tool agents** (`to-prd`, `to-erd`, `repo-guide`) are specialists
-  invoked by name rather than a how-to manual — source at
+- **Cross-tool agents** (`to-prd`, `to-erd`, `repo-guide`, and four
+  specialist reviewers — `neeve-reviewer`, `neeve-security-partner`,
+  `neeve-pm-partner`, `neeve-design-partner`) are specialists invoked by
+  name rather than a how-to manual — source at
   [`neeve/products/robin/agents-src/`](neeve/products/robin/agents-src/README.md),
   rendered into each tool's own native custom-agent mechanism where one
   exists (Claude Code, Copilot, Codex), and into the skill mechanism where
   it doesn't (Cursor, Antigravity). Invocation isn't identical everywhere —
-  see that folder's README for exactly how each tool differs.
-- **Org-wide agents** are a separate, older, GitHub-Enterprise-only
-  mechanism for specialist reviewers. Source lives in this repo at
-  [`neeve/org/`](neeve/org/README.md) and is exported to a separate
-  `neeve-ai/.github-private` repo when the org enables enterprise custom
-  agents — see that folder's README for the export steps and its current
-  reach (github.com Copilot only, and only once that Enterprise setup is
-  live — it does not reach Claude Code, Cursor, Codex, or Antigravity).
+  see that folder's README for exactly how each tool differs. The four
+  reviewers moved here from a GitHub-Enterprise-only mechanism
+  ([`neeve/org/`](neeve/org/README.md)) that reached zero engineers in
+  practice — one more still lives there, `neeve-ot-specialist`, gated on
+  SME content review rather than distribution.
 
 Full explanation (written for a non-technical reader too):
 [`neeve/products/robin/README.md`](neeve/products/robin/README.md#the-short-version).
@@ -127,9 +126,8 @@ repo-ask / repo-intel → to-spec → implement-spec → code-review
 
 **Built today:** the whole pipeline. `to-prd` and `to-erd` are agents (see
 "Beyond Skills" above) — invoke them by asking, not by learning a skill
-workflow. `neeve-pm-partner` and `neeve-design-partner` in
-[`neeve/org/`](neeve/org/README.md) remain the ad hoc reviewers alongside
-this, not replaced by it.
+workflow. `neeve-pm-partner` and `neeve-design-partner` (also cross-tool
+agents now) remain the ad hoc reviewers alongside this, not replaced by it.
 
 **Not built yet:**
 - **Living context, in full** — `repo-guide` (one of the cross-tool agents

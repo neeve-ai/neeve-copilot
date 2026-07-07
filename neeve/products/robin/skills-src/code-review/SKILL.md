@@ -73,6 +73,14 @@ Before reviewing, gather enough context to understand the change in-system.
    - `specs/`, `docs/contracts/`, `openapi.yaml`, or feature docs
    - `README*`, `docs/`, `AGENTS.md`, `CLAUDE.md`, release/testing guides
    - Helm chart docs and values when runtime behavior is affected
+   - this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if
+     registered — its `do_not_modify` list; a diff touching anything on it
+     without a called-out reason is a finding here, not something to wave
+     through because the reviewer happens to trust the author
+   - this repo's actual CI workflow (`.github/workflows/*.yml` or
+     equivalent) — every repo has some CI; know what it actually gates
+     (lint, type-check, tests, security/SCA scans) so Gate 4 below checks
+     against the real bar, not an assumed one
 3. Read the relevant tests, not just implementation.
 4. Classify the change. Most Neeve changes fall into one or more of:
    - backend/API service
@@ -189,6 +197,12 @@ Check that the change is backed by proof:
 
 Missing tests are a real finding when the change modifies business behavior, contracts, deployment,
 or failure handling.
+
+Cross-check against the actual CI workflow read during Required Discovery: if CI runs a check this
+review doesn't have visibility into (a scan, a gate only available in CI infrastructure), name that
+as a gap rather than silently treating local verification as equivalent. If CI itself is disabled or
+bypassed for a gate that should apply (a `workflows-disabled/` directory, a skipped required check),
+that's a Gate 4 finding, not something to leave for someone else to notice.
 
 ### Gate 5: Helm/Kubernetes Production Readiness
 

@@ -13,6 +13,9 @@ RENDER_SCRIPT="${SCRIPT_DIR}/scripts/context_render.py"
 MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_house_rules.py"
 AGENTS_RENDER_SCRIPT="${SCRIPT_DIR}/scripts/agents_render.py"
 AGENTS_SRC_DIR="${SCRIPT_DIR}/agents-src"
+SESSION_HOOK_MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_session_hook.py"
+REFRESH_CONTEXT_SCRIPT="${SCRIPT_DIR}/hooks-src/refresh-context.sh"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()  { echo -e "  ${GREEN}✓${NC} $*"; }
@@ -302,6 +305,26 @@ if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
   fi
 else
   warn "No scripts/agents_render.py or agents-src/ found — skipping agent install"
+fi
+
+# ── Freshness: global Claude Code SessionStart hook ──────────────────────────
+# Every engineer has their own local clone of neeve-copilot — a single
+# canonical context-src/repos/*.yaml only produces consistent answers across
+# engineers if everyone's clone is actually current, not just "current as of
+# whoever's last sync_skills.sh run." Claude Code supports a real global
+# SessionStart hook (~/.claude/settings.json) that can pull this repo and
+# reinstall automatically, quietly, only on days something actually changed —
+# confirmed via Claude Code's own docs, not assumed. No equivalent confirmed
+# for Copilot/Cursor/Codex/Antigravity yet — this is Claude-Code-only today,
+# stated plainly rather than implied to work everywhere.
+if $DO_CLAUDE && [[ -f "${SESSION_HOOK_MERGE_SCRIPT}" && -f "${REFRESH_CONTEXT_SCRIPT}" ]]; then
+  hdr "Freshness (Claude Code global SessionStart hook)"
+  HOOK_COMMAND="bash ${REFRESH_CONTEXT_SCRIPT} ${REPO_ROOT}"
+  if python3 "${SESSION_HOOK_MERGE_SCRIPT}" "${HOME}/.claude/settings.json" "${HOOK_COMMAND}" "refresh-context.sh" >/dev/null; then
+    ok "Claude Code  →  ~/.claude/settings.json (SessionStart hook, quiet no-op unless neeve-copilot has updates)"
+  else
+    err "Failed to install the SessionStart freshness hook — ~/.claude/settings.json left untouched"
+  fi
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────

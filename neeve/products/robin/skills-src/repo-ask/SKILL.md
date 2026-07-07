@@ -71,6 +71,12 @@ Use this shape to confirm before proceeding:
 If the question is unambiguous and the intent is clear, state the clarification check
 inline and proceed immediately — do not force a back-and-forth when none is needed.
 
+**Also check, before searching**: if this repo is registered in `neeve-copilot`'s
+`context-src/repos/<repo>.yaml`, note its `do_not_modify` list. If the question is
+heading toward a change to something on that list (not just understanding it), say so
+in the clarification check — mandatory here, not left to whether the person asking
+thought to consult `repo-guide` separately.
+
 ### Phase 1 — Choose a Search Strategy
 
 Before reading any file, decide the minimum search path that can answer the question.

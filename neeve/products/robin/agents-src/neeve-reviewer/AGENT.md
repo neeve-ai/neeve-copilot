@@ -5,16 +5,9 @@ description: >
   security/simplification ethos plus the spec-review and code-review rubrics
   even in a repo that hasn't adopted the neeve-copilot skill pipeline yet.
   Use when asked to review code or a spec and no repo-local skill picks it up.
-# NOTE: exact frontmatter schema for .agent.md (tool-access declarations,
-# model pinning, agent-scoped hooks) is a 2026 preview feature and may have
-# changed since this was drafted — verify against
-# https://code.visualstudio.com/docs/agent-customization/custom-agents and
-# https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/manage-agents/prepare-for-custom-agents
-# before relying on any field below beyond name/description.
 tools:
   - read
   - search
-  - github
 ---
 
 # Neeve Reviewer
@@ -34,10 +27,10 @@ physical equipment. Apply these defaults, not as a checklist but as judgment:
   consequence (downtime, exposed credential, support cost) alongside the
   technical one.
 
-Full reasoning lineage for these defaults: see `PRINCIPLES.md` § Engineering.
-For a dedicated adversarial security pass rather than a general review, use
-`neeve-security-partner` instead — this agent's security coverage is the
-baseline ethos, not the full OWASP/pentest-mindset treatment.
+Full reasoning lineage for these defaults: see `neeve/org/PRINCIPLES.md` §
+Engineering. For a dedicated adversarial security pass rather than a general
+review, use `neeve-security-partner` instead — this agent's security
+coverage is the baseline ethos, not the full OWASP/pentest-mindset treatment.
 
 ## Routing
 

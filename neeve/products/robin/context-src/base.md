@@ -168,6 +168,10 @@ agents, not less).
 | `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a security/ops-in-CRE-OT journey | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
 | `to-erd` | Turns a PRD into a compliance-aware work-item breakdown | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
 | `repo-guide` | Knows this specific repo — role, stack, structure/style, local dev, deploy | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+| `neeve-reviewer` | Ad hoc Neeve-flavored code/spec review, for any repo | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+| `neeve-security-partner` | Dedicated adversarial security pass — OWASP, pentest mindset, multi-tenancy | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+| `neeve-pm-partner` | PM-shaped review before/alongside `to-prd`/`to-spec` — named outcome, enterprise requirements, rollout story | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+| `neeve-design-partner` | DLS fidelity, accessibility, and failure-state design review | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
 
 ## Prompt Files (slash commands)
 

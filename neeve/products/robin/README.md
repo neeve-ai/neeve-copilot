@@ -22,14 +22,12 @@ Think of it like onboarding a new engineer:
 |---|---|---|---|
 | 1 | **House rules** | The onboarding doc every new hire reads on day one — always in the back of their mind | Culture/ethos, engineering principles, quality gates, the "state consequence and gaps" discipline, what Robin is and how its repos fit together. Installed once, globally, on your machine — not a file in any repo |
 | 2 | **Skills** | A manual the assistant only opens when the task calls for it | How to write a Neeve spec, how to review code, how to work with our design system, how to work with our building-automation stack |
-| 3 | **Cross-tool agents** | A specialist invoked by name, not a manual you have to open | `to-prd` (writes PRDs), `to-erd` (breaks a PRD into work items), `repo-guide` (knows this specific repo) — see `agents-src/` |
-| 4 | **Org-wide agents** | A specialist reserved for GitHub-Enterprise-only, company-wide use | A handful of reviewers (security, product, design) — see `neeve/org/`. Reaches github.com Copilot only, once that setup is live |
+| 3 | **Cross-tool agents** | A specialist invoked by name, not a manual you have to open | `to-prd`, `to-erd`, `repo-guide`, plus four specialist reviewers (`neeve-reviewer`, `neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) — see `agents-src/`. One more, `neeve-ot-specialist`, still lives in `neeve/org/`, gated on SME content review, not distribution |
 
 **One-line summary:** house rules set the mindset everywhere, all the time;
 skills give the deep how-to and only load when relevant; cross-tool agents
-are specialists you ask for by name, in whichever tool you're using; org-wide
-agents are the same idea but GitHub-Enterprise-only, for now. None of them
-can stop bad code from shipping — each product repo's own CI still does
+are specialists you ask for by name, in whichever tool you're using. None of
+them can stop bad code from shipping — each product repo's own CI still does
 that job, unrelated to this repo.
 
 **Why no per-repo instructions files or CI sync here anymore:** an earlier
@@ -235,13 +233,17 @@ cat /tmp/preview.md
 
 ---
 
-## Cross-Tool Agents: to-prd, to-erd, repo-guide
+## Cross-Tool Agents
 
-Three specialists, invoked by name rather than a workflow you have to
+Seven specialists, invoked by name rather than a workflow you have to
 trigger — `to-prd` (turns a problem into a PRD), `to-erd` (turns a PRD +
-optional prototype into a compliance-aware work-item breakdown), and
+optional prototype into a compliance-aware work-item breakdown),
 `repo-guide` (knows this specific repo's role, stack, structure/style,
-local dev, and deploy). Source lives in
+local dev, and deploy), and four reviewers migrated from `neeve/org/`'s old
+GitHub-Enterprise-only mechanism — `neeve-reviewer` (ad hoc code/spec
+review), `neeve-security-partner` (adversarial security pass),
+`neeve-pm-partner` (PM-shaped review), `neeve-design-partner` (DLS
+fidelity/accessibility/failure-state review). Source lives in
 [`agents-src/`](agents-src/README.md), one `AGENT.md` per agent, rendered
 by `scripts/agents_render.py` into every tool's own native custom-agent
 mechanism where one exists, and into a Skill where it doesn't.
@@ -257,6 +259,89 @@ for the full matrix):
 | GitHub Copilot (VS Code) | user-profile agents folder, `<name>.agent.md` | pick from the agent picker (not auto-triggered by default) |
 | Codex CLI | `~/.codex/agents/<name>.toml` | `/agent` — explicit only, does not auto-trigger |
 | Cursor / Antigravity | installed as a Skill instead (no native agent concept in either tool) | auto-triggers on phrasing, same as any other skill |
+
+## Keeping It Fresh: The SessionStart Hook
+
+`context-src/repos/*.yaml` (what `repo-guide` and the pipeline skills read)
+is one canonical source in principle — but every engineer has their own
+local clone of `neeve-copilot`, and it's only as current as their last
+`sync_skills.sh` run. Two engineers asking the same question on the same
+day can get different answers purely because one of them hasn't synced in
+three weeks. That's a different failure mode than "someone forgot to ask" —
+it's "everyone asked, and got different answers."
+
+### How it works
+
+Installing for Claude Code (`install.sh --claude-code` or `--all`) adds one
+more thing: a global `SessionStart` hook in `~/.claude/settings.json` that
+runs `hooks-src/refresh-context.sh` at the start of every Claude Code
+session, anywhere on the machine. It:
+
+1. Pulls `neeve-copilot` and compares the commit hash before/after.
+2. **Only if something actually changed**, re-runs `sync_skills.sh` (which
+   reinstalls skills, agents, and house rules) — a normal day with no
+   upstream changes is a fast, silent no-op, not extra latency every time.
+3. Appends one line to a local, per-engineer log
+   (`~/.claude/neeve-copilot-sync.log`) on **every** run, whether or not
+   anything changed: timestamp, user (`git config user.email`, falling back
+   to `whoami`), branch, before/after commit hash, and whether it updated.
+
+No other tool has a confirmed equivalent today (Copilot/Cursor/Codex/
+Antigravity's global hook mechanisms are either unconfirmed or explicit-only
+— see the invocation table above) — this is Claude-Code-only, stated
+plainly rather than implied to work everywhere.
+
+### What you gain
+
+- **Nobody has to remember to sync.** The strongest lever available for
+  the "everyone asked, got different answers" problem — it removes
+  reliance on individual habit entirely, for the tool where it's possible.
+- **A real, local audit trail.** `cat ~/.claude/neeve-copilot-sync.log`
+  answers "what commit is this machine actually on, and when did it last
+  check" with a fact, not a guess — useful the moment a `repo-guide` answer
+  looks stale and you want to know whether that's this machine's fault.
+
+### Why it's defensible
+
+- **Never blocks a session.** A failed pull (offline, no network, a local
+  change blocking a fast-forward) is caught and skipped silently — the
+  hook never prevents Claude Code from starting.
+- **Never forces anything.** It's a plain `git pull`, not a reset or a
+  force-push — if a local change would conflict, the pull simply fails and
+  is logged as `pulled=false`, nothing is overwritten.
+- **The log never leaves the machine.** `merge_session_hook.py` writes
+  `~/.claude/neeve-copilot-sync.log` locally only — this script never
+  pushes, uploads, or aggregates it anywhere. Centralizing that log across
+  engineers would be a separate, bigger decision (real reporting/telemetry
+  infrastructure), not something this hook does on its own.
+- **Every other setting survives untouched.** `merge_session_hook.py` is
+  idempotent JSON surgery (covered by 5 unit tests in
+  `test_merge_session_hook.py`) — it finds or creates exactly one managed
+  hook entry and leaves every other key and every other hook in
+  `~/.claude/settings.json` exactly as it found them, the same discipline
+  `merge_house_rules.py` already applies to `CLAUDE.md`.
+
+### Why it's scalable
+
+There's no per-engineer configuration and no central server — it's the same
+`git pull` + hash comparison for one engineer or a thousand. Adding an
+engineer doesn't add load anywhere; there's nothing to provision. The same
+property that makes `sync_skills.sh` itself scale (pull a public repo,
+reinstall locally) applies here unchanged.
+
+### Verified against a real repo, not just a simulation
+
+Before trusting this, it was proven end to end against `robin-kb-service`
+(a real product repo, over a real network round-trip — not a throwaway
+local bare repo):
+
+1. Pushed a real commit to a disposable branch (`test/refresh-context-verify`).
+2. Reset a second clone back to the commit *before* that push.
+3. Ran `refresh-context.sh` against that second clone and confirmed it:
+   - pulled the real new commit (`3e510a6` → `b17a61c`),
+   - logged `pulled=true updated=true` with the correct before/after hashes,
+   - and a second run against a now-current clone correctly logged
+     `updated=false` — the no-op case, verified, not assumed.
 
 ## Notes Per Tool
 

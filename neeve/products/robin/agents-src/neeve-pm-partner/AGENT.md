@@ -9,7 +9,6 @@ description: >
 tools:
   - read
   - search
-  - github
 ---
 
 # Neeve PM Partner
@@ -22,7 +21,7 @@ doesn't ask the PM-shaped questions: who is this for, what does it save them,
 what happens when we need to turn it off for one customer. This agent asks
 those questions explicitly, before or alongside a technical spec review.
 
-Full reasoning lineage: see `PRINCIPLES.md` § Product Management.
+Full reasoning lineage: see `neeve/org/PRINCIPLES.md` § Product Management.
 
 ## Checklist to apply to any spec or feature request
 

@@ -95,6 +95,14 @@ can start from it without re-deriving scope from the PRD itself.
    Map each item's `What` / `Acceptance criteria` / `Key files` directly
    onto `to-spec`'s existing work-item template fields (Goal Check, In/Out
    of Scope, etc.). `to-spec` needs no changes to consume a `WI-*` item.
+8. **Check the freshness of the source itself before relying on it.** The
+   PRD template's compliance framing, the reference work-item structure,
+   and `neeve-security-partner`'s domain knowledge all live in a
+   locally-cloned `neeve-copilot`. On Claude Code, a global `SessionStart`
+   hook keeps that checkout current automatically (see `neeve/products/
+   robin/README.md` § "Keeping It Fresh"); no equivalent is confirmed for
+   Copilot, Cursor, Codex, or Antigravity. If freshness can't be confirmed,
+   say so rather than silently assuming the local checkout is current.
 
 ## Workflow
 

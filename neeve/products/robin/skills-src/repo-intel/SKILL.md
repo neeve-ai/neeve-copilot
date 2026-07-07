@@ -27,7 +27,12 @@ A good `CONTEXT.md` lets anyone answer these questions without reading source fi
 - How is the code organized (modules, layers, boundaries)?
 - What are the key domain concepts and their relationships?
 - What are the API/event contracts this service owns or depends on?
-- How do I run, build, lint, and test this project locally?
+- How do I run, build, lint, and test this project locally — including any
+  environment quirk (a `.venv`/virtualenv that needs activating, a
+  `Makefile` target that wraps the raw command) that a bare command alone
+  would miss?
+- What does this repo's actual CI workflow (`.github/workflows/*.yml` or
+  equivalent) enforce, and does that match the documented local commands?
 - What patterns does the codebase enforce (error handling, auth, DI, async)?
 - What architectural decisions have been made and why?
 - What is out of scope or deliberately deferred?
@@ -52,6 +57,15 @@ Before scanning, confirm with the user:
 
 ### Phase 1 — Stack and Entry Point Discovery
 
+**First, check whether this repo is already registered in `neeve-copilot`'s
+`context-src/repos/<repo>.yaml`.** If it is, cross-check what follows
+against its `stack`, `do_not_modify`, and `test_cmd`/`lint_cmd` fields
+rather than deriving everything from scratch as if nothing were known —
+cite it, and if this scan finds something that contradicts the yaml (stack
+changed, a command no longer works), name that as a finding: it's a
+candidate for a `repo-guide`-proposed `context-src` fix, not something to
+silently prefer one source over the other.
+
 Identify the project's foundation without reading every file:
 
 - **Language and runtime:** check `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`,
@@ -60,6 +74,10 @@ Identify the project's foundation without reading every file:
   Spring, Gin, etc.
 - **Entry points:** `main.py`, `app.py`, `index.ts`, `cmd/`, `server.ts`, `wsgi.py`.
 - **Containerization:** `Dockerfile`, `docker-compose.yml`, Helm charts, `k8s/`.
+- **CI:** `.github/workflows/*.yml` or equivalent — what it actually lints/tests/scans.
+- **Environment quirks:** a Python virtualenv (`.venv`, `Pipfile`, `poetry.lock`) that
+  needs activating, or a `Makefile` that wraps the real test/lint/run commands — note
+  these explicitly rather than letting `CONTEXT.md` imply a bare command is sufficient.
 - **CI/CD:** `.github/workflows/`, `bitbucket-pipelines.yml`, `Makefile`, `.gitlab-ci.yml`.
 - **Monorepo signals:** `pnpm-workspace.yaml`, `nx.json`, `turbo.json`, `packages/`, `apps/`,
   `services/`.

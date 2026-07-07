@@ -170,6 +170,43 @@ Check the strongest local style sources that apply:
 - testing guides
 - contract docs
 - Helm/deployment docs
+- **this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if
+  registered** — its `do_not_modify` list (call out explicitly before
+  touching anything on it), and its documented `test_cmd`/`lint_cmd`. This
+  check is mandatory here, not left to whether someone thought to ask
+  `repo-guide` separately.
+- **this repo's actual CI workflow** (`.github/workflows/*.yml` or
+  equivalent) — every repo has some CI, and CI is the real gate, not the
+  yaml's documented commands or this skill's own judgment. Read what CI
+  actually runs (lint, type-check, unit/integration tests, security/SCA
+  scans) and treat that as the ground truth for "what must pass" — if it
+  differs from what `test_cmd`/`lint_cmd` documents, CI wins; flag the
+  drift as a gap (a `repo-guide`-proposed `context-src` fix candidate)
+  rather than silently trusting the possibly-stale yaml.
+
+**Don't paraphrase away environment quirks when running those commands.**
+A repo's real test/lint invocation often isn't the bare tool name — check
+for and use whichever of these actually applies before running anything,
+and before declaring the task done:
+- A Python virtualenv (`.venv`, `venv/`, or a `Pipfile`/`poetry` env) that
+  needs activating first (`source .venv/bin/activate`, `poetry run`, etc.)
+  — a bare `pytest` outside the right env silently runs against the wrong
+  interpreter/dependencies, or fails to import the package at all.
+- A `Makefile` target that wraps the raw command with required env vars,
+  flags, or setup steps (`make test`, `make lint`) — prefer the `make`
+  target over reconstructing the underlying command by hand whenever one
+  exists; the wrapping usually exists because the bare command alone
+  doesn't work correctly, and CI itself often invokes the same `make`
+  target rather than the raw tool.
+- Any other repo-specific quirk already captured in `local_dev_env_setup`/
+  `test_cmd`/`lint_cmd` (a required exported variable, a required running
+  service, a specific working directory) — treat these as load-bearing
+  facts to reuse verbatim, not prose to summarize loosely.
+
+**Definition of done includes matching CI, not just running something
+locally that looked similar.** If local verification can't exercise
+everything CI does (e.g. a scan that only runs in CI infrastructure), say
+so explicitly as a gap rather than silently declaring the task complete.
 
 ### Step 1.3 — Map the adjacent system
 

@@ -1,70 +1,68 @@
 # Feature Reference: Neeve Copilot Distribution System
 
 ## Feature Name
-Neeve Copilot Distribution System (Skills, Prompts, Hooks, and Always-On Instructions)
+Neeve Copilot Distribution System (Skills and Global House Rules)
 
 ## Description
 A central distribution system that gives every Neeve engineer the same AI
-skills, slash commands, warn-only hooks, and always-on repo context —
-identically, across Claude Code, GitHub Copilot, Cursor, Codex, and
-Antigravity — with zero hand-copying. Content lives once in this repo
-(`skills-src/`, `prompts-src/`, `hooks-src/`, `context-src/`) and is either
-installed to a developer's machine or rendered into a target repo.
+skills and house rules — identically, across Claude Code, GitHub Copilot,
+Cursor, Codex, and Antigravity — with zero hand-copying and nothing ever
+committed into a product repo. Content lives once in this repo
+(`skills-src/`, `context-src/`) and installs to each engineer's machine,
+globally.
 
 ## Key Functionalities
 - **One-command global install (`sync_skills.sh` → `neeve/products/robin/install.sh --all`)**:
-  pulls the latest from this repo and copies the 6 core skills into every
-  supported agent's global skill directory (`~/.claude/skills`,
-  `~/.codex/skills`, `~/.copilot/skills`, `~/.cursor/skills`,
-  `~/.gemini/antigravity/skills`).
-- **Project-scoped installs (`install.sh --project <path>`)**: commits
-  skills, prompts, and (where applicable) hooks directly into a target
-  repo's `.github/` so the whole team gets them on clone, no personal
-  install required.
-- **Always-on instructions render pipeline (`context_render.py`)**: composes
-  `context-src/base.md` + per-repo `context-src/repos/<repo>.yaml` into each
-  repo's `AGENTS.md` / `.github/copilot-instructions.md` / `CLAUDE.md` /
-  `.cursorrules` — identical content, one source of truth. A reusable CI
-  workflow (`context-drift-check.reusable.yml`) fails a repo's CI if its
-  committed files don't match a fresh render.
-- **Prompts (`.github/prompts/*.prompt.md`)**: slash-command wrappers around
-  the 6 skills, for editors that don't auto-trigger skills from natural
-  language.
-- **Warn-only hooks (`.github/hooks/`)**: session-start banners and
-  PreToolUse/PostToolUse checks (dangerous-command guard, spec-branch-purity
-  warning, a skill-usage audit log) — never block; CI is still the only
-  hard gate.
+  pulls the latest from this repo and installs both:
+  - the 6 core skills into every supported agent's global skill directory
+    (`~/.claude/skills`, `~/.codex/skills`, `~/.copilot/skills`,
+    `~/.cursor/skills`, `~/.gemini/antigravity/skills`)
+  - the house-rules content (culture/ethos, engineering principles, quality
+    gates, production-consequence discipline, product overview) into each
+    tool's own user-level instructions location — merged into
+    `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` without disturbing any
+    personal content already there, written standalone for Copilot
+    (`~/.copilot/instructions/neeve-house-rules.instructions.md`)
+- **House-rules render (`context_render.py --house-rules`)**: produces the
+  universal-only variant of `context-src/base.md` — no repo-specific
+  stack/commands/do-not-modify facts, no repo-conditional fragments (those
+  live in the skills that already trigger on their own: `to-spec`,
+  `ot-building-automation`, `neeve-dls`).
+- **Idempotent merge (`merge_house_rules.py`)**: re-running the installer
+  updates the house-rules block in `~/.claude/CLAUDE.md`/`~/.codex/AGENTS.md`
+  in place, marked by BEGIN/END comments, without touching anything else an
+  engineer has in that file.
 
 ## User Flow
 1. **Day-1 install:** clone this repo, run `bash sync_skills.sh` once — the
-   6 skills are now available in every project on the machine, in every
-   supported agent.
+   6 skills and the house rules are now available in every project on the
+   machine, in every supported agent.
 2. **Verify:** open any project, type `/skills` (Claude Code) or check the
-   `/`-command picker (Copilot/Cursor/Codex).
-3. **Usage:** the skills trigger automatically on matching phrasing (see the
-   trigger-phrase table in the top-level `README.md`), or invoke explicitly
-   via `/to-spec`, `/implement-spec`, `/code-review`, `/repo-ask`,
-   `/repo-intel`, `/neeve-dls`.
+   `/`-command picker (Copilot/Cursor/Codex). Preview the house rules with
+   `python3 neeve/products/robin/scripts/context_render.py --house-rules /tmp/preview.md`.
+3. **Usage:** the skills trigger automatically on matching phrasing, or
+   invoke explicitly via `/to-spec`, `/implement-spec`, `/code-review`,
+   `/repo-ask`, `/repo-intel`, `/neeve-dls`. House rules apply automatically,
+   every request, every repo — no invocation needed.
 4. **Update:** re-run `bash sync_skills.sh` any time to pick up changes —
    alias it (see top-level README) so it's a one-word habit.
-5. **Per-repo setup (maintainers/team leads):** run
-   `neeve/products/robin/install.sh --project <repo-path> --copilot` (or the
-   relevant agent flag) once per repo to commit skills/prompts/hooks/context
-   into that repo's `.github/`, so the whole team gets them without a
-   personal install step.
+5. **Cursor's global rules** live in Settings, not a plain file, so the
+   installer can't write them automatically — it prints a one-time manual
+   paste step (Command Palette → "Rules: User Rules").
 
 ## Technical Implementation
-- **Copy, not symlink**: every install path copies files into the target
-  location rather than symlinking to a shared source — a project-scoped
-  install is meant to be committed and reviewed like any other file, not a
-  live pointer back to this repo.
+- **Copy, not symlink**: skill installs copy files into the target location
+  rather than symlinking to a shared source.
+- **Merge, not overwrite**: house-rules installs into `~/.claude/CLAUDE.md`/
+  `~/.codex/AGENTS.md` only replace a clearly marked block, preserving any
+  other personal content in that file.
 - **No third-party content**: this system only distributes Neeve's own
-  `skills-src`/`prompts-src`/`hooks-src`/`context-src` — it does not pull in
-  or depend on any external community repo.
-- **Render, don't hand-edit**: `AGENTS.md`/`CLAUDE.md`/`copilot-instructions.md`/
-  `.cursorrules` are generated files. `context-drift-check` in each product
-  repo's CI fails if someone edits a rendered file directly instead of
-  `context-src/base.md`.
+  `skills-src`/`context-src` — it does not pull in or depend on any external
+  community repo.
+- **Nothing committed into product repos**: no `.github/copilot-instructions.md`,
+  `AGENTS.md`, `.cursorrules`, prompts, or hooks are ever written into any of
+  Neeve's product repos. If you find any of those as uncommitted files in a
+  product repo, they're leftovers from an earlier design — safe to delete.
 
 ## Non-functional requirements
 - **Compatibility**: install/sync scripts run under bash 3.2 (macOS default)
@@ -74,8 +72,17 @@ installed to a developer's machine or rendered into a target repo.
   repo plus local file copies only.
 
 ## History
-This repo previously also shipped a separate, unreconciled distribution path
-(`install.sh`/`load_agents.sh` at the repo root, curl-piped, pulling in a
-third-party `github/awesome-copilot` repo and three placeholder skills via
-`~/.agents/skills/`) that delivered none of Neeve's real skills, prompts, or
-hooks. It was removed — this document now describes the one real path.
+Two earlier designs were tried and abandoned in the same session that built
+this one:
+1. A March-2026 curl-piped installer (`install.sh`/`load_agents.sh` at the
+   repo root) that pulled in a third-party `github/awesome-copilot` repo and
+   three placeholder skills via `~/.agents/skills/` — delivered none of
+   Neeve's real skills. Removed.
+2. A per-repo render-and-commit model: `AGENTS.md`/`CLAUDE.md`/
+   `.github/copilot-instructions.md`/`.cursorrules` generated and committed
+   into all 16 product repos, kept fresh via a CI workflow that opened a
+   review PR on every merge. This worked, but meant maintaining GitHub
+   Actions automation across 16 repos for something VS Code/Copilot and
+   Claude Code already solve natively via user-level global instructions.
+   Replaced by the current design — nothing is committed into any product
+   repo at all.

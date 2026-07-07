@@ -37,6 +37,11 @@ jobs:
             fi
             rm -rf "$tmp_dir"
           done
+          echo "Smoke-testing --house-rules (global, no repo arg)..."
+          if ! python3 neeve/products/robin/scripts/context_render.py --house-rules "$(mktemp)"; then
+            echo "::error::context_render.py --house-rules failed"
+            FAIL=1
+          fi
           if [ "$FAIL" -eq 1 ]; then
             exit 1
           fi
@@ -46,10 +51,10 @@ jobs:
           echo "Running test_context_render.py..."
           python3 neeve/products/robin/scripts/test_context_render.py -v
 
-      - name: Run Context Sync Unit Tests
+      - name: Run House-Rules Merge Unit Tests
         run: |
-          echo "Running test_context_sync.py..."
-          python3 neeve/products/robin/scripts/test_context_sync.py -v
+          echo "Running test_merge_house_rules.py..."
+          python3 neeve/products/robin/scripts/test_merge_house_rules.py -v
 
       - name: Verify neeve/org Consistency
         run: |

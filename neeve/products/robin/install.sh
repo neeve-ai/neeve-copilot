@@ -9,8 +9,8 @@ SKILLS="code-review to-spec implement-spec neeve-dls repo-intel repo-ask"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZIP_DIR="${SKILLS_ZIP_DIR:-}"
 SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
-PROMPTS_SRC_DIR="${SCRIPT_DIR}/prompts-src"
-HOOKS_SRC_DIR="${SCRIPT_DIR}/hooks-src"
+RENDER_SCRIPT="${SCRIPT_DIR}/scripts/context_render.py"
+MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_house_rules.py"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()  { echo -e "  ${GREEN}✓${NC} $*"; }
@@ -30,20 +30,13 @@ global_path() {
   esac
 }
 
-# Returns the project-relative skills dir for a given agent name
-project_rel_path() {
-  case "$1" in
-    claude-code)  echo ".claude/skills" ;;
-    codex)        echo ".agents/skills" ;;
-    antigravity)  echo ".agents/skills" ;;
-    copilot)      echo ".github/skills" ;;
-    cursor)       echo ".cursor/skills" ;;
-  esac
-}
-
 usage() {
   cat <<EOF
 Usage: bash install.sh [OPTIONS]
+
+Everything installs to your machine only — global, user-level, never
+project-scoped. Nothing is ever committed into a product repo; neeve-copilot
+is the single centralized source, refreshed by re-running this script.
 
 Options:
   --all              Install for all supported agents (global scope)
@@ -51,15 +44,13 @@ Options:
   --codex            OpenAI Codex CLI
   --antigravity      Google Antigravity
   --copilot          GitHub Copilot (global user scope)
-  --cursor           Cursor IDE (global user scope)
-  --project PATH     Also install project-scoped copies into PATH
+  --cursor           Cursor IDE (prints a one-time manual paste step)
   --help             Show this help
 
 Examples:
   bash install.sh                              # auto-detect installed agents
   bash install.sh --all                        # install for every agent
   bash install.sh --claude-code --cursor       # specific agents only
-  bash install.sh --all --project ~/robin-ai   # global + project-scoped
 EOF
 }
 
@@ -70,7 +61,6 @@ DO_CODEX=false
 DO_ANTIGRAVITY=false
 DO_COPILOT=false
 DO_CURSOR=false
-PROJECT_ROOT=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -80,7 +70,6 @@ while [[ $# -gt 0 ]]; do
     --antigravity)  DO_ANTIGRAVITY=true ;;
     --copilot)      DO_COPILOT=true ;;
     --cursor)       DO_CURSOR=true ;;
-    --project)      shift; PROJECT_ROOT="${1:-}" ;;
     --help|-h)      usage; exit 0 ;;
     *) warn "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -202,72 +191,57 @@ $DO_ANTIGRAVITY && install_agent "antigravity"
 $DO_COPILOT     && install_agent "copilot"
 $DO_CURSOR      && install_agent "cursor"
 
-# ── Project-scoped install ────────────────────────────────────────────────────
-if [[ -n "$PROJECT_ROOT" ]]; then
-  if [[ ! -d "$PROJECT_ROOT" ]]; then
-    err "Project path not found: ${PROJECT_ROOT}"
-  else
-    # Track which relative paths we've already written (codex + antigravity share .agents/skills)
-    done_paths=""
-    install_project_agent() {
-      local agent="$1"
-      local rel
-      rel="$(project_rel_path "$agent")"
-      local abs="${PROJECT_ROOT}/${rel}"
-      # Skip if we already installed to this path
-      if echo "$done_paths" | grep -qF "|${rel}|"; then
-        return
-      fi
-      done_paths="${done_paths}|${rel}|"
-      hdr "project  →  ${abs}"
-      for skill in $SKILLS; do
-        if install_to "${skill}" "${abs}"; then
-          ok "${skill}  (${rel})"
-          TOTAL_OK=$((TOTAL_OK + 1))
-        else
-          err "${skill}"
-          TOTAL_FAIL=$((TOTAL_FAIL + 1))
-        fi
-      done
-    }
+# ── House rules: global, user-level, every workspace on this machine ────────
+# The shared culture/ethos/principles/quality-gates/product-overview content
+# (context-src/base.md, minus anything repo-specific) installs once per
+# engineer, into each tool's own user-level instructions location. Nothing is
+# ever written into a product repo — re-run this installer to refresh it
+# after context-src/base.md changes.
+if [[ -f "${RENDER_SCRIPT}" ]]; then
+  HOUSE_RULES_TMP="$(mktemp)"
+  trap 'rm -f "${HOUSE_RULES_TMP}"' EXIT
+  if python3 "${RENDER_SCRIPT}" --house-rules "${HOUSE_RULES_TMP}" >/dev/null; then
+    hdr "House rules (global, every workspace)"
 
-    $DO_CLAUDE      && install_project_agent "claude-code"
-    $DO_CODEX       && install_project_agent "codex"
-    $DO_ANTIGRAVITY && install_project_agent "antigravity"
-    $DO_COPILOT     && install_project_agent "copilot"
-    $DO_CURSOR      && install_project_agent "cursor"
-
-    # Prompts and hooks are Copilot/VS Code-specific project artifacts (no
-    # global-scope equivalent), so they're only written when Copilot is selected.
-    if $DO_COPILOT; then
-      hdr "project  →  ${PROJECT_ROOT}/.github/prompts"
-      if [[ -d "${PROMPTS_SRC_DIR}" ]]; then
-        mkdir -p "${PROJECT_ROOT}/.github/prompts"
-        cp "${PROMPTS_SRC_DIR}"/*.prompt.md "${PROJECT_ROOT}/.github/prompts/"
-        ok "6 prompt files"
-      else
-        warn "No prompts-src/ found — skipping prompt file install"
-      fi
-
-      hdr "project  →  ${PROJECT_ROOT}/.github/hooks"
-      if [[ -f "${HOOKS_SRC_DIR}/baseline.hooks.json" ]]; then
-        mkdir -p "${PROJECT_ROOT}/.github/hooks/scripts"
-        cp "${HOOKS_SRC_DIR}/baseline.hooks.json" "${PROJECT_ROOT}/.github/hooks/hooks.json"
-        cp "${HOOKS_SRC_DIR}/scripts/"*.sh "${PROJECT_ROOT}/.github/hooks/scripts/"
-        chmod +x "${PROJECT_ROOT}/.github/hooks/scripts/"*.sh
-        ok "hooks.json + $(ls "${HOOKS_SRC_DIR}/scripts" | wc -l | tr -d ' ') hook scripts"
-      else
-        warn "No hooks-src/baseline.hooks.json found — skipping hooks install"
-      fi
+    if $DO_CLAUDE; then
+      python3 "${MERGE_SCRIPT}" "${HOME}/.claude/CLAUDE.md" "${HOUSE_RULES_TMP}" >/dev/null
+      ok "Claude Code  →  ~/.claude/CLAUDE.md"
     fi
 
-    echo ""
-    warn "Commit project-scoped skills so your team gets them on git clone:"
-    echo "       cd ${PROJECT_ROOT}"
-    echo "       git add .claude/skills/ .github/skills/ .agents/skills/ .cursor/skills/"
-    echo "       git add .github/prompts/ .github/hooks/"
-    echo "       git commit -m 'chore: add Neeve engineering skills, prompts, and hooks'"
+    if $DO_CODEX; then
+      python3 "${MERGE_SCRIPT}" "${HOME}/.codex/AGENTS.md" "${HOUSE_RULES_TMP}" >/dev/null
+      ok "Codex CLI  →  ~/.codex/AGENTS.md"
+    fi
+
+    if $DO_COPILOT; then
+      mkdir -p "${HOME}/.copilot/instructions"
+      {
+        echo "---"
+        echo 'applyTo: "**"'
+        echo "---"
+        echo ""
+        cat "${HOUSE_RULES_TMP}"
+      } > "${HOME}/.copilot/instructions/neeve-house-rules.instructions.md"
+      ok "GitHub Copilot  →  ~/.copilot/instructions/neeve-house-rules.instructions.md"
+    fi
+
+    if $DO_ANTIGRAVITY; then
+      warn "Antigravity: no confirmed global-instructions file location yet — skipped. Flag to Neeve tooling if you know it."
+    fi
+
+    if $DO_CURSOR; then
+      warn "Cursor stores global rules in Settings > Rules > User Rules (not a plain file on disk),"
+      warn "so this can't be written automatically. One-time manual step:"
+      warn "  1. Open Cursor → Cmd/Ctrl+Shift+P → \"Rules: User Rules\""
+      warn "  2. Paste the contents of: ${HOUSE_RULES_TMP}"
+      warn "  (that temp file is deleted when this script exits — copy it now if needed:"
+      warn "   cat ${HOUSE_RULES_TMP} | pbcopy    # macOS clipboard)"
+    fi
+  else
+    err "context_render.py --house-rules failed — skipping house-rules install"
   fi
+else
+  warn "No scripts/context_render.py found — skipping house-rules install (skills-only mode)"
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────

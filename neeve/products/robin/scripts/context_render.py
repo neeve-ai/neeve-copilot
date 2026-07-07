@@ -226,6 +226,56 @@ no spec-review rubric, no hooks, no enforced quality gates are rendered here.
 """
 
 
+HOUSE_RULES_HEADER = """# Neeve Engineering — House Rules
+
+Read by: GitHub Copilot · OpenAI Codex · Claude Code (global instructions,
+every workspace on this machine).
+
+This file is rendered from `context-src/base.md` (house-rules variant, the
+universal parts only — no repo-specific stack/commands/do-not-modify) by
+`scripts/context_render.py --house-rules`. It is installed once per engineer
+via `install.sh`/`sync_skills.sh` into each tool's user-level instructions
+location, not committed into any product repo. Edit `context-src/base.md`,
+then re-run the installer to refresh it on your machine."""
+
+REPO_SPECIFIC_FRAGMENT_POINTER = """If this repo does spec-based development, touches the `dls-neeve` design
+system, or talks to Niagara/WebCTRL building-automation systems, the
+relevant skill (`to-spec`, `neeve-dls`, or `ot-building-automation`) carries
+the full rubric/notes for that and triggers on its own — it isn't
+duplicated here since it doesn't apply to every repo."""
+
+
+def render_house_rules() -> str:
+    """Universal-only variant of base.md: house rules with no repo-specific
+    facts and no repo-conditional fragments (those live in the skills that
+    already trigger on their own, not duplicated here) — installed once,
+    user-level, via install.sh, not committed into any product repo."""
+    base = BASE_MD.read_text()
+
+    # Drop the per-repo-render header/comment, replace with a house-rules one.
+    _, _, rest = base.partition("---\n\n## Why This Matters")
+    body = "## Why This Matters" + rest
+
+    # Drop the "## This Repo" section (repo-specific stack/local-dev).
+    before, _, after = body.partition("## This Repo")
+    _, _, after = after.partition("## Engineering Principles")
+    body = before + "## Engineering Principles" + after
+
+    rendered = (
+        body.replace("{{PRODUCT_OVERVIEW_FRAGMENT}}", render_product_overview_fragment())
+        .replace("{{PRODUCTION_CONSEQUENCE_FRAGMENT}}", render_production_consequence_fragment())
+        .replace("{{REPO_COMMANDS_BLOCK}}", "")
+        .replace("{{REPO_DO_NOT_MODIFY_BLOCK}}", "")
+        .replace("{{SPEC_REVIEW_FRAGMENT}}", "")
+        .replace("{{CODE_REVIEW_FRAGMENT}}", "")
+        .replace("{{OT_DOMAIN_FRAGMENT}}", "")
+        .replace("{{DLS_FRAGMENT}}", REPO_SPECIFIC_FRAGMENT_POINTER)
+    )
+    while "\n\n\n\n" in rendered:
+        rendered = rendered.replace("\n\n\n\n", "\n\n\n")
+    return HOUSE_RULES_HEADER + "\n\n---\n\n" + rendered.strip() + "\n"
+
+
 def render(repo: str) -> dict[str, str]:
     v = load_repo_vars(repo)
     if v.get("minimal"):
@@ -290,12 +340,26 @@ def cmd_write(repo: str, target: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("repo", help="Repo name, matching context-src/repos/<repo>.yaml")
+    parser.add_argument("repo", nargs="?", help="Repo name, matching context-src/repos/<repo>.yaml")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", metavar="TARGET_PATH", help="Diff rendered output against TARGET_PATH")
     mode.add_argument("--write", metavar="TARGET_PATH", help="Write rendered output into TARGET_PATH")
+    mode.add_argument(
+        "--house-rules",
+        metavar="OUTPUT_FILE",
+        help="Write the universal-only house-rules variant to OUTPUT_FILE (no repo arg needed)",
+    )
     args = parser.parse_args()
 
+    if args.house_rules:
+        out = Path(args.house_rules).expanduser().resolve()
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(render_house_rules())
+        print(f"Wrote: {out}")
+        return 0
+
+    if not args.repo:
+        parser.error("repo is required unless --house-rules is given")
     if args.check:
         return cmd_check(args.repo, Path(args.check).expanduser().resolve())
     return cmd_write(args.repo, Path(args.write).expanduser().resolve())

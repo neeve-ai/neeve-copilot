@@ -16,7 +16,10 @@ bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh
 #    Open any project, type: /skills
 ```
 
-That's it. The skills are now available in every project on your machine.
+That's it. The skills, and Neeve's shared house rules (culture/ethos,
+engineering principles, quality gates, product overview), are now available
+in every project on your machine — nothing is committed into any product
+repo to make this work.
 
 > **Keep skills up to date:** run `sync_skills.sh` any time — it pulls the latest
 > from this repo and reinstalls everything. Bookmark it or alias it.
@@ -61,40 +64,33 @@ scale check, security check, and code review. The skills enforce this automatica
 
 See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for:
 
-- Per-agent install paths and verification commands
-- Always-on context files (CLAUDE.md, AGENTS.md, .cursorrules) — **now generated**,
-  not hand-authored, from `context-src/`; see that README's "Whole System, In Plain
-  English" section for what changed and why
-- Project-scoped skill installation (commit skills to a repo for team sharing)
-- Prompts (`.github/prompts/`) and warn-only hooks (`.github/hooks/`)
+- Per-tool install paths and verification commands
+- House rules (culture/ethos, engineering principles, quality gates, product
+  overview) — installed globally via the same installer, merged into each
+  tool's own user-level instructions file, never committed into any repo
 - Troubleshooting
 
 ---
 
-## Beyond Skills: Instructions, Prompts, and Hooks
+## Beyond Skills: House Rules and Custom Agents
 
-Skills are one of five ways GitHub Copilot (and Claude Code, Cursor, Codex)
-can be taught how Neeve works. In short:
+Skills are one of three ways GitHub Copilot (and Claude Code, Cursor, Codex)
+get taught how Neeve works. In short:
 
-- **Instructions** (`AGENTS.md` / `copilot-instructions.md` / `CLAUDE.md` /
-  `.cursorrules`) are always-on context, generated from a shared template and
-  kept fresh automatically — a small trigger file in each product repo syncs
-  them (and prompts/hooks) fresh from this repo every time a PR merges to
-  that repo's `main`, opening a review PR if anything changed. Nothing is
-  bulk-pushed or hand-copied.
-- **Prompts** (`.github/prompts/`) are slash-command shortcuts to the six
-  skills above, kept in sync the same way.
-- **Hooks** (`.github/hooks/`) give a warning before a risky action (force-push
-  to `main`, editing code on a spec-only branch) — deliberately warn-only;
-  CI is still the only thing that actually blocks a bad merge.
+- **House rules** are always-on context — culture/ethos, engineering
+  principles, quality gates, the "state consequence and gaps" discipline,
+  and what Robin's product/repos are — installed once, globally, into each
+  tool's own user-level instructions location (`~/.claude/CLAUDE.md`,
+  `~/.codex/AGENTS.md`, `~/.copilot/instructions/`). Re-running the
+  installer refreshes it. Nothing is ever written into a product repo.
+- **Skills** are the deep how-to, loaded only when a task calls for them.
 - **Custom agents** are reserved for specialist, org-wide use cases. Their
   source lives in this repo at
   [`neeve/org/`](neeve/org/README.md) and is exported to a separate
   `neeve-ai/.github-private` repo when the org enables enterprise custom
   agents — see that folder's README for the export steps.
 
-Full explanation (written for a non-technical reader too) and the process for
-onboarding a repo or changing the shared template:
+Full explanation (written for a non-technical reader too):
 [`neeve/products/robin/README.md`](neeve/products/robin/README.md#the-short-version).
 
 ---

@@ -144,6 +144,26 @@ class FragmentGatingTests(unittest.TestCase):
         self.assertIn("Required in Every Output: Consequence and Gaps", out)
 
 
+class HouseRulesTests(unittest.TestCase):
+    """The user-level global instructions variant: no repo-specific facts,
+    no unrendered placeholders, no leftover conditional-fragment markers."""
+
+    def test_no_placeholders_leak(self) -> None:
+        out = cr.render_house_rules()
+        self.assertEqual(PLACEHOLDER_RE.findall(out), [])
+
+    def test_no_repo_specific_section(self) -> None:
+        out = cr.render_house_rules()
+        self.assertNotIn("## This Repo", out)
+
+    def test_universal_content_present(self) -> None:
+        out = cr.render_house_rules()
+        self.assertIn("Zero-trust by default", out)
+        self.assertIn("Required in Every Output: Consequence and Gaps", out)
+        self.assertIn("Product Overview: Robin", out)
+        self.assertIn("Skills Available", out)
+
+
 class RenderNoPlaceholderLeakTests(unittest.TestCase):
     """Regression guard: every {{PLACEHOLDER}} in base.md must be replaced for
     every registered repo. This is the test that would have caught a newly

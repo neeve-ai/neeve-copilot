@@ -6,6 +6,11 @@ format, and the same review bar. Set it up once, and it works the same way
 no matter which tool you or your teammates use, in every repo, with nothing
 ever committed into a product repo.
 
+This covers the `to-spec → implement-spec → code-review` half of Neeve's
+pipeline. For the bigger picture — PRD → prototype → ERD work items → spec —
+and what's still ahead, see the
+[top-level README's roadmap](../../../README.md#roadmap-the-north-star-pipeline).
+
 ---
 
 ## The Short Version

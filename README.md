@@ -95,6 +95,52 @@ Full explanation (written for a non-technical reader too):
 
 ---
 
+## Roadmap: The North-Star Pipeline
+
+Everything above is shipped and working today. It's building toward one
+pipeline: an idea becomes a PRD, a PRD becomes a prototype, a prototype
+becomes work items, and work items flow through the spec pipeline that
+already exists.
+
+```
+PM writes a PRD                       ← neeve-pm-partner reviews it ad hoc
+        ↓
+Designer prototypes the UI            ← neeve-dls, prototype mode
+        ↓
+PRD + prototype → an ERD              ← Engineering (Requirements) Document:
+                                         a work-item breakdown, modeled on
+                                         robin-adr's existing
+                                         Enterprise_Readiness_Workitems.md
+        ↓
+Each work item (WI-*) enters the existing, unmodified pipeline:
+repo-ask / repo-intel → to-spec → implement-spec → code-review
+```
+
+**Built today:** the bottom half of that pipeline (`to-spec` through
+`code-review`), plus `neeve-pm-partner` and `neeve-design-partner` in
+[`neeve/org/`](neeve/org/README.md) as ad hoc reviewers.
+
+**Not built yet:**
+- **`to-prd`** — a skill that turns a problem into a PRD, upstream of
+  `to-spec`. `neeve-pm-partner`'s review checklist is the intended Phase-1
+  gate for it, not a replacement.
+- **`to-erd`** — a skill that turns a PRD + prototype into a new
+  `robin-adr/erd/<feature-slug>-workitems.md`, whose individual `WI-*` items
+  are consumable by the existing `to-spec` unmodified.
+- **Living context** — `context-src/product-overview.md` and
+  `context-src/repos/*.yaml` (the source for the house rules'
+  product-overview section) should stay current as the product evolves,
+  without anyone having to remember to update them by hand, framed as a
+  feature/bug worth documenting, never a trade secret. A per-repo bot-PR
+  version of this was tried and abandoned (see "History" in
+  [`docs/Feature-Reference.md`](docs/Feature-Reference.md)) — it fought the
+  centralized, nothing-per-repo model this repo settled on. Whatever
+  replaces it has to update `context-src/` itself, in this repo, not 16
+  others; the exact mechanism is still an open design question, not yet
+  built.
+
+---
+
 ## Contributing Skills
 
 Skills live in [`neeve/products/robin/skills-src/`](neeve/products/robin/skills-src/).

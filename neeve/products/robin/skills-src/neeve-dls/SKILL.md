@@ -7,6 +7,13 @@ description: Work with the `dls-neeve` design-system repository and the shared `
 
 Use this skill to make disciplined changes in the Neeve design system without re-discovering the repo layout, typography tokens, or shared font package. Default to exact DLS fidelity, not approximation.
 
+**Two modes.** Default mode (below) targets `dls-neeve`/`fonts` themselves —
+component, token, typography, and font-package work. **PRD Prototype Mode**
+(see its own section further down) targets a *consuming* app instead, for
+throwaway UI built from a `to-prd` PRD, on a disposable `proto/*` branch.
+Confirm which mode applies before doing anything — if the task references a
+PRD or a feature-slug rather than a DLS component/token, it's prototype mode.
+
 ## Start Here
 
 **Before any edits**, confirm with the user where the repos live (or should be cloned). Ask:
@@ -135,6 +142,57 @@ If the localhost server cannot be started, say so explicitly and block the task 
 - If a change affects publishing or consumption, check the package README and pipeline files before changing the release flow.
 - Do not accept "visually similar" replacements for official DLS components, font settings, or token values.
 
+## Mode: PRD Prototype
+
+Use this mode when the task consumes a `to-prd` PRD (`robin-adr/prds/
+<feature-slug>.md`) and needs a throwaway, presentation-only UI to validate
+it — not a `dls-neeve`/`fonts` change. This is new scope for this skill:
+the target is a consuming app, not the design-system repo itself.
+
+**Target repo: always ask, no default.** Confirm with the user:
+
+> "Which repo does this prototype belong in — `robin-web` (most
+> admin-portal-shaped PRDs) or `robin` (extension/sidepanel-specific
+> features)? Default is neither — tell me which one."
+
+**Branch:** `proto/<feature-slug>` — the exact slug from the PRD's header,
+reused unchanged. This branch is **disposable and never merged to `main`**.
+Say so explicitly to the user before starting. Keep it around until `to-erd`
+has finished consuming it (Source-of-Truth references in the resulting
+work-items doc may point at it), then it's safe to delete.
+
+**Presentation-only, mocked data — no real backend wiring.** A prototype
+proves the UI matches the PRD's journeys, not that the backend works. Mock
+data and API responses rather than wiring real endpoints. A CI job,
+`proto-branch-purity`, mirrors `robin-ai`'s `spec-branch-purity` job shape
+and fails any `proto/*` PR that reaches real backend/API/schema files — the
+inverse concern of the original (which blocks code changes on a docs-only
+branch; this blocks real backend changes on a UI-only branch).
+
+**Fidelity bar is lower than component work, and that's correct, not
+sloppy.** Reuse existing DLS components and tokens exactly as normal DLS
+fidelity requires (don't improvise new visual treatments here either), but
+don't spend time on pixel-perfect polish for a throwaway — the point is
+validating the PRD's journeys read correctly as a real screen, not shipping
+production UI. Say this explicitly in the sign-off so nobody over-invests.
+
+**Still run Visual Verification and still emit the Sign-off Checklist**
+(below) when the prototype is ready for PM/design review — but extend it
+with one more row:
+
+```
+| All PRD scenarios from robin-adr/prds/<feature-slug>.md represented (✅/❌ per scenario) | | |
+```
+
+Fill in one row per journey/scenario named in the PRD, not a single
+pass/fail for the whole thing — a partial prototype should show exactly
+which scenarios are covered and which aren't (this is the same gap-analysis
+discipline every other agent/skill in this system applies, not new).
+
+**Handoff:** once sign-off passes, the prototype (plus the PRD) is ready for
+`to-erd`. State the `feature-slug` and the `proto/<feature-slug>` branch
+name as the handoff.
+
 ## Visual Sign-off Checklist
 
 This checklist is **mandatory**. Emit it in your response — filled in — before declaring any visual task done. Do not skip or abbreviate it. If any item cannot be confirmed, mark it ❌ and block the task with an explanation.
@@ -175,15 +233,17 @@ between context gathering and review for any UI-facing task.
 |---|---|
 | Unclear which DLS component or token to use | → `repo-ask` to trace existing usage in the consuming app |
 | Task requires understanding the consuming app's layout before changing a component | → `repo-ask` on the consuming app first |
+| PRD Prototype Mode | → `to-prd` agent (produces the PRD + feature-slug this mode consumes) |
 
 | Situation | Next skill after visual sign-off passes |
 |---|---|
 | Change touches TypeScript, CSS, or component logic beyond token wiring | → `code-review` for code correctness |
 | Change introduces a new DLS pattern not covered by an existing spec | → `to-spec` to document the new pattern |
+| PRD Prototype Mode sign-off passes | → `to-erd` agent (turns the PRD + prototype into work items) |
 | All visual checks and code review pass | → task is done |
 
-**Feeds into:** `code-review` (always for logic changes), `to-spec` (new DLS patterns)
-**Fed by:** `repo-ask`, `implement-spec`
+**Feeds into:** `code-review` (always for logic changes), `to-spec` (new DLS patterns), `to-erd` (PRD Prototype Mode only)
+**Fed by:** `repo-ask`, `implement-spec`, `to-prd` (PRD Prototype Mode only)
 
 Load `references/quality-gates.md` — gates 1 (linter), 2 (type checker), 3 (unit tests),
 and 7 (code-review) apply to every DLS code change regardless of scope.

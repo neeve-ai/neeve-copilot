@@ -11,6 +11,8 @@ ZIP_DIR="${SKILLS_ZIP_DIR:-}"
 SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
 RENDER_SCRIPT="${SCRIPT_DIR}/scripts/context_render.py"
 MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_house_rules.py"
+AGENTS_RENDER_SCRIPT="${SCRIPT_DIR}/scripts/agents_render.py"
+AGENTS_SRC_DIR="${SCRIPT_DIR}/agents-src"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()  { echo -e "  ${GREEN}✓${NC} $*"; }
@@ -244,6 +246,64 @@ else
   warn "No scripts/context_render.py found — skipping house-rules install (skills-only mode)"
 fi
 
+# ── Agents: cross-tool, rendered from agents-src/ ────────────────────────────
+# Claude Code, Copilot (VS Code), and Codex CLI each have a real, working,
+# global custom-agent mechanism — in three incompatible formats. Cursor and
+# Antigravity have none, so they get the same content as a Skill instead
+# (skills auto-trigger on phrasing, so this isn't a downgrade). One source
+# per agent (agents-src/<name>/AGENT.md), rendered per tool — see
+# agents-src/README.md.
+if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
+  AGENT_NAMES=()
+  for agent_dir in "${AGENTS_SRC_DIR}"/*/; do
+    [[ -f "${agent_dir}AGENT.md" ]] || continue
+    AGENT_NAMES+=("$(basename "${agent_dir}")")
+  done
+
+  if [[ ${#AGENT_NAMES[@]} -gt 0 ]]; then
+    hdr "Agents (cross-tool, rendered from agents-src/)"
+    for agent in "${AGENT_NAMES[@]}"; do
+      if $DO_CLAUDE; then
+        if python3 "${AGENTS_RENDER_SCRIPT}" "${agent}" --claude "${HOME}/.claude/agents/${agent}.md" >/dev/null; then
+          ok "Claude Code  →  ~/.claude/agents/${agent}.md"
+        else
+          err "Claude Code agent render failed: ${agent}"
+        fi
+      fi
+      if $DO_COPILOT; then
+        if python3 "${AGENTS_RENDER_SCRIPT}" "${agent}" --copilot "${HOME}/.copilot/agents/${agent}.agent.md" >/dev/null; then
+          ok "GitHub Copilot  →  ~/.copilot/agents/${agent}.agent.md"
+        else
+          err "Copilot agent render failed: ${agent}"
+        fi
+      fi
+      if $DO_CODEX; then
+        if python3 "${AGENTS_RENDER_SCRIPT}" "${agent}" --codex "${HOME}/.codex/agents/${agent}.toml" >/dev/null; then
+          ok "Codex CLI  →  ~/.codex/agents/${agent}.toml"
+        else
+          err "Codex agent render failed: ${agent}"
+        fi
+      fi
+      if $DO_CURSOR; then
+        if python3 "${AGENTS_RENDER_SCRIPT}" "${agent}" --skill-fallback "$(global_path cursor)" >/dev/null; then
+          ok "Cursor (skill fallback, no native agent concept)  →  $(global_path cursor)/${agent}/"
+        else
+          err "Cursor skill-fallback render failed: ${agent}"
+        fi
+      fi
+      if $DO_ANTIGRAVITY; then
+        if python3 "${AGENTS_RENDER_SCRIPT}" "${agent}" --skill-fallback "$(global_path antigravity)" >/dev/null; then
+          ok "Antigravity (skill fallback, no native agent concept)  →  $(global_path antigravity)/${agent}/"
+        else
+          err "Antigravity skill-fallback render failed: ${agent}"
+        fi
+      fi
+    done
+  fi
+else
+  warn "No scripts/agents_render.py or agents-src/ found — skipping agent install"
+fi
+
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
 echo "═══════════════════════════════════════════════════"
@@ -261,3 +321,9 @@ echo ""
 echo "Invoke manually:"
 echo "  /code-review  |  /to-spec  |  /implement-spec  |  /neeve-dls"
 echo "  \$code-review  |  \$to-spec  |  \$implement-spec  |  \$neeve-dls  (Codex)"
+echo ""
+echo "Agents (to-prd, to-erd, repo-guide) — invocation differs by tool:"
+echo "  Claude Code:      auto-triggers on phrasing, or @agent-<name>"
+echo "  Copilot (VS Code): pick from the agent picker (not auto-triggered by default)"
+echo "  Codex CLI:         /agent  (explicit only, does not auto-trigger)"
+echo "  Cursor/Antigravity: same as a skill — auto-triggers on phrasing"

@@ -56,6 +56,37 @@ jobs:
           echo "Running test_merge_house_rules.py..."
           python3 neeve/products/robin/scripts/test_merge_house_rules.py -v
 
+      - name: Run Agents Renderer Unit Tests
+        run: |
+          echo "Running test_agents_render.py..."
+          python3 neeve/products/robin/scripts/test_agents_render.py -v
+
+      - name: Verify Agents Renderer (smoke test every registered agent)
+        run: |
+          echo "Smoke-testing agents_render.py against every registered agent..."
+          FAIL=0
+          for agent_dir in neeve/products/robin/agents-src/*/; do
+            agent="$(basename "$agent_dir")"
+            [ -f "${agent_dir}AGENT.md" ] || continue
+            tmp_dir="$(mktemp -d)"
+            if ! python3 neeve/products/robin/scripts/agents_render.py "$agent" --claude "$tmp_dir/claude.md"; then
+              echo "::error::agents_render.py --claude failed for: $agent"; FAIL=1
+            fi
+            if ! python3 neeve/products/robin/scripts/agents_render.py "$agent" --copilot "$tmp_dir/copilot.agent.md"; then
+              echo "::error::agents_render.py --copilot failed for: $agent"; FAIL=1
+            fi
+            if ! python3 neeve/products/robin/scripts/agents_render.py "$agent" --codex "$tmp_dir/codex.toml"; then
+              echo "::error::agents_render.py --codex failed for: $agent"; FAIL=1
+            fi
+            if ! python3 neeve/products/robin/scripts/agents_render.py "$agent" --skill-fallback "$tmp_dir/skill"; then
+              echo "::error::agents_render.py --skill-fallback failed for: $agent"; FAIL=1
+            fi
+            rm -rf "$tmp_dir"
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+
       - name: Verify neeve/org Consistency
         run: |
           echo "Checking neeve/org agent citations stay consistent with security.md/PRINCIPLES.md..."

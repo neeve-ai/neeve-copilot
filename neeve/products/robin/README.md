@@ -9,7 +9,7 @@ ever committed into a product repo.
 This covers the `to-spec → implement-spec → code-review` half of Neeve's
 pipeline. For the bigger picture — PRD → prototype → ERD work items → spec —
 and what's still ahead, see the
-[top-level README's roadmap](../../../README.md#roadmap-the-north-star-pipeline).
+[top-level README's north-star pipeline](../../../README.md#the-north-star-pipeline).
 
 ---
 
@@ -22,12 +22,15 @@ Think of it like onboarding a new engineer:
 |---|---|---|---|
 | 1 | **House rules** | The onboarding doc every new hire reads on day one — always in the back of their mind | Culture/ethos, engineering principles, quality gates, the "state consequence and gaps" discipline, what Robin is and how its repos fit together. Installed once, globally, on your machine — not a file in any repo |
 | 2 | **Skills** | A manual the assistant only opens when the task calls for it | How to write a Neeve spec, how to review code, how to work with our design system, how to work with our building-automation stack |
-| 3 | **Custom agents** | A specialist you bring in for one job only | A handful of company-wide reviewers (security, product, design) — see `neeve/org/` |
+| 3 | **Cross-tool agents** | A specialist invoked by name, not a manual you have to open | `to-prd` (writes PRDs), `to-erd` (breaks a PRD into work items), `repo-guide` (knows this specific repo) — see `agents-src/` |
+| 4 | **Org-wide agents** | A specialist reserved for GitHub-Enterprise-only, company-wide use | A handful of reviewers (security, product, design) — see `neeve/org/`. Reaches github.com Copilot only, once that setup is live |
 
 **One-line summary:** house rules set the mindset everywhere, all the time;
-skills give the deep how-to and only load when relevant; agents are for
-specialist jobs. None of them can stop bad code from shipping — each
-product repo's own CI still does that job, unrelated to this repo.
+skills give the deep how-to and only load when relevant; cross-tool agents
+are specialists you ask for by name, in whichever tool you're using; org-wide
+agents are the same idea but GitHub-Enterprise-only, for now. None of them
+can stop bad code from shipping — each product repo's own CI still does
+that job, unrelated to this repo.
 
 **Why no per-repo instructions files or CI sync here anymore:** an earlier
 version of this system rendered `AGENTS.md`/`CLAUDE.md`/etc. into every
@@ -231,6 +234,29 @@ cat /tmp/preview.md
 ```
 
 ---
+
+## Cross-Tool Agents: to-prd, to-erd, repo-guide
+
+Three specialists, invoked by name rather than a workflow you have to
+trigger — `to-prd` (turns a problem into a PRD), `to-erd` (turns a PRD +
+optional prototype into a compliance-aware work-item breakdown), and
+`repo-guide` (knows this specific repo's role, stack, structure/style,
+local dev, and deploy). Source lives in
+[`agents-src/`](agents-src/README.md), one `AGENT.md` per agent, rendered
+by `scripts/agents_render.py` into every tool's own native custom-agent
+mechanism where one exists, and into a Skill where it doesn't.
+
+**Installed by the same `sync_skills.sh`/`install.sh` you already run** —
+no separate step. **Invocation differs by tool, on purpose, not by
+accident** (researched directly, not assumed — see `agents-src/README.md`
+for the full matrix):
+
+| Tool | Where it lands | How you invoke it |
+|---|---|---|
+| Claude Code | `~/.claude/agents/<name>.md` | auto-triggers on phrasing, or `@agent-<name>` |
+| GitHub Copilot (VS Code) | user-profile agents folder, `<name>.agent.md` | pick from the agent picker (not auto-triggered by default) |
+| Codex CLI | `~/.codex/agents/<name>.toml` | `/agent` — explicit only, does not auto-trigger |
+| Cursor / Antigravity | installed as a Skill instead (no native agent concept in either tool) | auto-triggers on phrasing, same as any other skill |
 
 ## Notes Per Tool
 

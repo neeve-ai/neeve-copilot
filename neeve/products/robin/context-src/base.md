@@ -147,6 +147,28 @@ The skill chain: `repo-ask`/`repo-intel` (understand) → `to-spec` (agree scope
 checkpoint; loops back if findings require changes). `neeve-dls` runs alongside
 `implement-spec` for UI/DLS surfaces.
 
+The full north-star pipeline, when a feature starts from a product idea
+rather than an existing spec: `to-prd` (PRD) → `neeve-dls` PRD Prototype Mode
+(optional, UI only) → `to-erd` (work-item breakdown) → the chain above,
+once per work item.
+
+## Agents Available
+
+Unlike skills, these are specialist agents, not always-loaded workflows —
+and **invocation is not identical across tools** (researched directly
+against each tool's mechanism, not assumed): Claude Code and Codex auto- or
+explicitly-invoke a real native agent; Copilot in VS Code shows them in an
+agent picker rather than auto-triggering by default; Cursor and Antigravity
+have no native agent concept, so they get the same content as a Skill
+instead (which does auto-trigger — more automatic than Codex's explicit-only
+agents, not less).
+
+| Agent | Does | Claude Code / Codex | Copilot (VS Code) | Cursor / Antigravity |
+|-------|------|---------------------|--------------------|-----------------------|
+| `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a security/ops-in-CRE-OT journey | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+| `to-erd` | Turns a PRD into a compliance-aware work-item breakdown | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+| `repo-guide` | Knows this specific repo — role, stack, structure/style, local dev, deploy | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+
 ## Prompt Files (slash commands)
 
 If your editor surfaces `.github/prompts/*.prompt.md` as slash commands, the

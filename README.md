@@ -72,10 +72,10 @@ See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for:
 
 ---
 
-## Beyond Skills: House Rules and Custom Agents
+## Beyond Skills: House Rules and Agents
 
-Skills are one of three ways GitHub Copilot (and Claude Code, Cursor, Codex)
-get taught how Neeve works. In short:
+Skills are one of four ways GitHub Copilot (and Claude Code, Cursor, Codex,
+Antigravity) get taught how Neeve works. In short:
 
 - **House rules** are always-on context — culture/ethos, engineering
   principles, quality gates, the "state consequence and gaps" discipline,
@@ -84,60 +84,64 @@ get taught how Neeve works. In short:
   `~/.codex/AGENTS.md`, `~/.copilot/instructions/`). Re-running the
   installer refreshes it. Nothing is ever written into a product repo.
 - **Skills** are the deep how-to, loaded only when a task calls for them.
-- **Custom agents** are reserved for specialist, org-wide use cases. Their
-  source lives in this repo at
+- **Cross-tool agents** (`to-prd`, `to-erd`, `repo-guide`) are specialists
+  invoked by name rather than a how-to manual — source at
+  [`neeve/products/robin/agents-src/`](neeve/products/robin/agents-src/README.md),
+  rendered into each tool's own native custom-agent mechanism where one
+  exists (Claude Code, Copilot, Codex), and into the skill mechanism where
+  it doesn't (Cursor, Antigravity). Invocation isn't identical everywhere —
+  see that folder's README for exactly how each tool differs.
+- **Org-wide agents** are a separate, older, GitHub-Enterprise-only
+  mechanism for specialist reviewers. Source lives in this repo at
   [`neeve/org/`](neeve/org/README.md) and is exported to a separate
   `neeve-ai/.github-private` repo when the org enables enterprise custom
-  agents — see that folder's README for the export steps.
+  agents — see that folder's README for the export steps and its current
+  reach (github.com Copilot only, and only once that Enterprise setup is
+  live — it does not reach Claude Code, Cursor, Codex, or Antigravity).
 
 Full explanation (written for a non-technical reader too):
 [`neeve/products/robin/README.md`](neeve/products/robin/README.md#the-short-version).
 
 ---
 
-## Roadmap: The North-Star Pipeline
+## The North-Star Pipeline
 
-Everything above is shipped and working today. It's building toward one
-pipeline: an idea becomes a PRD, a PRD becomes a prototype, a prototype
-becomes work items, and work items flow through the spec pipeline that
-already exists.
+An idea becomes a PRD, a PRD becomes a prototype, a prototype becomes work
+items, and work items flow through the spec pipeline that already exists —
+all built and working today:
 
 ```
-PM writes a PRD                       ← neeve-pm-partner reviews it ad hoc
+PM asks to-prd for a PRD              ← led by a security/ops-in-CRE-OT
+                                         journey; neeve-pm-partner's
+                                         checklist runs as part of it
         ↓
-Designer prototypes the UI            ← neeve-dls, prototype mode
-        ↓
-PRD + prototype → an ERD              ← Engineering (Requirements) Document:
-                                         a work-item breakdown, modeled on
-                                         robin-adr's existing
-                                         Enterprise_Readiness_Workitems.md
+Designer prototypes the UI            ← neeve-dls, PRD Prototype Mode
+        ↓ (optional — skipped for non-UI features)
+PRD + prototype → to-erd              ← a compliance-aware work-item
+                                         breakdown, grounded in the actual
+                                         repo(s), not just the PRD's prose
         ↓
 Each work item (WI-*) enters the existing, unmodified pipeline:
 repo-ask / repo-intel → to-spec → implement-spec → code-review
 ```
 
-**Built today:** the bottom half of that pipeline (`to-spec` through
-`code-review`), plus `neeve-pm-partner` and `neeve-design-partner` in
-[`neeve/org/`](neeve/org/README.md) as ad hoc reviewers.
+**Built today:** the whole pipeline. `to-prd` and `to-erd` are agents (see
+"Beyond Skills" above) — invoke them by asking, not by learning a skill
+workflow. `neeve-pm-partner` and `neeve-design-partner` in
+[`neeve/org/`](neeve/org/README.md) remain the ad hoc reviewers alongside
+this, not replaced by it.
 
 **Not built yet:**
-- **`to-prd`** — a skill that turns a problem into a PRD, upstream of
-  `to-spec`. `neeve-pm-partner`'s review checklist is the intended Phase-1
-  gate for it, not a replacement.
-- **`to-erd`** — a skill that turns a PRD + prototype into a new
-  `robin-adr/erd/<feature-slug>-workitems.md`, whose individual `WI-*` items
-  are consumable by the existing `to-spec` unmodified.
-- **Living context** — `context-src/product-overview.md` and
-  `context-src/repos/*.yaml` (the source for the house rules'
-  product-overview section) should stay current as the product evolves,
-  without anyone having to remember to update them by hand, framed as a
-  feature/bug worth documenting, never a trade secret. A per-repo bot-PR
-  version of this was tried and abandoned (see "History" in
+- **Living context, in full** — `repo-guide` (one of the cross-tool agents
+  above) now proposes a fix whenever it catches a stale
+  `context-src/repos/<repo>.yaml` fact or a real gap, closing the per-repo
+  half of this. What's still open: whether `context-src/product-overview.md`'s
+  cross-repo narrative facts stay current the same way. A per-repo bot-PR
+  version of a broader mechanism was tried and abandoned (see "History" in
   [`docs/Feature-Reference.md`](docs/Feature-Reference.md)) — it fought the
-  centralized, nothing-per-repo model this repo settled on. Whatever
-  replaces it has to update `context-src/` itself, in this repo, not 16
-  others; the exact mechanism is still an open design question, not yet
-  built.
+  centralized, nothing-per-repo model this repo settled on; whatever closes
+  the remaining gap has to update `context-src/` itself, in this repo, not
+  16 others.
 
 ---
 

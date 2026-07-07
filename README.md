@@ -21,6 +21,11 @@ engineering principles, quality gates, product overview), are now available
 in every project on your machine — nothing is committed into any product
 repo to make this work.
 
+**Stuck, or not sure what to use next?** Ask `neeve-guide` — "help me set up
+neeve-copilot" or "what should I use for X" — it's the one agent meant to be
+asked first, for setup and for figuring out which of the other 13
+skills/agents fits a task. See [`agents-src/README.md`](neeve/products/robin/agents-src/README.md).
+
 > **Keep skills up to date:** run `sync_skills.sh` any time — it pulls the latest
 > from this repo and reinstalls everything. Bookmark it or alias it.
 > ```bash
@@ -84,10 +89,10 @@ Antigravity) get taught how Neeve works. In short:
   `~/.codex/AGENTS.md`, `~/.copilot/instructions/`). Re-running the
   installer refreshes it. Nothing is ever written into a product repo.
 - **Skills** are the deep how-to, loaded only when a task calls for them.
-- **Cross-tool agents** (`to-prd`, `to-erd`, `repo-guide`, and four
-  specialist reviewers — `neeve-reviewer`, `neeve-security-partner`,
-  `neeve-pm-partner`, `neeve-design-partner`) are specialists invoked by
-  name rather than a how-to manual — source at
+- **Cross-tool agents** (`neeve-guide` for setup/triage, `to-prd`, `to-erd`,
+  `repo-guide`, and four specialist reviewers — `neeve-reviewer`,
+  `neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) are
+  specialists invoked by name rather than a how-to manual — source at
   [`neeve/products/robin/agents-src/`](neeve/products/robin/agents-src/README.md),
   rendered into each tool's own native custom-agent mechanism where one
   exists (Claude Code, Copilot, Codex), and into the skill mechanism where

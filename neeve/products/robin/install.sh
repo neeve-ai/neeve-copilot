@@ -5,8 +5,17 @@
 # =============================================================================
 set -euo pipefail
 
-SKILLS="code-review to-spec implement-spec neeve-dls repo-intel repo-ask"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Auto-discovered from skills-src/ (mirrors skills_sync.sh's own discover_skills()
+# and the agents-src discovery loop below) — a hardcoded list here previously let
+# ot-building-automation silently never get installed after it was added to
+# skills-src/ without this list being updated. Never hardcode this again.
+SKILLS=""
+for skill_dir in "${SCRIPT_DIR}"/skills-src/*/; do
+  [[ -f "${skill_dir}SKILL.md" ]] || continue
+  SKILLS="${SKILLS} $(basename "${skill_dir}")"
+done
+SKILLS="${SKILLS# }"
 ZIP_DIR="${SKILLS_ZIP_DIR:-}"
 SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
 RENDER_SCRIPT="${SCRIPT_DIR}/scripts/context_render.py"
@@ -341,9 +350,9 @@ echo "  Cursor:                 /skills  (chat panel)"
 echo "  Copilot (VS Code):      /skills  (Copilot chat)"
 echo "  Antigravity:            @skills"
 echo ""
-echo "Invoke manually:"
-echo "  /code-review  |  /to-spec  |  /implement-spec  |  /neeve-dls"
-echo "  \$code-review  |  \$to-spec  |  \$implement-spec  |  \$neeve-dls  (Codex)"
+echo "Invoke manually (${SKILLS// /, }):"
+echo "  /<skill-name>   (Claude Code / Copilot / Cursor / Antigravity)"
+echo "  \$<skill-name>   (Codex)"
 echo ""
 echo "Agents (to-prd, to-erd, repo-guide) — invocation differs by tool:"
 echo "  Claude Code:      auto-triggers on phrasing, or @agent-<name>"

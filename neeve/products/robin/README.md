@@ -22,7 +22,7 @@ Think of it like onboarding a new engineer:
 |---|---|---|---|
 | 1 | **House rules** | The onboarding doc every new hire reads on day one — always in the back of their mind | Culture/ethos, engineering principles, quality gates, the "state consequence and gaps" discipline, what Robin is and how its repos fit together. Installed once, globally, on your machine — not a file in any repo |
 | 2 | **Skills** | A manual the assistant only opens when the task calls for it | How to write a Neeve spec, how to review code, how to work with our design system, how to work with our building-automation stack |
-| 3 | **Cross-tool agents** | A specialist invoked by name, not a manual you have to open | `to-prd`, `to-erd`, `repo-guide`, plus four specialist reviewers (`neeve-reviewer`, `neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) — see `agents-src/`. One more, `neeve-ot-specialist`, still lives in `neeve/org/`, gated on SME content review, not distribution |
+| 3 | **Cross-tool agents** | A specialist invoked by name, not a manual you have to open | `neeve-guide` (ask this one first — setup + "what should I use" triage), `to-prd`, `to-erd`, `repo-guide`, plus four specialist reviewers (`neeve-reviewer`, `neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) — see `agents-src/`. One more, `neeve-ot-specialist`, still lives in `neeve/org/`, gated on SME content review, not distribution |
 
 **One-line summary:** house rules set the mindset everywhere, all the time;
 skills give the deep how-to and only load when relevant; cross-tool agents
@@ -235,18 +235,27 @@ cat /tmp/preview.md
 
 ## Cross-Tool Agents
 
-Seven specialists, invoked by name rather than a workflow you have to
-trigger — `to-prd` (turns a problem into a PRD), `to-erd` (turns a PRD +
-optional prototype into a compliance-aware work-item breakdown),
-`repo-guide` (knows this specific repo's role, stack, structure/style,
-local dev, and deploy), and four reviewers migrated from `neeve/org/`'s old
-GitHub-Enterprise-only mechanism — `neeve-reviewer` (ad hoc code/spec
-review), `neeve-security-partner` (adversarial security pass),
-`neeve-pm-partner` (PM-shaped review), `neeve-design-partner` (DLS
+Eight specialists, invoked by name rather than a workflow you have to
+trigger. Start with `neeve-guide` — setup help, plus "which of these seven
+do I actually need" triage — then `to-prd` (turns a problem into a PRD),
+`to-erd` (turns a PRD + optional prototype into a compliance-aware
+work-item breakdown), `repo-guide` (knows this specific repo's role, stack,
+structure/style, local dev, and deploy), and four reviewers migrated from
+`neeve/org/`'s old GitHub-Enterprise-only mechanism — `neeve-reviewer` (ad
+hoc code/spec review), `neeve-security-partner` (adversarial security
+pass), `neeve-pm-partner` (PM-shaped review), `neeve-design-partner` (DLS
 fidelity/accessibility/failure-state review). Source lives in
 [`agents-src/`](agents-src/README.md), one `AGENT.md` per agent, rendered
 by `scripts/agents_render.py` into every tool's own native custom-agent
 mechanism where one exists, and into a Skill where it doesn't.
+
+`neeve-guide` deliberately stays a lightweight **router** (classify the
+ask, point at one specialist), not a heavier **orchestrator** that spawns
+and coordinates other agents itself — Anthropic's own published research
+puts that heavier pattern at roughly 15× the token cost of a single-agent
+exchange and calls coding tasks a weak fit for it. See
+[`agents-src/README.md`](agents-src/README.md#when-to-write-an-agent-instead-of-a-skill)
+for the citations.
 
 **Installed by the same `sync_skills.sh`/`install.sh` you already run** —
 no separate step. **Invocation differs by tool, on purpose, not by

@@ -165,6 +165,7 @@ agents, not less).
 
 | Agent | Does | Claude Code / Codex | Copilot (VS Code) | Cursor / Antigravity |
 |-------|------|---------------------|--------------------|-----------------------|
+| `neeve-guide` | Setup help, plus "which skill/agent do I use for X" triage | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
 | `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a security/ops-in-CRE-OT journey | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
 | `to-erd` | Turns a PRD into a compliance-aware work-item breakdown | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
 | `repo-guide` | Knows this specific repo — role, stack, structure/style, local dev, deploy | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |

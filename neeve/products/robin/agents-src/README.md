@@ -1,12 +1,13 @@
 # Agents: cross-tool custom agents, rendered from one source
 
 This directory holds Neeve's custom agents — `to-prd`, `to-erd`,
-`repo-guide`, and four specialist reviewers migrated from `neeve/org/`
-(`neeve-reviewer`, `neeve-security-partner`, `neeve-pm-partner`,
-`neeve-design-partner`) — each authored once as `agents-src/<name>/AGENT.md`
-and rendered by `scripts/agents_render.py` into every tool's own native
-format. It exists alongside `skills-src/` (seven Agent Skills: `repo-intel`,
-`repo-ask`, `to-spec`, `implement-spec`, `code-review`, `neeve-dls`,
+`repo-guide`, `neeve-guide` (setup + lightweight task triage), and four
+specialist reviewers migrated from `neeve/org/` (`neeve-reviewer`,
+`neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) —
+each authored once as `agents-src/<name>/AGENT.md` and rendered by
+`scripts/agents_render.py` into every tool's own native format. It exists
+alongside `skills-src/` (seven Agent Skills: `repo-intel`, `repo-ask`,
+`to-spec`, `implement-spec`, `code-review`, `neeve-dls`,
 `ot-building-automation`) for workflows that specifically need agent
 behavior — see "When to write an agent instead of a skill" below.
 
@@ -42,6 +43,8 @@ agents-src/
   to-erd/
     AGENT.md
   repo-guide/
+    AGENT.md
+  neeve-guide/
     AGENT.md
   neeve-reviewer/
     AGENT.md
@@ -80,6 +83,16 @@ a skill can't express as cleanly:
 - **Isolated tool access or subagent delegation** — the workflow should run
   with a restricted tool set, or needs to spawn/coordinate its own
   subagents, not just follow a linear instruction set.
+- **An entry point for "I don't know what to use," not a task in itself** —
+  `neeve-guide` is this: setup help plus a lightweight routing
+  recommendation, deliberately scoped to Anthropic's cheap **routing**
+  pattern (classify, point at one specialist) rather than the far more
+  expensive **orchestrator-workers** pattern (spawn multiple subagents,
+  synthesize results — confirmed ~15× the token cost of a single-agent
+  chat, and a documented weak fit for coding tasks specifically). See
+  `neeve-guide/AGENT.md`'s own "Why This Agent Exists" section for the
+  citations — don't let a future edit to this agent drift it toward the
+  heavier pattern without re-deriving that cost/benefit call first.
 
 If none of those apply, it's a skill — that's still the right default for
 most new workflows.

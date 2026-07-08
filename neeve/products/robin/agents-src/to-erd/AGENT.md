@@ -74,7 +74,14 @@ can start from it without re-deriving scope from the PRD itself.
    to create/change` list built from guessing at plausible-sounding paths
    is exactly the failure mode this rule exists to prevent. If `repo-ask`/
    `repo-intel` output already exists for a Source-of-Truth repo, use it
-   instead of re-scanning from scratch.
+   instead of re-scanning from scratch. If a work item's feasibility hinges
+   on how a third-party library, framework, or external service actually
+   behaves — not just where a file lives — invoke `debug-trace` instead of
+   `repo-ask`/`repo-intel`: this is exactly the exhaustive, research-backed
+   grounding a work item's `Key files to create/change` and dependency
+   claims need before another engineer treats them as reliable. Note the
+   **Depth check** line (`debug-trace`'s Disclosure Requirement) next to any
+   item whose feasibility rested on it.
 5. **Compliance is a field, not a section — populate it per item, from the
    PRD, or mark it "N/A."** Every work item gets a `**Compliance:**` line
    (see Output Template) populated from the source PRD's Security &

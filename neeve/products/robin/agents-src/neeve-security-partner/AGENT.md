@@ -45,6 +45,14 @@ re-derive rules from memory, that file is the canonical source and includes:
   least-privilege service credentials, audit logging for compliance-relevant
   actions, secrets rotation, service-to-service zero-trust.
 
+If a finding depends on whether a specific dependency version has a known
+vulnerability, or on how an auth/crypto library actually behaves, invoke
+`debug-trace` to research it and ground the exact version this repo pins —
+the same "do not re-derive from memory" discipline this agent already
+applies to `references/security.md` applies equally to claims about a
+third-party dependency's security posture. Include the **Depth check** line
+(`debug-trace`'s Disclosure Requirement) in the finding.
+
 ## Escalation, not just findings
 
 Some things aren't code-review findings, they're PM/leadership escalations:

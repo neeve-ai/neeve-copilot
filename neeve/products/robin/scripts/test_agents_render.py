@@ -85,13 +85,18 @@ class RenderTargetTests(unittest.TestCase):
         self.assertTrue(out.startswith("---\n"))
         self.assertIn("name: sample-agent", out)
         self.assertIn("description: >", out)
-        self.assertIn("tools:\n  - read\n  - write", out)
+        # Semantic "read"/"write" translate to Claude Code's real,
+        # capitalized tool names — not passed through verbatim.
+        self.assertIn("tools:\n  - Read\n  - Write\n  - Edit", out)
         self.assertIn("## Workflow", out)
 
     def test_copilot_render_has_target_and_user_invocable(self) -> None:
         out = ar.render_copilot(self.agent)
         self.assertIn("target: vscode", out)
         self.assertIn("user-invocable: true", out)
+        # Copilot's VS Code tool vocabulary is a third, different set —
+        # "write" maps to "editFiles", not Claude's "Write, Edit".
+        self.assertIn("tools:\n  - codebase\n  - editFiles", out)
         self.assertIn("## Workflow", out)
 
     def test_codex_render_is_valid_toml(self) -> None:
@@ -167,6 +172,34 @@ class RenderTargetTests(unittest.TestCase):
         ):
             self.assertIn(body, out)
         self.assertIn(body, ar.render_codex(self.agent))
+
+
+class ToolTranslationTests(unittest.TestCase):
+    def test_claude_map_covers_every_semantic_tool_used_by_real_agents(self) -> None:
+        for semantic in ("read", "write", "search", "bash"):
+            self.assertIn(semantic, ar.CLAUDE_TOOL_MAP)
+            self.assertIn(semantic, ar.COPILOT_TOOL_MAP)
+
+    def test_search_translates_to_grep_and_glob_for_claude(self) -> None:
+        self.assertEqual(ar._translate_tools(["search"], ar.CLAUDE_TOOL_MAP), ["Grep", "Glob"])
+
+    def test_search_translates_to_single_search_tool_for_copilot(self) -> None:
+        self.assertEqual(ar._translate_tools(["search"], ar.COPILOT_TOOL_MAP), ["search"])
+
+    def test_unrecognized_semantic_tool_raises_instead_of_silently_dropping(self) -> None:
+        with self.assertRaises(ValueError):
+            ar._translate_tools(["not-a-real-tool"], ar.CLAUDE_TOOL_MAP)
+
+    def test_every_real_agent_source_uses_only_mapped_semantic_tool_names(self) -> None:
+        """Regression guard for the actual bug found in production: every
+        agents-src/*/AGENT.md tools: entry must be a key this module knows
+        how to translate for both Claude and Copilot, not a name that
+        silently earns the agent zero real tools in either one."""
+        for name in ar.discover_agents():
+            agent = ar.load_agent(name)
+            for tool in agent.tools:
+                self.assertIn(tool, ar.CLAUDE_TOOL_MAP, f"{name}: unmapped tool {tool!r}")
+                self.assertIn(tool, ar.COPILOT_TOOL_MAP, f"{name}: unmapped tool {tool!r}")
 
 
 class DiscoverAgentsTests(unittest.TestCase):

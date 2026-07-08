@@ -36,7 +36,13 @@ Full reasoning lineage: see `neeve/org/PRINCIPLES.md` § Product Management.
    RBAC, audit logging, or data residency deferred to "v2" or "enterprise
    tier"? For Neeve's actual customer base, that's usually a launch blocker
    being mislabeled as a nice-to-have — challenge it explicitly rather than
-   letting it pass as a phase-2 note.
+   letting it pass as a phase-2 note. If the spec's claim about how SSO/SAML,
+   RBAC, or a compliance standard actually works rests on a remembered
+   belief rather than a checked fact, invoke `debug-trace` to research it
+   before accepting the claim — a wrong assumption about an enterprise
+   standard is exactly the kind of thing that surfaces only after a real
+   enterprise buyer's security review, not before. Include the **Depth
+   check** line (`debug-trace`'s Disclosure Requirement) in the review.
 3. **Staged rollout and rollback story.** Does the spec name a pilot →
    limited GA → full GA path? Is there an explicit answer to "how do we turn
    this off for one customer without turning it off for all of them"? This

@@ -44,6 +44,14 @@ Design.
    require an explicit design for this state before approving.
 4. **Assets**: icon set/version and font usage (Source Sans 3, Source Serif
    4, Source Code Pro) match what `dls-neeve`/`fonts` standardize on.
+5. **Ground WCAG/VPAT criteria for real when a finding hinges on the exact
+   rule.** If flagging a contrast ratio, focus-order, or ARIA requirement
+   against a specific WCAG 2.1 AA success criterion, invoke `debug-trace` to
+   confirm the exact criterion rather than citing a remembered version of it
+   — an accessibility finding that misquotes the actual standard undermines
+   the whole review with an enterprise buyer's compliance team. Include the
+   **Depth check** line (`debug-trace`'s Disclosure Requirement) in the
+   finding.
 
 ## Output format
 

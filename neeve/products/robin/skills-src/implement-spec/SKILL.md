@@ -303,6 +303,16 @@ If implementing a bug fix:
 
 Bug fixes in Neeve should close the specific failure mode, not become a disguised rewrite.
 
+Identifying "the broken prior behavior first" is exactly where a shallow grep
+finds a plausible-looking cause instead of the real one. If the bug's root
+cause isn't obvious from the immediate call site, or depends on how a
+third-party library/tool actually behaves, invoke `debug-trace` to trace the
+full call chain to its persistence/cache boundary and ground the dependency's
+real behavior before writing the fix — don't implement a fix for a
+hypothesis that was never actually confirmed. Include the **Depth check**
+line (`debug-trace`'s Disclosure Requirement) in the implementation summary
+so the root cause claim is auditable, not asserted on confidence alone.
+
 ## Test-First Discipline
 
 Before or alongside production code, define the proof.

@@ -84,7 +84,14 @@ lifecycle (`ServletContextListener`) layered on top of the station.
 - Any change that would let an agent invoke a write/override action against
   a live station — that's a product/safety decision, not just a code change.
 - Any module manifest, Niagara SDK version, or WebCTRL SDK version change —
-  station/server compatibility can't be verified from source alone.
+  station/server compatibility can't be verified from source alone. Invoke
+  `debug-trace` to ground the actual SDK version pinned in this repo (module
+  manifest, build file) and research that version's real behavior/breaking
+  changes before assuming training-data knowledge of "Niagara" or "WebCTRL"
+  in general still applies — N4 and WebCTRL SDK behavior changes across
+  versions the same way any other dependency's does. Include the **Depth
+  check** line (`debug-trace`'s Disclosure Requirement) in the Production
+  Consequence & Gaps section below.
 
 ## Production Consequence & Gaps — required for any change here
 

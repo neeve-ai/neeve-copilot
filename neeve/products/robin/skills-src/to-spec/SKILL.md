@@ -170,6 +170,13 @@ Before finalising the spec:
 - Pydantic version: if the model uses `class Config` it is v1; `model_config` dict is v2.
 - NFR SELECT counts must match the actual number of `get_session()` calls through the FR sequence.
 - Redis key patterns must match how existing code writes them.
+- If any of the above depends on an unfamiliar library/framework's actual
+  current behavior, or on a call chain not yet traced to its persistence/
+  cache boundary, invoke `debug-trace` before asserting it — a technical
+  accuracy claim resting on a training-data guess about a dependency is
+  exactly the failure mode this check exists to catch. Include the **Depth
+  check** line (`debug-trace`'s Disclosure Requirement) in the spec's
+  handoff notes so a reviewer can see whether this was grounded or skipped.
 
 #### Check 7 — Cross-Repo and Cross-Spec Citations
 - When citing "ADR-NNNN §Section", verify the section heading exists in the ADR file.

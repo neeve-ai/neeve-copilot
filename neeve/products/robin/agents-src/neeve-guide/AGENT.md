@@ -139,6 +139,7 @@ specialist, explain how to invoke it in this tool, stop.
 | PM-shaped check before/alongside a spec | `neeve-pm-partner` agent | — |
 | DLS/accessibility/failure-state design review | `neeve-design-partner` agent | — |
 | Niagara/BQL/WebCTRL OT work | `ot-building-automation` skill | — |
+| A production incident, a security-relevant path, or an unfamiliar library/tool that must be verified for real, not recalled | `debug-trace` (exhaustive, invoked from within whatever skill/agent hit the point that needed it) | back to whatever was in progress |
 
 ## Reference Files
 

@@ -141,11 +141,16 @@ when the description matches your request, or invoke manually.
 | `implement-spec` | Ask to implement a task, build from a spec, or write code | `/implement-spec` / `$implement-spec` |
 | `code-review` | Ask to review, audit, or check production readiness | `/code-review` / `$code-review` |
 | `neeve-dls` | Ask to update a DLS component or match a design | `/neeve-dls` / `$neeve-dls` |
+| `debug-trace` | Invoked *by another skill/agent* when a step needs exhaustive, research-grounded depth — not a typical first move | manual invoke, or ask to "trace this thoroughly" / "don't just grep this" |
 
 The skill chain: `repo-ask`/`repo-intel` (understand) → `to-spec` (agree scope) →
 `implement-spec` (build; all 7 quality gates must pass) → `code-review` (final
 checkpoint; loops back if findings require changes). `neeve-dls` runs alongside
-`implement-spec` for UI/DLS surfaces.
+`implement-spec` for UI/DLS surfaces. `debug-trace` sits outside this chain,
+one level deeper than `repo-ask` — every other skill/agent invokes it at the
+specific step that needs exhaustive call-chain tracing or real (not
+remembered) research into an external library/tool/concept, rather than
+re-deriving that rigor inline.
 
 The full north-star pipeline, when a feature starts from a product idea
 rather than an existing spec: `to-prd` (PRD) → `neeve-dls` PRD Prototype Mode
@@ -177,7 +182,7 @@ agents, not less).
 ## Prompt Files (slash commands)
 
 If your editor surfaces `.github/prompts/*.prompt.md` as slash commands, the
-same six workflows are available as `/to-spec`, `/implement-spec`,
-`/code-review`, `/repo-ask`, `/repo-intel`, `/neeve-dls` — thin wrappers around
-the skills above, useful where automatic skill-matching doesn't trigger (e.g.
-inline chat).
+same seven workflows are available as `/to-spec`, `/implement-spec`,
+`/code-review`, `/repo-ask`, `/repo-intel`, `/neeve-dls`, `/debug-trace` —
+thin wrappers around the skills above, useful where automatic skill-matching
+doesn't trigger (e.g. inline chat).

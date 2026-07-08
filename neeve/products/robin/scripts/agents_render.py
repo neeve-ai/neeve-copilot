@@ -109,6 +109,48 @@ def discover_agents() -> list[str]:
     return sorted(p.name for p in AGENTS_SRC.iterdir() if p.is_dir() and (p / "AGENT.md").is_file())
 
 
+# AGENT.md's `tools:` list is written once, in our own tool-agnostic
+# vocabulary (read/write/search/bash) — each real tool has its own,
+# incompatible tool-name vocabulary, confirmed directly against each tool's
+# docs rather than assumed. A tools list that's merely copied verbatim into
+# both `render_claude` and `render_copilot` looks plausible but is actually
+# wrong in both places: neither `read`/`write`/`search`/`bash` are real
+# Claude Code tool names (those are `Read`/`Write`/`Edit`/`Grep`/`Glob`/
+# `Bash`, capitalized), and Copilot's VS Code tool vocabulary is a third,
+# different set (`codebase`/`editFiles`/`search`/`runCommands`) confirmed via
+# GitHub's own custom-agent docs. An unrecognized name in an explicit `tools:`
+# allowlist silently yields zero usable tools in Claude Code — the agent can
+# describe an action but never actually take it. Translate at render time so
+# each target gets its own real names; fail loudly on an unmapped semantic
+# name rather than let it silently disappear the same way again.
+CLAUDE_TOOL_MAP: dict[str, list[str]] = {
+    "read": ["Read"],
+    "write": ["Write", "Edit"],
+    "search": ["Grep", "Glob"],
+    "bash": ["Bash"],
+}
+
+COPILOT_TOOL_MAP: dict[str, list[str]] = {
+    "read": ["codebase"],
+    "write": ["editFiles"],
+    "search": ["search"],
+    "bash": ["runCommands"],
+}
+
+
+def _translate_tools(tools: list[str], tool_map: dict[str, list[str]]) -> list[str]:
+    translated: list[str] = []
+    for tool in tools:
+        try:
+            translated.extend(tool_map[tool])
+        except KeyError:
+            raise ValueError(
+                f"Unrecognized semantic tool name {tool!r} — add it to the tool map "
+                "instead of letting it pass through untranslated and silently grant no tool."
+            ) from None
+    return translated
+
+
 def _tools_yaml_block(tools: list[str]) -> str:
     if not tools:
         return ""
@@ -123,7 +165,8 @@ def render_claude(agent: AgentSource) -> str:
         "description: >",
         f"  {agent.description}",
     ]
-    fm.append(_tools_yaml_block(agent.tools).rstrip("\n") if agent.tools else None)
+    tools_block = _tools_yaml_block(_translate_tools(agent.tools, CLAUDE_TOOL_MAP))
+    fm.append(tools_block.rstrip("\n") if tools_block else None)
     fm = [line for line in fm if line is not None]
     fm.append("---")
     return "\n".join(fm) + "\n\n" + agent.body.rstrip() + "\n"
@@ -139,7 +182,7 @@ def render_copilot(agent: AgentSource) -> str:
         "target: vscode",
         "user-invocable: true",
     ]
-    tools_block = _tools_yaml_block(agent.tools)
+    tools_block = _tools_yaml_block(_translate_tools(agent.tools, COPILOT_TOOL_MAP))
     if tools_block:
         fm.append(tools_block.rstrip("\n"))
     fm.append("---")

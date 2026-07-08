@@ -142,6 +142,15 @@ representative files per pattern area:
 
 Record the pattern as a rule: "The codebase does X by Y. Example: `path/to/file.py:42`."
 
+If a pattern's actual behavior depends on an unfamiliar third-party library
+or framework (e.g. a DI container's resolution order, an ORM's session
+lifecycle), invoke `debug-trace` to ground that library's real, version-
+specific behavior rather than documenting a remembered-but-unverified belief
+about it as a "pattern" — a wrong pattern in `CONTEXT.md` propagates to every
+future skill/agent that reads it. Note the **Depth check** line
+(`debug-trace`'s Disclosure Requirement) next to that pattern in `CONTEXT.md`
+so a later reader knows whether it was grounded.
+
 ### Phase 5 — Quality Tooling
 
 Read the actual config files — do not guess:

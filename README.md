@@ -47,6 +47,14 @@ Six engineering skills that work across every agent:
 | `code-review` | "review this PR", "review these changes" | Production code review: correctness, security, contracts |
 | `neeve-dls` | "update this component", "fix this DLS issue" | Pixel-perfect DLS changes with localhost visual verification |
 
+Plus `debug-trace` — not a typical first move, and deliberately not in the
+table above. It's invoked *by* the other six (and by the cross-tool agents)
+at the specific step that needs exhaustive call-chain tracing to a
+persistence/cache boundary, or real (researched, version-grounded) certainty
+about an external library/tool rather than a training-data guess about it.
+Ask for it directly with "trace this thoroughly" / "don't just grep this" if
+you want that rigor on demand.
+
 ### How they chain
 
 ```
@@ -58,6 +66,10 @@ repo-ask / repo-intel          ← start here on unfamiliar code
         ↓
    code-review                  ← quality gate before done
 ```
+
+`debug-trace` sits outside this chain, one level deeper than `repo-ask` —
+any of the four steps above drops into it when the step specifically
+requires that depth, then returns to where it left off.
 
 Every implementation task must pass **7 quality gates**: linter (zero warnings),
 strict type checking (zero errors), unit tests (≥95% coverage), integration tests,

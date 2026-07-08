@@ -94,6 +94,15 @@ A finished PRD must hand off, explicitly, to whatever consumes it next
    Codex, or Antigravity. If freshness can't be confirmed, say so in the
    PRD's handoff line rather than silently assuming the local checkout is
    current.
+8. **Ground enterprise/compliance claims for real, don't recall them.** If a
+   Functional or Enterprise Requirement rests on how SSO/SAML, RBAC, a
+   compliance standard, or a third-party integration actually behaves,
+   invoke `debug-trace` to research it rather than stating a remembered,
+   possibly-outdated belief as fact — a PRD requirement built on a wrong
+   assumption about how an enterprise standard works ships that wrongness
+   into every downstream work item `to-erd` produces from it. Include the
+   **Depth check** line (`debug-trace`'s Disclosure Requirement) in Section 9
+   (Operational Consequence & Gaps).
 
 ## Workflow
 

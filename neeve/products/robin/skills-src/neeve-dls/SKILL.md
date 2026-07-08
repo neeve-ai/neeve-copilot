@@ -141,6 +141,13 @@ If the localhost server cannot be started, say so explicitly and block the task 
 - Prefer minimal changes that match the existing Tailwind and shadcn-based patterns.
 - If a change affects publishing or consumption, check the package README and pipeline files before changing the release flow.
 - Do not accept "visually similar" replacements for official DLS components, font settings, or token values.
+- If a change depends on how Tailwind, shadcn, or a font-loading mechanism
+  actually behaves in the version this package pins (not the version
+  remembered from training data), invoke `debug-trace` to ground it before
+  changing publish/consumption code — a token or build change made on a
+  wrong belief about the underlying tool ships to every consumer of
+  `@neeve/dls`. Include the **Depth check** line (`debug-trace`'s Disclosure
+  Requirement) in the change summary.
 
 ## Mode: PRD Prototype
 

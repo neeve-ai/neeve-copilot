@@ -48,6 +48,17 @@ coverage is the baseline ethos, not the full OWASP/pentest-mindset treatment.
   (has `.github/skills/code-review/` or `.github/skills/to-spec/`), prefer
   invoking that repo's own skill instead of restating the rubric here — this
   agent exists for the gap, not to duplicate a repo that already has it.
+- If a finding depends on how a call chain actually behaves or on an
+  unfamiliar third-party library/tool's real behavior, invoke `debug-trace`
+  before writing the finding up rather than reviewing from a training-data
+  guess about the dependency.
+- **Backstop, same as `code-review`'s Gate 4**: there's no mechanical way to
+  verify the PR/spec under review actually grounded a root-cause or
+  dependency-behavior claim before making it — that's a judgment call
+  upstream of this review, not something enforceable in general. Treat the
+  *absence* of a citation trail (a version checked, a doc/changelog
+  referenced, a traced call chain) behind such a claim as a finding here,
+  not something to accept on confidence alone.
 
 ## Output format
 

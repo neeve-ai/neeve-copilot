@@ -93,6 +93,13 @@ Before reviewing, gather enough context to understand the change in-system.
 Do not review a fragment in isolation when you can inspect the spec, callers, tests, or deployment
 surface.
 
+If a finding depends on how a call chain actually behaves in production (a
+suspected root cause behind an incident, a path touching a trust boundary
+or tenant-scoping) or on how an unfamiliar third-party library/tool actually
+behaves in the version this repo runs, invoke `debug-trace` before writing
+the finding up — a review comment built on an untraced assumption about a
+dependency is exactly the failure mode Gate 2/Gate 3 exist to catch.
+
 ## Neeve Review Ladder
 
 Run the review in this order. Do not skip steps.
@@ -197,6 +204,20 @@ Check that the change is backed by proof:
 
 Missing tests are a real finding when the change modifies business behavior, contracts, deployment,
 or failure handling.
+
+**Backstop for ungrounded depth claims:** there is no mechanical way to verify
+another skill/agent actually invoked `debug-trace` before making a claim about
+an external library/tool's behavior or a bug's root cause — that's a
+judgment call upstream, not something CI can enforce. This gate is the
+downstream check instead: if a PR description, spec, or commit message
+asserts a root cause or a specific third-party dependency's behavior with no
+citation trail (a version checked, a doc/changelog referenced, a call chain
+traced to its persistence/cache boundary), treat the *absence* of that trail
+as a Gate 4 finding — "claims dependency X behaves this way, no evidence it
+was verified rather than assumed" — rather than accepting the claim on
+confidence alone. If this review itself invokes `debug-trace` to verify a
+finding, include the **Depth check** line (`debug-trace`'s Disclosure
+Requirement) in the review output too.
 
 Cross-check against the actual CI workflow read during Required Discovery: if CI runs a check this
 review doesn't have visibility into (a scan, a gate only available in CI infrastructure), name that

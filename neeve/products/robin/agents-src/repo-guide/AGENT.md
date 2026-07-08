@@ -108,7 +108,12 @@ not a file to a downstream skill. It owes three things on every answer:
    still holds against the actual repo you're sitting in (does the path
    exist, does the command's target exist). If it doesn't check out, say
    so: "possibly stale — `context-src/repos/<repo>.yaml` lists `<path>` but
-   it wasn't found in this checkout."
+   it wasn't found in this checkout." If answering "what's the stack here"
+   or "how do I run this locally" depends on how a specific dependency
+   version actually behaves (not just that it's listed), invoke
+   `debug-trace` to ground it rather than describing the library/tool from
+   memory, and include the **Depth check** line (`debug-trace`'s Disclosure
+   Requirement) in the answer.
 4. **Check the freshness of the source itself, not just individual facts.**
    On Claude Code, a global `SessionStart` hook (`hooks-src/refresh-context.sh`,
    see the "Keeping It Fresh" section of `neeve/products/robin/README.md`)

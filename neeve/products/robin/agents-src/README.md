@@ -6,10 +6,13 @@ specialist reviewers migrated from `neeve/org/` (`neeve-reviewer`,
 `neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) —
 each authored once as `agents-src/<name>/AGENT.md` and rendered by
 `scripts/agents_render.py` into every tool's own native format. It exists
-alongside `skills-src/` (seven Agent Skills: `repo-intel`, `repo-ask`,
+alongside `skills-src/` (eight Agent Skills: `repo-intel`, `repo-ask`,
 `to-spec`, `implement-spec`, `code-review`, `neeve-dls`,
-`ot-building-automation`) for workflows that specifically need agent
-behavior — see "When to write an agent instead of a skill" below.
+`ot-building-automation`, `debug-trace`) for workflows that specifically need
+agent behavior — see "When to write an agent instead of a skill" below.
+`debug-trace` is the one exception to "skills are task-shaped, agents are
+identity-shaped": it's a skill because every other skill/agent needs to be
+able to invoke it mid-workflow, not because the work itself is simple.
 
 ## Why a render step, not one shared file
 

@@ -31,7 +31,7 @@ where:
 | `--no-verify` backstop | Same script, `--all`, as a required PR status | [`templates/ci/context-sync-check.yml`](templates/ci/context-sync-check.yml) |
 | Integration verification | Per-repo PR-build job running the repo's real integration tests (EDIT-ME template — fails until pointed at the real command) | [`templates/ci/integration-verify.yml`](templates/ci/integration-verify.yml) |
 | Context freshness on the engineer's machine | Claude Code `SessionStart` hook pulls this repo + reinstalls, quietly, only when something changed | [`hooks-src/refresh-context.sh`](hooks-src/refresh-context.sh) |
-| Framework self-consistency | CI: agent routes every skill, shared refs match canonical, skills/prompts pack cleanly, renderer tests | [`org/scripts/check_org_sync.py`](org/scripts/check_org_sync.py) + `.github/workflows/ci.yml` |
+| Framework self-consistency | CI: agent routes every skill, shared refs match canonical, skills/prompts pack cleanly, renderer tests | [`scripts/check_org_sync.py`](scripts/check_org_sync.py) + `.github/workflows/ci.yml` |
 | Quality gates (7) | Linter · strict types · unit ≥95% · integration · scale · security · code review — specced by `to-spec`, enforced by `implement-spec`, verified by `code-review` | [`references/quality-gates.md`](references/quality-gates.md) (canonical; skills carry generated copies) |
 
 ## Pillar 3 — The Design Loop

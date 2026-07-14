@@ -453,7 +453,7 @@ There are two source trees you edit here, each with its own local check:
 
 `scripts/test_context_render.py` and `scripts/test_merge_house_rules.py`
 (stdlib `unittest`, no extra dependency) cover the rendering/merging logic
-and run in this repo's own CI, along with `neeve/org/scripts/check_org_sync.py`
+and run in this repo's own CI, along with `neeve/scripts/check_org_sync.py`
 (keeps the `neeve` agent's routing table consistent with what skills
 actually ship, and `security.md`'s headings consistent with what cites them).
 

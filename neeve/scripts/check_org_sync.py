@@ -19,7 +19,7 @@ This check now asserts three things instead:
    `foundation.md`/`engineering-principles.md`, so a rename/removal there
    doesn't leave a stale reference.
 
-Usage: python3 neeve/org/scripts/check_org_sync.py
+Usage: python3 neeve/scripts/check_org_sync.py
 Exit 0 if all checks pass, 1 otherwise.
 """
 from __future__ import annotations
@@ -27,8 +27,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-ORG_DIR = Path(__file__).resolve().parents[1]
-NEEVE_DIR = ORG_DIR.parent
+NEEVE_DIR = Path(__file__).resolve().parents[1]  # neeve/
 AGENT_MD = NEEVE_DIR / "agent-src" / "neeve" / "AGENT.md"
 SECURITY_MD = NEEVE_DIR / "skills-src" / "code-review" / "references" / "security.md"
 FOUNDATION_MD = NEEVE_DIR / "foundation.md"
@@ -124,11 +123,11 @@ def main() -> int:
         + check_reference_citations()
     )
     if all_errors:
-        print("neeve/org sync check FAILED:", file=sys.stderr)
+        print("consistency check FAILED:", file=sys.stderr)
         for err in all_errors:
             print(f"  - {err}", file=sys.stderr)
         return 1
-    print("neeve/org: unified agent routes every skill, all citations present.")
+    print("consistency: unified agent routes every skill, all citations present.")
     return 0
 
 

@@ -97,7 +97,7 @@ jobs:
           echo "Running test_merge_session_hook.py..."
           python3 neeve/scripts/test_merge_session_hook.py -v
 
-      - name: Verify neeve/org Consistency
+      - name: Verify Framework Consistency
         run: |
           echo "Checking the neeve agent routes every skill and reference citations stay consistent..."
-          python3 neeve/org/scripts/check_org_sync.py
+          python3 neeve/scripts/check_org_sync.py

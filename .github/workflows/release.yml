@@ -43,7 +43,9 @@ jobs:
         run: |
           mkdir -p "${BUNDLE_DIR}/zips"
           cp neeve/install.sh "${BUNDLE_DIR}/install.sh"
-          cp neeve/products/robin/AGENTS.md "${BUNDLE_DIR}/AGENTS.md"
+          # Render the AGENTS.md seed fresh from the current house rules —
+          # a committed copy silently rots (it did once already).
+          python3 neeve/scripts/context_render.py --house-rules "${BUNDLE_DIR}/AGENTS.md"
           cp neeve/products/robin/README.md "${BUNDLE_DIR}/README.md"
           cp "${ZIP_DIR}"/*.zip "${BUNDLE_DIR}/zips/"
           (

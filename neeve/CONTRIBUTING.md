@@ -21,7 +21,7 @@ for — that answers "where does this go" almost by itself:
 | 04. Neeve Foundation | Company identity, culture, product, customer personas | Yes | `neeve/foundation.md` |
 | 03. Engineering Principles | SDLC process principles, quality gates, security posture | Yes | `neeve/engineering-principles.md`, `neeve/references/*.md` |
 | 02. Repository-Level Context | The OKF book (`introduction.md`/`index.md`/`appendix.md`) | **No** — committed into each *product* repo by `init-repo.sh` + `repo-intel`, never here | N/A from this repo |
-| 01. Custom & User Context | Developer-local overrides, personal instructions | **No** — lives outside any `BEGIN/END NEEVE` marker in the engineer's own dotfiles | N/A from this repo |
+| 01. Custom & User Context | Developer-local overrides, personal instructions | **Mostly no** — the content lives outside any `BEGIN/END NEEVE` marker in the engineer's own dotfiles | Only the *precedence rule* for when it conflicts with a house rule lives here, in `neeve/agent/neeve/AGENT.md`'s "Respecting Developer-Local Overrides" section — edit there if that rule needs to change |
 
 If what you're adding is genuinely repo-specific knowledge about *a product
 repo* (e.g. "how robin-ai's auth works"), it does not belong in

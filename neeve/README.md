@@ -86,3 +86,9 @@ bash sync_skills.sh
 # Once per cloned product repo:
 bash <neeve-copilot>/neeve/init-repo.sh        # then run the repo-intel skill
 ```
+
+## Adding or changing content in this repo
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) — where a new skill, checklist, or
+house-rules change belongs by layer, and the objective verification gate
+every addition must pass before it merges.

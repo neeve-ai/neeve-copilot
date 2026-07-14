@@ -178,21 +178,19 @@ separate agents to remember.
 
 ---
 
-## Contributing Skills
+## Contributing
 
-Skills live in [`neeve/skills/`](neeve/skills/) (product-specific ones under [`neeve/products/<product>/skills/`](neeve/products/robin/skills/)).
-Each skill is a directory with a `SKILL.md` and optional `references/` files.
+See [`neeve/CONTRIBUTING.md`](neeve/CONTRIBUTING.md) — where a new skill,
+checklist, fragment, or house-rules change belongs (mapped to the 4 Layers
+of Context), and the objective verification commands every addition must
+pass before it merges.
+
+Quick loop for an existing skill:
 
 ```bash
-# Edit a skill
-code neeve/skills/to-spec/SKILL.md
-
-# Test your change locally (reinstalls all skills)
-bash sync_skills.sh
-
-# Commit and push — the post-commit hook pushes automatically
-git add neeve/skills/
-git commit -m "skills: describe your change"
+code neeve/skills/to-spec/SKILL.md   # edit
+bash sync_skills.sh                  # reinstall locally and try it
+git add neeve/skills/ && git commit -m "skills: describe your change"
 ```
 
 See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for the full

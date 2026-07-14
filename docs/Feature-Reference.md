@@ -6,15 +6,17 @@ Neeve Copilot Distribution System (Skills and Global House Rules)
 ## Description
 A central distribution system that gives every Neeve engineer the same AI
 skills and house rules — identically, across Claude Code, GitHub Copilot,
-Cursor, Codex, and Antigravity — with zero hand-copying and nothing ever
-committed into a product repo. Content lives once in this repo
-(`skills-src/`, `context-src/`) and installs to each engineer's machine,
-globally.
+Cursor, Codex, and Antigravity — with zero hand-copying. Global content
+lives once in this repo (`neeve/skills-src/`, `neeve/context-src/`,
+`neeve/agent-src/`) and installs to each engineer's machine. The one
+deliberate per-repo artifact is the OKF book
+(introduction.md/index.md/appendix.md + its pre-commit freshness hook),
+set up per product repo by `neeve/init-repo.sh` — see `neeve/README.md`.
 
 ## Key Functionalities
 - **One-command global install (`sync_skills.sh` → `neeve/install.sh --all`)**:
   pulls the latest from this repo and installs both:
-  - the 6 core skills into every supported agent's global skill directory
+  - all 10 skills (org-level + product-level skills-src roots) into every supported agent's global skill directory
     (`~/.claude/skills`, `~/.codex/skills`, `~/.copilot/skills`,
     `~/.cursor/skills`, `~/.gemini/antigravity/skills`)
   - the house-rules content (culture/ethos, engineering principles, quality
@@ -35,7 +37,7 @@ globally.
 
 ## User Flow
 1. **Day-1 install:** clone this repo, run `bash sync_skills.sh` once — the
-   6 skills and the house rules are now available in every project on the
+   all skills and the house rules are now available in every project on the
    machine, in every supported agent.
 2. **Verify:** open any project, type `/skills` (Claude Code) or check the
    `/`-command picker (Copilot/Cursor/Codex). Preview the house rules with

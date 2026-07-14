@@ -22,7 +22,7 @@ Think of it like onboarding a new engineer:
 |---|---|---|---|
 | 1 | **House rules** | The onboarding doc every new hire reads on day one — always in the back of their mind | Culture/ethos, engineering principles, quality gates, the "state consequence and gaps" discipline, what Robin is and how its repos fit together. Installed once, globally, on your machine — not a file in any repo |
 | 2 | **Skills** | A manual the assistant only opens when the task calls for it | How to write a Neeve spec, how to review code, how to work with our design system, how to work with our building-automation stack |
-| 3 | **The unified agent** | A specialist invoked by name, not a manual you have to open | `neeve` — ask this one first (setup + Design Loop routing across every skill) — see `agents-src/` |
+| 3 | **The unified agent** | A specialist invoked by name, not a manual you have to open | `neeve` — ask this one first (setup + Design Loop routing across every skill) — see `neeve/agent-src/` |
 
 **One-line summary:** house rules set the mindset everywhere, all the time;
 skills give the deep how-to and only load when relevant; the unified `neeve`
@@ -43,20 +43,30 @@ global location — no repo ever needs a file for it.
 
 ---
 
-## The Six Skills
+## The Skills
+
+Ten skills covering the full Design Loop (see `neeve/README.md` for the
+architecture). Eight are product-agnostic and live in `neeve/skills-src/`;
+two are Robin-specific and live here in `skills-src/`:
 
 | Skill | What it does |
 |-------|-------------|
-| `repo-intel` | Scans a whole codebase and writes it up — a CONTEXT.md doc, gaps in the README, missing decision records |
+| `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a CRE-OT security/ops journey |
+| `to-erd` | Breaks a PRD into compliance-aware, dependency-ordered work items |
+| `repo-intel` | Scans a whole codebase and fills the repo's OKF book (introduction.md / index.md / appendix.md) |
 | `repo-ask` | Answers "how does X work" by tracing the actual code, not guessing |
-| `to-spec` | Turns a feature idea or bug into a proper Neeve-style spec, ready to hand off |
+| `to-spec` | Turns a feature idea or bug into a proper Neeve-style spec (including the Design/architecture lock), ready to hand off |
 | `implement-spec` | Builds a spec's task: reuse what exists, write typed code, write real tests |
 | `code-review` | A thorough pre-merge review: does it match the spec, is it correct, is it secure |
-| `neeve-dls` | Makes UI changes match our design system exactly, down to the pixel |
+| `neeve-dls` (Robin) | Makes UI changes match our design system exactly, down to the pixel |
+| `ot-building-automation` (Robin) | Domain grounding for Niagara/BQL/WebCTRL work |
+| `debug-trace` | Exhaustive grounding, invoked by the others when a step needs it |
 
-They're meant to be used in order:
+They're meant to be used in Design Loop order:
 
 ```
+to-prd → (neeve-dls prototype) → to-erd
+        ↓
 repo-ask / repo-intel   ← get to know the code first
         ↓
      to-spec            ← agree what you're building, in writing
@@ -64,10 +74,13 @@ repo-ask / repo-intel   ← get to know the code first
   implement-spec         ← build it — all 7 quality checks must pass
         ↓
    code-review           ← final check before it ships
+        ↓
+   Merge → CI Pass       ← loops back to the next feature's PRD
 ```
 
 If the work touches UI, `neeve-dls` runs alongside `implement-spec`, and
-`code-review` still happens after.
+`code-review` still happens after. A small bug fix starts at `to-spec`,
+not `to-prd`.
 
 **The 7 checks every change must pass:** no linter warnings, no type errors,
 tests cover at least 95% of the code, the main flow has an integration test,
@@ -97,7 +110,7 @@ bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh
 ```
 
 That's it. This one command:
-1. Installs the 6 skills into every detected tool's global skill directory.
+1. Installs all 10 skills (both skills-src roots) into every detected tool's global skill directory.
 2. Renders the house-rules content from `context-src/base.md` and installs it
    into each tool's global instructions location (merging into
    `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` without touching any other
@@ -135,11 +148,17 @@ bash install.sh --claude-code --cursor       # only specific agents
 | Codex CLI | `~/.codex/skills/` | `~/.codex/AGENTS.md` (merged block) |
 | Antigravity | `~/.gemini/antigravity/skills/` | not yet supported |
 
-Nothing is ever written into a product repo. If you see `AGENTS.md`,
-`.github/copilot-instructions.md`, `.cursorrules`, `.github/prompts/`, or
-`.github/hooks/` show up as uncommitted files in a product repo, that's a
-leftover from an earlier design — safe to delete, it isn't part of this
-system anymore.
+Nothing above is ever written into a product repo. If you see `AGENTS.md`,
+`.github/copilot-instructions.md`, or `.cursorrules` show up as uncommitted
+files in a product repo, that's a leftover from an earlier design — safe to
+delete.
+
+**One deliberate exception:** the per-repo **OKF book**
+(`introduction.md` / `index.md` / `appendix.md`) and its `.githooks/pre-commit`
+freshness hook ARE committed into each product repo — set up once per repo by
+`neeve/init-repo.sh`, filled by the `repo-intel` skill. Repo-level knowledge
+only works if every clone carries it; see `neeve/README.md` Pillar 1,
+Layer 02.
 
 ---
 
@@ -149,12 +168,16 @@ Skills load themselves automatically when what you ask for matches one:
 
 | What you say | Skill that answers |
 |-------------|-------------|
-| "map this repo", "document this project" | `repo-intel` |
+| "write a PRD for X" | `to-prd` |
+| "break this PRD into work items" | `to-erd` |
+| "map this repo", "fill the OKF book" | `repo-intel` |
 | "how does X work", "why does X fail", "where is X defined" | `repo-ask` |
 | "spec this feature", "turn this bug into a work item" | `to-spec` |
 | "implement task 3", "build this from the spec" | `implement-spec` |
 | "review this PR", "audit these changes" | `code-review` |
 | "update this DLS component", "fix this UI to match the design" | `neeve-dls` |
+| Niagara/BQL/WebCTRL work | `ot-building-automation` |
+| "trace this thoroughly", "don't just grep this" | `debug-trace` |
 
 Or call one directly:
 

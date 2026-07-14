@@ -1,12 +1,13 @@
 ---
 name: repo-intel
 description: >
-  Scan a project and produce a living knowledge base that any LLM or human can use to build,
-  fix, or perform tasks without prior context. Trigger on: "map this repo", "document this
-  project", "build a knowledge base", "onboard me to this codebase", "document the patterns",
-  "what does this project do", "generate CONTEXT.md", "document the architecture", or any
-  request to understand, document, or onboard a codebase. Produces CONTEXT.md, README updates,
-  ADR stubs, and spec stubs derived from actual code — never invented.
+  Scan a project and produce its OKF book — introduction.md, index.md, appendix.md at the
+  repo root — the living, committed knowledge base any LLM or human uses to build, fix, or
+  perform tasks without prior context. Trigger on: "map this repo", "document this project",
+  "build a knowledge base", "onboard me to this codebase", "fill the OKF book", "refresh the
+  repo book", "repo-intel --refresh", "document the architecture", or any request to
+  understand, document, or onboard a codebase. Also produces README updates, ADR stubs, and
+  spec stubs — all derived from actual code, never invented.
 ---
 
 # Repo Intel
@@ -15,12 +16,30 @@ This skill scans a project and writes structured knowledge that makes the codeba
 any LLM or human arriving cold. The output is derived from the actual code — no invented
 patterns, no guessed decisions.
 
-The primary deliverable is a `CONTEXT.md` at the project root that acts as the persistent
-knowledge anchor for all future work in the repo.
+The primary deliverable is the **OKF book** — three committed files at the repo root,
+following the book analogy for maintaining context efficiently (Layer 02 of the 4-Layer
+Context stack, see neeve-copilot's `neeve/README.md`):
+
+| File | Role | Analogy |
+|---|---|---|
+| `introduction.md` | Contextual README *for agents*: stack & versions, how this repo wires into the product (NATS/HTTP/MCP, OpenAPI contract if a backend), make targets, docker/local-dev, deploy path. Small — always read first. | A book's introduction |
+| `index.md` | Functional areas mapped to where they live ("Auth → `src/auth/**`, entrypoint `src/auth/middleware.ts`, see `appendix.md#AuthService`") so an agent jumps straight to the right place instead of grepping cold. | Table of contents |
+| `appendix.md` | Every public method/class with its **purpose**, **dependencies** (calls / called by), and **impact if changed** (blast radius). The expensive, highest-value-when-correct file. | The appendix |
+
+The scaffolds (with `TODO(repo-intel)` markers) are created by neeve-copilot's
+`neeve/init-repo.sh`, which also installs the `.githooks/pre-commit` context-sync hook.
+This skill fills and refreshes them from a real scan. If the book files don't exist yet
+and init-repo.sh hasn't been run, tell the user to run it first (it also wires the
+freshness hook) — or create the three files directly if they decline.
+
+**Freshness contract:** the committed pre-commit hook deterministically flags drift
+(manifest-hash on `introduction.md`, structural diff on `index.md`, public-symbol diff on
+`appendix.md`). This skill is the *narrative* refresh the hook points at — after any
+refresh, re-stamp the manifest hash: `python3 .githooks/pre-commit --stamp`.
 
 ## What Good Output Looks Like
 
-A good `CONTEXT.md` lets anyone answer these questions without reading source files:
+A good book lets anyone answer these questions without reading source files:
 
 - What does this service/app do and who consumes it?
 - What is the tech stack and runtime?
@@ -53,7 +72,7 @@ Before scanning, confirm with the user:
 
 1. The root directory to scan (default: current working directory).
 2. Whether to write files or only report findings (default: write).
-3. Whether to include ADR stubs and spec stubs or only `CONTEXT.md` (default: all).
+3. Whether to include ADR stubs and spec stubs or only the OKF book (default: all).
 
 ### Phase 1 — Stack and Entry Point Discovery
 
@@ -79,7 +98,7 @@ Identify the project's foundation without reading every file:
 - **CI:** `.github/workflows/*.yml` or equivalent — what it actually lints/tests/scans.
 - **Environment quirks:** a Python virtualenv (`.venv`, `Pipfile`, `poetry.lock`) that
   needs activating, or a `Makefile` that wraps the real test/lint/run commands — note
-  these explicitly rather than letting `CONTEXT.md` imply a bare command is sufficient.
+  these explicitly rather than letting `introduction.md` imply a bare command is sufficient.
 - **CI/CD:** `.github/workflows/`, `bitbucket-pipelines.yml`, `Makefile`, `.gitlab-ci.yml`.
 - **Monorepo signals:** `pnpm-workspace.yaml`, `nx.json`, `turbo.json`, `packages/`, `apps/`,
   `services/`.
@@ -148,9 +167,9 @@ If a pattern's actual behavior depends on an unfamiliar third-party library
 or framework (e.g. a DI container's resolution order, an ORM's session
 lifecycle), invoke `debug-trace` to ground that library's real, version-
 specific behavior rather than documenting a remembered-but-unverified belief
-about it as a "pattern" — a wrong pattern in `CONTEXT.md` propagates to every
+about it as a "pattern" — a wrong pattern in the book propagates to every
 future skill/agent that reads it. Note the **Depth check** line
-(`debug-trace`'s Disclosure Requirement) next to that pattern in `CONTEXT.md`
+(`debug-trace`'s Disclosure Requirement) next to that pattern in the book
 so a later reader knows whether it was grounded.
 
 ### Phase 5 — Quality Tooling
@@ -183,17 +202,41 @@ Read the actual config files — do not guess:
 
 Write only what is grounded in Phase 1–5 findings. Do not invent sections.
 
-#### 6a — CONTEXT.md
+#### 6a — The OKF book (`introduction.md`, `index.md`, `appendix.md`)
 
-Write `CONTEXT.md` at the project root using
-[`references/context-template.md`](references/context-template.md) as the structural guide.
+Fill (or refresh) the three book files at the project root. Use
+[`references/context-template.md`](references/context-template.md) as the structural
+guide for what `introduction.md` covers; `index.md` and `appendix.md` follow the table
+formats the init-repo.sh scaffolds establish.
 
-Rules:
+- `introduction.md` — Phases 1 + 5 findings: role in the product (cross-checked against
+  `context-src/repos/<repo>.yaml`), stack/runtime, how it wires into the product
+  (Phase 3's owned/consumed contracts, summarized with pointers into `index.md`), every
+  make target, local-dev spin-up including environment quirks, deploy path. Keep it
+  small — it's the always-read-first file, not the encyclopedia.
+- `index.md` — Phase 2's module map, organized by functional area/domain (not a raw
+  directory listing): area → path glob → entry-point file → `appendix.md#Anchor` for the
+  deep dive.
+- `appendix.md` — Phases 3 + 4 at symbol level: one section per module, a table of
+  public symbols with purpose, dependencies (what it calls / what calls it — traced, not
+  guessed), and impact-if-changed (which modules or downstream services break). Resolve
+  every `TODO(purpose)` the pre-commit hook has flagged. This is the expensive file; for
+  a large repo, prioritize modules on trust boundaries and shared contracts first and
+  mark the rest `TODO(repo-intel): not yet scanned` — an honest partial appendix beats a
+  vague complete one.
+
+Rules (all three files):
 - Every claim must be traceable to a file or config read in Phases 1–5.
 - Cite file paths for key decisions: "Auth uses JWT — see `app/middleware/auth.py:12`."
 - Mark anything inferred (not read) as `[inferred]` so a reader knows to verify.
 - If a section has no grounded content, write `Not found — add manually.` rather than
   inventing placeholder text.
+- After writing, re-stamp: `python3 .githooks/pre-commit --stamp` (updates
+  `introduction.md`'s manifest-hash so the hook stops flagging staleness), then run
+  `python3 .githooks/pre-commit --all` and confirm it exits clean.
+- If this repo predates the book and has a legacy `CONTEXT.md`, migrate its
+  still-accurate content into the three files and delete it — two competing knowledge
+  anchors is exactly the drift this structure exists to prevent.
 
 #### 6b — README gaps
 
@@ -251,7 +294,10 @@ After writing all outputs, emit a compact report:
 | Test command confirmed | ✅ / ⚠️ | |
 | Build command confirmed | ✅ / ⚠️ | |
 | Local dev setup documented | ✅ / ⚠️ | |
-| CONTEXT.md written | ✅ / ❌ | |
+| introduction.md written/refreshed | ✅ / ❌ | |
+| index.md written/refreshed | ✅ / ❌ | |
+| appendix.md written/refreshed (TODO(purpose) count after: N) | ✅ / ⚠️ / ❌ | |
+| manifest-hash re-stamped + hook --all exits clean | ✅ / ❌ | |
 | README gaps patched | ✅ / ❌ / N/A | |
 | ADR stubs written | ✅ / ❌ / N/A | |
 | Spec stubs written | ✅ / ❌ / N/A | |
@@ -273,13 +319,14 @@ must never be left blank by omission — state what was checked if nothing was f
 ## Quality Rules
 
 - Never invent a pattern, contract, or decision. If it is not in the code, mark it absent.
-- Never copy-paste large blocks of source code into CONTEXT.md — summarize and cite.
+- Never copy-paste large blocks of source code into the book — summarize and cite.
 - Prefer one accurate sentence over three vague ones.
 - If a module's purpose is unclear from reading it, say so rather than guessing.
-- CONTEXT.md should be readable in under 10 minutes. If it exceeds ~400 lines, split by
-  domain module into `docs/context/` and keep a short index in `CONTEXT.md`.
-- After writing, re-read CONTEXT.md as if you are arriving at the repo for the first time.
-  If you cannot answer all nine questions from "What Good Output Looks Like" above, the
+- `introduction.md` should be readable in under 5 minutes; `index.md` scannable at a
+  glance. Depth lives in `appendix.md` — that's the file allowed to be long, organized
+  by module anchors so nobody reads it linearly.
+- After writing, re-read the book as if you are arriving at the repo for the first time.
+  If you cannot answer all the questions from "What Good Output Looks Like" above, the
   output is not done.
 
 ## Anti-Patterns
@@ -305,8 +352,8 @@ is missing across multiple areas.
 | Situation | Next skill |
 |---|---|
 | A specific question arises during or after the scan | → `repo-ask` (targeted trace) |
-| CONTEXT.md reveals undocumented features that need specs | → `to-spec` |
-| CONTEXT.md reveals a bug or broken contract | → `repo-ask` first, then `to-spec` |
+| The book reveals undocumented features that need specs | → `to-spec` |
+| The book reveals a bug or broken contract | → `repo-ask` first, then `to-spec` |
 | Codebase is fully mapped and a task is ready to implement | → `implement-spec` |
 
 **Feeds into:** `repo-ask`, `to-spec`, `implement-spec`

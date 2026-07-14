@@ -14,9 +14,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Verify Robin Skill Packaging
+      - name: Verify Shared Reference Docs Are In Sync
         run: |
-          echo "Checking Robin skills-src packages cleanly into release zips..."
+          echo "Checking generated copies match canonical neeve/references/..."
+          bash neeve/scripts/shared_refs_sync.sh check
+
+      - name: Verify Skill Packaging
+        run: |
+          echo "Checking both skills-src roots package cleanly into release zips..."
           neeve/scripts/skills_sync.sh check
 
       - name: Verify Robin Prompt Files

@@ -1,4 +1,3 @@
-<!-- GENERATED from neeve/references/quality-gates.md — edit the canonical file and run neeve/scripts/shared_refs_sync.sh sync -->
 # Quality Gates — Production Standard
 
 Every task that produces or modifies code must pass all applicable gates before being

@@ -219,6 +219,9 @@ main() {
       rm -rf "${tmp_zip_dir}"
       ;;
     pack)
+      # Refresh generated copies of shared reference docs first, so zips
+      # always embed the current canonical (see shared_refs_sync.sh).
+      bash "${ROOT_DIR}/scripts/shared_refs_sync.sh" sync >/dev/null
       mkdir -p "${ZIP_DIR}"
       prune_stale_zips
       for skill in "${SKILLS[@]}"; do

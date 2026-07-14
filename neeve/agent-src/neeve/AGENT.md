@@ -132,6 +132,16 @@ invent a flag or behavior; read `neeve/install.sh` and
    than the one being checked; an old install predates a newer mechanism and
    needs `sync_skills.sh` re-run.
 
+**Per-repo init (after cloning any product repo):** run
+`bash <neeve-copilot>/neeve/init-repo.sh` from inside the cloned repo. It
+scaffolds the OKF book (`introduction.md`/`index.md`/`appendix.md`) seeded
+from that repo's `context-src/repos/<repo>.yaml`, installs the committed
+`.githooks/pre-commit` context-sync hook (warn-only by default), and with
+`--with-ci` copies the CI backstop templates. Then run the `repo-intel`
+skill to fill the book from a real scan. If a repo's book files are missing
+or full of `TODO(repo-intel)` markers, that's the gap to close before deep
+work in that repo — route to `init-repo.sh` + `repo-intel`, in that order.
+
 **Never touch unrelated tool config.** Only ever add or verify
 neeve-copilot's own content; name anything unrelated found in a tool's
 config directory as a separate observation.

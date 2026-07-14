@@ -62,9 +62,11 @@ Before scanning, confirm with the user:
 against its `stack`, `do_not_modify`, and `test_cmd`/`lint_cmd` fields
 rather than deriving everything from scratch as if nothing were known —
 cite it, and if this scan finds something that contradicts the yaml (stack
-changed, a command no longer works), name that as a finding: it's a
-candidate for a `repo-guide`-proposed `context-src` fix, not something to
-silently prefer one source over the other.
+changed, a command no longer works), name that as a finding and propose the
+concrete `context-src/repos/<repo>.yaml` diff to fix it — never silently
+prefer one source over the other, and never write the fix directly into
+`neeve-copilot`'s `context-src/` yourself; hand the diff to the engineer to
+commit there on a reviewed branch.
 
 Identify the project's foundation without reading every file:
 

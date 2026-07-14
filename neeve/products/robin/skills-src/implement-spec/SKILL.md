@@ -173,16 +173,17 @@ Check the strongest local style sources that apply:
 - **this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if
   registered** — its `do_not_modify` list (call out explicitly before
   touching anything on it), and its documented `test_cmd`/`lint_cmd`. This
-  check is mandatory here, not left to whether someone thought to ask
-  `repo-guide` separately.
+  check is mandatory here, not left to whether someone thought to check
+  separately.
 - **this repo's actual CI workflow** (`.github/workflows/*.yml` or
   equivalent) — every repo has some CI, and CI is the real gate, not the
   yaml's documented commands or this skill's own judgment. Read what CI
   actually runs (lint, type-check, unit/integration tests, security/SCA
   scans) and treat that as the ground truth for "what must pass" — if it
   differs from what `test_cmd`/`lint_cmd` documents, CI wins; flag the
-  drift as a gap (a `repo-guide`-proposed `context-src` fix candidate)
-  rather than silently trusting the possibly-stale yaml.
+  drift as a gap (a `context-src` fix candidate, proposed the same way
+  `repo-intel` proposes one) rather than silently trusting the possibly-stale
+  yaml.
 
 **Don't paraphrase away environment quirks when running those commands.**
 A repo's real test/lint invocation often isn't the bare tool name — check

@@ -258,6 +258,39 @@ else
   warn "No scripts/context_render.py found — skipping house-rules install (skills-only mode)"
 fi
 
+# ── Prune retired agents ──────────────────────────────────────────────────────
+# `to-prd`/`to-erd`/`repo-guide`/`neeve-guide`/`neeve-reviewer`/
+# `neeve-security-partner`/`neeve-pm-partner`/`neeve-design-partner` were
+# retired in favor of the single `neeve` agent (their content folded into
+# skills + neeve/references/*.md). Re-running install.sh only ever *writes*
+# current agents — it never removed a retired one, so without this step a
+# stale `~/.claude/agents/neeve-guide.md` etc. keeps auto-triggering forever
+# on any machine that installed before this change. `to-prd`/`to-erd` are
+# deliberately skipped for skill-fallback (Cursor/Antigravity): those names
+# now legitimately belong to real skills installed at that same path.
+RETIRED_AGENTS=(neeve-guide to-prd to-erd repo-guide neeve-reviewer neeve-security-partner neeve-pm-partner neeve-design-partner)
+RETIRED_AGENTS_SKILL_FALLBACK_ONLY=(neeve-guide repo-guide neeve-reviewer neeve-security-partner neeve-pm-partner neeve-design-partner)
+hdr "Pruning retired agents (superseded by the neeve agent)"
+for name in "${RETIRED_AGENTS[@]}"; do
+  if $DO_CLAUDE && [[ -f "${HOME}/.claude/agents/${name}.md" ]]; then
+    rm -f "${HOME}/.claude/agents/${name}.md" && ok "Removed stale Claude Code agent: ${name}"
+  fi
+  if $DO_COPILOT && [[ -f "${HOME}/.copilot/agents/${name}.agent.md" ]]; then
+    rm -f "${HOME}/.copilot/agents/${name}.agent.md" && ok "Removed stale Copilot agent: ${name}"
+  fi
+  if $DO_CODEX && [[ -f "${HOME}/.codex/agents/${name}.toml" ]]; then
+    rm -f "${HOME}/.codex/agents/${name}.toml" && ok "Removed stale Codex agent: ${name}"
+  fi
+done
+for name in "${RETIRED_AGENTS_SKILL_FALLBACK_ONLY[@]}"; do
+  if $DO_CURSOR && [[ -d "$(global_path cursor)/${name}" ]]; then
+    rm -rf "$(global_path cursor)/${name}" && ok "Removed stale Cursor skill-fallback agent: ${name}"
+  fi
+  if $DO_ANTIGRAVITY && [[ -d "$(global_path antigravity)/${name}" ]]; then
+    rm -rf "$(global_path antigravity)/${name}" && ok "Removed stale Antigravity skill-fallback agent: ${name}"
+  fi
+done
+
 # ── Agents: cross-tool, rendered from agents-src/ ────────────────────────────
 # Claude Code, Copilot (VS Code), and Codex CLI each have a real, working,
 # global custom-agent mechanism — in three incompatible formats. Cursor and
@@ -354,7 +387,7 @@ echo "Invoke manually (${SKILLS// /, }):"
 echo "  /<skill-name>   (Claude Code / Copilot / Cursor / Antigravity)"
 echo "  \$<skill-name>   (Codex)"
 echo ""
-echo "Agents (to-prd, to-erd, repo-guide) — invocation differs by tool:"
+echo "Agent (neeve — setup/onboarding + Design Loop routing) — invocation differs by tool:"
 echo "  Claude Code:      auto-triggers on phrasing, or @agent-<name>"
 echo "  Copilot (VS Code): pick from the agent picker (not auto-triggered by default)"
 echo "  Codex CLI:         /agent  (explicit only, does not auto-trigger)"

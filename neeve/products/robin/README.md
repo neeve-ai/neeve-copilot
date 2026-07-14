@@ -22,11 +22,12 @@ Think of it like onboarding a new engineer:
 |---|---|---|---|
 | 1 | **House rules** | The onboarding doc every new hire reads on day one — always in the back of their mind | Culture/ethos, engineering principles, quality gates, the "state consequence and gaps" discipline, what Robin is and how its repos fit together. Installed once, globally, on your machine — not a file in any repo |
 | 2 | **Skills** | A manual the assistant only opens when the task calls for it | How to write a Neeve spec, how to review code, how to work with our design system, how to work with our building-automation stack |
-| 3 | **Cross-tool agents** | A specialist invoked by name, not a manual you have to open | `neeve-guide` (ask this one first — setup + "what should I use" triage), `to-prd`, `to-erd`, `repo-guide`, plus four specialist reviewers (`neeve-reviewer`, `neeve-security-partner`, `neeve-pm-partner`, `neeve-design-partner`) — see `agents-src/`. One more, `neeve-ot-specialist`, still lives in `neeve/org/`, gated on SME content review, not distribution |
+| 3 | **The unified agent** | A specialist invoked by name, not a manual you have to open | `neeve` — ask this one first (setup + Design Loop routing across every skill) — see `agents-src/` |
 
 **One-line summary:** house rules set the mindset everywhere, all the time;
-skills give the deep how-to and only load when relevant; cross-tool agents
-are specialists you ask for by name, in whichever tool you're using. None of
+skills give the deep how-to and only load when relevant; the unified `neeve`
+agent is the specialist you ask for by name, in whichever tool you're using,
+and routes to the right skill for the Design Loop stage you're in. None of
 them can stop bad code from shipping — each product repo's own CI still does
 that job, unrelated to this repo.
 
@@ -233,46 +234,45 @@ cat /tmp/preview.md
 
 ---
 
-## Cross-Tool Agents
+## The Unified Agent
 
-Eight specialists, invoked by name rather than a workflow you have to
-trigger. Start with `neeve-guide` — setup help, plus "which of these seven
-do I actually need" triage — then `to-prd` (turns a problem into a PRD),
-`to-erd` (turns a PRD + optional prototype into a compliance-aware
-work-item breakdown), `repo-guide` (knows this specific repo's role, stack,
-structure/style, local dev, and deploy), and four reviewers migrated from
-`neeve/org/`'s old GitHub-Enterprise-only mechanism — `neeve-reviewer` (ad
-hoc code/spec review), `neeve-security-partner` (adversarial security
-pass), `neeve-pm-partner` (PM-shaped review), `neeve-design-partner` (DLS
-fidelity/accessibility/failure-state review). Source lives in
-[`agents-src/`](agents-src/README.md), one `AGENT.md` per agent, rendered
+One agent, `neeve`, invoked by name rather than a workflow you have to
+trigger. It handles setup help, plus routing every request to the right
+skill by Design Loop stage (PRD → Design → ERD → Spec → Implement → Code
+Review → Merge → CI Pass — see `neeve/README.md`). Source lives in
+[`agents-src/`](agents-src/README.md), `agents-src/neeve/AGENT.md`, rendered
 by `scripts/agents_render.py` into every tool's own native custom-agent
 mechanism where one exists, and into a Skill where it doesn't.
 
-`neeve-guide` deliberately stays a lightweight **router** (classify the
-ask, point at one specialist), not a heavier **orchestrator** that spawns
-and coordinates other agents itself — Anthropic's own published research
-puts that heavier pattern at roughly 15× the token cost of a single-agent
-exchange and calls coding tasks a weak fit for it. See
-[`agents-src/README.md`](agents-src/README.md#when-to-write-an-agent-instead-of-a-skill)
-for the citations.
+This replaces an earlier eight-agent model (`neeve-guide`, `to-prd`,
+`to-erd`, `repo-guide`, plus four specialist reviewers) — see
+[`agents-src/README.md`](agents-src/README.md#what-changed-and-why) for why
+that duplicated content already in the skills and gave Copilot users an
+eight-item picker instead of one router. `neeve` deliberately stays a
+lightweight **router** (classify the ask, point at one skill), not a
+heavier **orchestrator** that spawns and coordinates subagents itself —
+Anthropic's own published research puts that heavier pattern at roughly 15×
+the token cost of a single-agent exchange and calls coding tasks a weak fit
+for it.
 
 **Installed by the same `sync_skills.sh`/`install.sh` you already run** —
-no separate step. **Invocation differs by tool, on purpose, not by
-accident** (researched directly, not assumed — see `agents-src/README.md`
-for the full matrix):
+no separate step, and re-running it prunes any of the eight retired agent
+files a prior install left behind. **Invocation differs by tool, on
+purpose, not by accident** (researched directly, not assumed — see
+`agents-src/README.md` for the full matrix):
 
 | Tool | Where it lands | How you invoke it |
 |---|---|---|
-| Claude Code | `~/.claude/agents/<name>.md` | auto-triggers on phrasing, or `@agent-<name>` |
-| GitHub Copilot (VS Code) | user-profile agents folder, `<name>.agent.md` | pick from the agent picker (not auto-triggered by default) |
-| Codex CLI | `~/.codex/agents/<name>.toml` | `/agent` — explicit only, does not auto-trigger |
+| Claude Code | `~/.claude/agents/neeve.md` | auto-triggers on phrasing, or `@agent-neeve` |
+| GitHub Copilot (VS Code) | user-profile agents folder, `neeve.agent.md` | pick from the agent picker (not auto-triggered by default) — skills still auto-trigger independently |
+| Codex CLI | `~/.codex/agents/neeve.toml` | `/agent` — explicit only, does not auto-trigger |
 | Cursor / Antigravity | installed as a Skill instead (no native agent concept in either tool) | auto-triggers on phrasing, same as any other skill |
 
 ## Keeping It Fresh: The SessionStart Hook
 
-`context-src/repos/*.yaml` (what `repo-guide` and the pipeline skills read)
-is one canonical source in principle — but every engineer has their own
+`context-src/repos/*.yaml` (what `repo-ask`/`repo-intel` and the pipeline
+skills read) is one canonical source in principle — but every engineer has
+their own
 local clone of `neeve-copilot`, and it's only as current as their last
 `sync_skills.sh` run. Two engineers asking the same question on the same
 day can get different answers purely because one of them hasn't synced in
@@ -307,8 +307,9 @@ plainly rather than implied to work everywhere.
   reliance on individual habit entirely, for the tool where it's possible.
 - **A real, local audit trail.** `cat ~/.claude/neeve-copilot-sync.log`
   answers "what commit is this machine actually on, and when did it last
-  check" with a fact, not a guess — useful the moment a `repo-guide` answer
-  looks stale and you want to know whether that's this machine's fault.
+  check" with a fact, not a guess — useful the moment a `repo-ask`/
+  `repo-intel` answer looks stale and you want to know whether that's this
+  machine's fault.
 
 ### Why it's defensible
 
@@ -430,8 +431,8 @@ There are two source trees you edit here, each with its own local check:
 `scripts/test_context_render.py` and `scripts/test_merge_house_rules.py`
 (stdlib `unittest`, no extra dependency) cover the rendering/merging logic
 and run in this repo's own CI, along with `neeve/org/scripts/check_org_sync.py`
-(keeps `neeve/org/`'s agent definitions consistent with `security.md`/
-`PRINCIPLES.md`).
+(keeps the `neeve` agent's routing table consistent with what skills
+actually ship, and `security.md`'s headings consistent with what cites them).
 
 **Editing a skill:**
 ```bash

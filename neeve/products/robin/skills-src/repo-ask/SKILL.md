@@ -75,7 +75,7 @@ inline and proceed immediately — do not force a back-and-forth when none is ne
 `context-src/repos/<repo>.yaml`, note its `do_not_modify` list. If the question is
 heading toward a change to something on that list (not just understanding it), say so
 in the clarification check — mandatory here, not left to whether the person asking
-thought to consult `repo-guide` separately.
+thought to check separately.
 
 ### Phase 1 — Choose a Search Strategy
 

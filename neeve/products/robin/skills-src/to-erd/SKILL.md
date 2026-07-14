@@ -7,25 +7,22 @@ description: >
   existing, unmodified to-spec pipeline. Trigger on: "break this PRD into
   work items", "write an ERD for...", "turn this into engineering work
   items". Not to be confused with a database Entity Relationship Diagram.
-tools:
-  - read
-  - write
-  - search
+  Stage 3 of the Design Loop (see `neeve/README.md`).
 ---
 
 # To-ERD
 
 > **Disambiguation:** "ERD" here means **Engineering (Requirements)
-> Document** — a work-item breakdown, the output of this agent. Some repos
+> Document** — a work-item breakdown, the output of this skill. Some repos
 > also use "ERD" for a **database** Entity Relationship Diagram (an
 > unrelated document with the same acronym). If both exist in the same
 > org, each should carry a one-line pointer at the other so nobody confuses
 > the two.
 
-## Why This Agent Exists
+## Why This Skill Exists
 
 Turning a big feature into a pile of loosely-related tickets is how scope
-and dependencies get lost. This agent applies a proven shape — atomic,
+and dependencies get lost. This skill applies a proven shape — atomic,
 dependency-ordered, acceptance-criteria-bearing work items, grouped by
 domain, with an explicit dependency graph and sprint ordering — to any
 feature coming out of `to-prd`. Two things distinguish it from a plain
@@ -70,7 +67,7 @@ can start from it without re-deriving scope from the PRD itself.
    prose.** Before drafting items, read enough real code/structure in each
    Source-of-Truth repo to write concrete file paths and cite real
    existing patterns — the same "cite files, mark `[inferred]`, never
-   invent" discipline `repo-intel`/`repo-guide` already use. A `Key files
+   invent" discipline `repo-ask`/`repo-intel` already use. A `Key files
    to create/change` list built from guessing at plausible-sounding paths
    is exactly the failure mode this rule exists to prevent. If `repo-ask`/
    `repo-intel` output already exists for a Source-of-Truth repo, use it
@@ -79,9 +76,7 @@ can start from it without re-deriving scope from the PRD itself.
    behaves — not just where a file lives — invoke `debug-trace` instead of
    `repo-ask`/`repo-intel`: this is exactly the exhaustive, research-backed
    grounding a work item's `Key files to create/change` and dependency
-   claims need before another engineer treats them as reliable. Note the
-   **Depth check** line (`debug-trace`'s Disclosure Requirement) next to any
-   item whose feasibility rested on it.
+   claims need before another engineer treats them as reliable.
 5. **Compliance is a field, not a section — populate it per item, from the
    PRD, or mark it "N/A."** Every work item gets a `**Compliance:**` line
    (see Output Template) populated from the source PRD's Security &
@@ -89,9 +84,7 @@ can start from it without re-deriving scope from the PRD itself.
    compliance-relevant surface, write `N/A — no compliance-relevant
    surface`, not a blank. This field is a **pointer for `to-spec` to carry
    forward** — it complements `to-spec`'s existing OWASP-ASVS-based
-   `references/security-checklist.md`, it does not replace it; say this
-   explicitly in the handoff so nobody drops the OWASP pass thinking the
-   compliance field already covered it.
+   `references/security-checklist.md`, it does not replace it.
 6. **Dependencies are explicit, both in prose and in a dependency graph.**
    Every item states `**Depends on:**` / `**Blocks:**` (or "nothing"), and
    a mermaid `graph TD` block uses short node IDs (e.g. `R02`, not
@@ -103,13 +96,13 @@ can start from it without re-deriving scope from the PRD itself.
    onto `to-spec`'s existing work-item template fields (Goal Check, In/Out
    of Scope, etc.). `to-spec` needs no changes to consume a `WI-*` item.
 8. **Check the freshness of the source itself before relying on it.** The
-   PRD template's compliance framing, the reference work-item structure,
-   and `neeve-security-partner`'s domain knowledge all live in a
-   locally-cloned `neeve-copilot`. On Claude Code, a global `SessionStart`
-   hook keeps that checkout current automatically (see `neeve/products/
-   robin/README.md` § "Keeping It Fresh"); no equivalent is confirmed for
-   Copilot, Cursor, Codex, or Antigravity. If freshness can't be confirmed,
-   say so rather than silently assuming the local checkout is current.
+   PRD template's compliance framing and the reference work-item structure
+   live in a locally-cloned `neeve-copilot`. On Claude Code, a global
+   `SessionStart` hook keeps that checkout current automatically (see
+   `neeve/products/robin/README.md` § "Keeping It Fresh"); no equivalent
+   is confirmed for Copilot, Cursor, Codex, or Antigravity. If freshness
+   can't be confirmed, say so rather than silently assuming the local
+   checkout is current.
 
 ## Workflow
 
@@ -238,8 +231,8 @@ Items at the same tier can run in parallel. Dependencies flow downward.
 | This org's ADR source (if any) | For citation (Core Rule 3), never as a blocker |
 | The source PRD from `to-prd` | Always |
 | Existing `repo-ask`/`repo-intel` output for the Source-of-Truth repos | Always, before Phase 2, if available — don't re-scan from scratch |
-| `neeve/org/.github/agents/neeve-security-partner.agent.md` | When populating `Compliance` fields needs deeper security-framework grounding than the PRD's own Security & Compliance section provides |
-| `skills-src/to-spec/references/security-checklist.md` | To confirm the `Compliance` field is additive to, not a replacement for, `to-spec`'s own OWASP-ASVS pass |
+| `code-review/references/security.md` | When populating `Compliance` fields needs deeper security-framework grounding than the PRD's own Security & Compliance section provides |
+| `to-spec/references/security-checklist.md` | To confirm the `Compliance` field is additive to, not a replacement for, `to-spec`'s own OWASP-ASVS pass |
 
 ---
 

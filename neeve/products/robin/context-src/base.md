@@ -32,9 +32,10 @@ should shape every suggestion and every review comment:
 These are judgment defaults, not a checklist — apply them where they change a
 decision, not as boilerplate to append to every response.
 
-Full reasoning lineage for these defaults, plus the fuller Product/Design/
-Engineering charter (each principle traced to a named industry practice) and
-customer/buyer-persona detail: `neeve/org/PRINCIPLES.md`.
+Full reasoning for these defaults, what Neeve is and who it serves:
+`neeve/foundation.md`. The fuller SDLC process-principles charter (PRD/
+Design/Spec/Implementation/Review, each stage's principles stated
+explicitly): `neeve/engineering-principles.md`.
 
 {{PRODUCT_OVERVIEW_FRAGMENT}}
 
@@ -135,54 +136,48 @@ when the description matches your request, or invoke manually.
 
 | Skill | Triggers when you... | Manual invoke |
 |-------|---------------------|---------------|
+| `to-prd` | Ask to turn a problem into a PRD | `/to-prd` / `$to-prd` |
+| `to-erd` | Ask to break a PRD into engineering work items | `/to-erd` / `$to-erd` |
 | `repo-intel` | Ask to map/document this repo, generate CONTEXT.md | `/repo-intel` / `$repo-intel` |
 | `repo-ask` | Ask how/why something works, trace a call path | `/repo-ask` / `$repo-ask` |
-| `to-spec` | Ask to write a spec, plan a feature, or break into tasks | `/to-spec` / `$to-spec` |
+| `to-spec` | Ask to write a spec, plan a feature, or break into tasks (includes Design/architecture lock, Stage 2 of the Design Loop) | `/to-spec` / `$to-spec` |
 | `implement-spec` | Ask to implement a task, build from a spec, or write code | `/implement-spec` / `$implement-spec` |
 | `code-review` | Ask to review, audit, or check production readiness | `/code-review` / `$code-review` |
 | `neeve-dls` | Ask to update a DLS component or match a design | `/neeve-dls` / `$neeve-dls` |
+| `ot-building-automation` | Ask about Niagara/BQL/WebCTRL building-automation work | manual invoke, or auto-triggers in `alc-*`/`niagara-robin-agent` |
 | `debug-trace` | Invoked *by another skill/agent* when a step needs exhaustive, research-grounded depth — not a typical first move | manual invoke, or ask to "trace this thoroughly" / "don't just grep this" |
 
-The skill chain: `repo-ask`/`repo-intel` (understand) → `to-spec` (agree scope) →
-`implement-spec` (build; all 7 quality gates must pass) → `code-review` (final
-checkpoint; loops back if findings require changes). `neeve-dls` runs alongside
-`implement-spec` for UI/DLS surfaces. `debug-trace` sits outside this chain,
-one level deeper than `repo-ask` — every other skill/agent invokes it at the
+The full Design Loop, all 8 stages (see `neeve/README.md`): `to-prd` (PRD) →
+`neeve-dls` PRD Prototype Mode (optional, UI only) → `to-erd` (work-item
+breakdown) → `to-spec` (Spec, including the Design/architecture lock) →
+`implement-spec` (Implement; all 7 quality gates must pass) → `code-review`
+(Code Review; loops back if findings require changes) → Merge → CI Pass,
+which re-enters the loop at the next feature's PRD. `repo-ask`/`repo-intel`
+run ahead of any stage to orient in unfamiliar code. `debug-trace` sits
+outside this chain, one level deeper — every other skill invokes it at the
 specific step that needs exhaustive call-chain tracing or real (not
-remembered) research into an external library/tool/concept, rather than
-re-deriving that rigor inline.
+remembered) research into an external library/tool/concept.
 
-The full north-star pipeline, when a feature starts from a product idea
-rather than an existing spec: `to-prd` (PRD) → `neeve-dls` PRD Prototype Mode
-(optional, UI only) → `to-erd` (work-item breakdown) → the chain above,
-once per work item.
+Not every change needs every stage — a small bug fix starts at `to-spec`,
+not `to-prd`.
 
-## Agents Available
+## The `neeve` Agent
 
-Unlike skills, these are specialist agents, not always-loaded workflows —
-and **invocation is not identical across tools** (researched directly
-against each tool's mechanism, not assumed): Claude Code and Codex auto- or
-explicitly-invoke a real native agent; Copilot in VS Code shows them in an
-agent picker rather than auto-triggering by default; Cursor and Antigravity
-have no native agent concept, so they get the same content as a Skill
-instead (which does auto-trigger — more automatic than Codex's explicit-only
-agents, not less).
-
-| Agent | Does | Claude Code / Codex | Copilot (VS Code) | Cursor / Antigravity |
-|-------|------|---------------------|--------------------|-----------------------|
-| `neeve-guide` | Setup help, plus "which skill/agent do I use for X" triage | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
-| `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a security/ops-in-CRE-OT journey | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
-| `to-erd` | Turns a PRD into a compliance-aware work-item breakdown | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
-| `repo-guide` | Knows this specific repo — role, stack, structure/style, local dev, deploy | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
-| `neeve-reviewer` | Ad hoc Neeve-flavored code/spec review, for any repo | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
-| `neeve-security-partner` | Dedicated adversarial security pass — OWASP, pentest mindset, multi-tenancy | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
-| `neeve-pm-partner` | PM-shaped review before/alongside `to-prd`/`to-spec` — named outcome, enterprise requirements, rollout story | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
-| `neeve-design-partner` | DLS fidelity, accessibility, and failure-state design review | auto-triggers / `/agent` | pick from agent picker | auto-triggers (as a skill) |
+One unified agent, `neeve`, routes across all of the above by Design Loop
+stage and handles setup/onboarding — see its own `AGENT.md` for the full
+routing table. Invocation differs by tool (researched directly against each
+tool's mechanism, not assumed): Claude Code auto-triggers it or `/agent`;
+Copilot (VS Code) surfaces it in the agent picker (skills still auto-trigger
+independently there); Codex gets a native agent; Cursor/Antigravity get the
+same content as a skill fallback (which auto-triggers, unlike Copilot's
+picker). On Claude Code specifically, this agent is often redundant with
+its own auto-routing to the skills directly — the skills are the reliable
+surface across every tool; the agent is the routing/setup layer on top.
 
 ## Prompt Files (slash commands)
 
 If your editor surfaces `.github/prompts/*.prompt.md` as slash commands, the
-same seven workflows are available as `/to-spec`, `/implement-spec`,
-`/code-review`, `/repo-ask`, `/repo-intel`, `/neeve-dls`, `/debug-trace` —
-thin wrappers around the skills above, useful where automatic skill-matching
-doesn't trigger (e.g. inline chat).
+same skills are available as `/to-prd`, `/to-erd`, `/to-spec`,
+`/implement-spec`, `/code-review`, `/repo-ask`, `/repo-intel`, `/neeve-dls`,
+`/debug-trace` — thin wrappers around the skills above, useful where
+automatic skill-matching doesn't trigger (e.g. inline chat).

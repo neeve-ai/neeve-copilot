@@ -256,11 +256,9 @@ Read the best available sources before inventing structure:
 - bug report or incident details, if this is a fix
 - **this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if this
   repo is registered there** — cite its `do_not_modify` list, `stack`, and
-  `spec_based_development` flag the same way `repo-guide` would. This is
-  mandatory, not optional: don't let this step depend on whether the person
-  driving remembered to ask `repo-guide` first — a spec that proposes
-  touching something on the do-not-modify list must call that out
-  explicitly here, regardless of who's writing it.
+  `spec_based_development` flag directly. This is mandatory, not optional:
+  a spec that proposes touching something on the do-not-modify list must
+  call that out explicitly here, regardless of who's writing it.
 
 Extract:
 
@@ -313,6 +311,24 @@ Required sections (must appear in this order):
 19. Consequences / Follow-on Work
 20. Implementation Handoff
 
+### Phase 3.5 — Design: Lock Architecture
+
+This is Stage 2 of the Design Loop (see `neeve/README.md`) — deliberately
+folded into `to-spec` rather than a separate skill, since it produces input
+the spec's own template sections already need. Before writing spec prose:
+
+- Fill **System Boundaries** and **Owned Interfaces** first, as a structural
+  sketch, not narrative — every component/service/dependency this change
+  touches, named, with its role.
+- For anything touching more than one component/service, add a `mermaid
+  graph TD` (or sequence diagram for request/response flows) directly under
+  **End-to-End Flow** showing the data-flow order — this is the "component &
+  data-flow diagrams locked" acceptance contract, made concrete rather than
+  implied.
+- Treat this structural sketch as **locked** once Phase 4 starts — a change
+  to System Boundaries or the diagram discovered during prose-writing means
+  returning to this phase, not silently patching prose around a design gap.
+
 ### Phase 4 — Write the spec
 
 Write the chosen shape in a way a human reviewer can consume quickly.
@@ -364,6 +380,18 @@ Run all 8 checks from Rule 8 on the draft spec and emit a compact self-review **
 
 Do not write the Implementation Handoff block until every check is ✅ or any ⚠️ items are
 explicitly resolved or deferred with a note.
+
+Additionally — supplementary to the 8-check rubric above, not a renumbering
+of it — confirm the Stage 2 Design Lock (Phase 3.5) and SOLID mapping:
+
+```
+## Design & SOLID Self-Review
+
+| Check | Status | Notes |
+|---|---|---|
+| Component & data-flow diagram locked (Phase 3.5) | ✅ / ⚠️ / N/A (single-component change) | |
+| Each Functional Requirement maps to a SOLID boundary it respects (SRP for a new class/service, interface segregation at a new contract boundary, dependency inversion via the Protocol/interface pattern) | ✅ / ⚠️ | [any FR with no clear single responsibility] |
+```
 
 ## What Good Looks Like
 
@@ -799,6 +827,7 @@ Load on demand:
 | `references/ddd-patterns.md` | When the spec touches aggregates, repositories, or layered architecture |
 | `references/security-checklist.md` | Always when writing security-sensitive specs |
 | `references/quality-gates.md` | When writing Definition of Done and Required Tests — ensures all 7 gates are specced |
+| `neeve/references/pm-lens.md` | For any customer-facing spec — named persona/outcome, enterprise requirements, staged rollout, scope discipline |
 
 ---
 

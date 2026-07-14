@@ -511,3 +511,29 @@ that matter specifically because of that shape, on top of everything above:
   rely on network position ("it's inside the VPC, so it's trusted") — this is
   the same zero-trust default from this repo's culture/ethos section, applied
   at the infrastructure level.
+
+---
+
+## Escalation — Needs A Decision, Not Just A Fix
+
+Some security findings aren't code-review findings, they're product/leadership
+escalations, because no diff resolves them — only a scoping or resourcing
+decision does. Surface these explicitly, in a section separate from tiered
+findings, rather than filing them as a routine finding that looks like it'll
+be fixed by the next commit:
+
+- A missing audit trail on a sensitive action (role change, data export,
+  credential rotation) that would require new schema/infra to add, not a
+  one-line fix.
+- A deferred SSO/RBAC requirement that was scoped out of the current PR/spec
+  entirely, rather than a bug in what's present.
+- A disabled or missing Security Gate (secrets scanning, SAST, SCA,
+  container/IaC scanning) at the CI level — the fix is a pipeline/ownership
+  decision, not a code change in this diff.
+- A compliance-relevant gap (data residency, a missing DPA-required control)
+  that the diff surfaces but cannot fix alone.
+
+Format: a short "Needs a decision, not just a fix" list alongside the tiered
+🔴/🟡/🟢 findings — each item states what decision is needed and who should
+make it (product, security/compliance owner, engineering lead), not a
+suggested code change.

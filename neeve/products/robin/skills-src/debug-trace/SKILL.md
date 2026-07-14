@@ -221,8 +221,8 @@ is a line item, not a silence"), not quietly dropped. This doesn't force
 compliance — a skill that skips the disclosure line has skipped the whole
 thing again, invisibly, and no tooling here closes that residual gap. What
 it does do is turn most omissions into a visible, reviewable line instead of
-an untraceable one, and gives `code-review`/`neeve-reviewer`'s Gate 4
-backstop something concrete to check for.
+an untraceable one, and gives `code-review`'s Gate 4 backstop something
+concrete to check for.
 
 ## Skill Chain
 

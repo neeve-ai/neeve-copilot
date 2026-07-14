@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
-"""Assertion-based consistency check for Neeve's specialist agents.
+"""Assertion-based consistency check for Neeve's unified `neeve` agent and
+its canonical reference files.
 
-Unlike context_render.py's byte-for-byte diff, these agent files are
-deliberately condensed prose, not a mechanical render of base.md/security.md/
-PRINCIPLES.md — so this check can't diff them against a generated "expected"
-output. Instead it asserts each agent still textually cites the specific
-sections it claims to apply, catching the case where base.md/security.md/
-PRINCIPLES.md is restructured (a heading renamed or removed) and an agent's
-citation silently goes stale.
+Historically this checked eight narrow specialist agents' citations against
+`PRINCIPLES.md`/`security.md`. That structure is retired: `to-prd`/`to-erd`
+are now skills, `repo-guide`/`neeve-reviewer`/`neeve-security-partner`/
+`neeve-pm-partner`/`neeve-design-partner` are folded into existing skills and
+two new reference files, and a single `neeve` agent routes to all of them.
+This check now asserts three things instead:
 
-Four agents (`neeve-reviewer`, `neeve-security-partner`, `neeve-pm-partner`,
-`neeve-design-partner`) were migrated to `agents-src/<name>/AGENT.md` so they
-reach every engineer/tool via the same render pipeline as `to-prd`/`to-erd`/
-`repo-guide`, retiring the GitHub-Enterprise-only `.github-private` export
-path for them. `neeve-ot-specialist` stays in `neeve/org/.github/agents/` —
-it's gated on SME content review, not distribution; migrate it the same way
-once it's validated.
+1. `agent-src/neeve/AGENT.md`'s routing table names every skill that ships
+   under either skills-src root exactly once — a new skill added without a
+   routing-table entry fails this, catching silent drift between what's
+   installed and what the agent tells engineers to use.
+2. `code-review/references/security.md` still has the section headings the
+   `neeve` agent's Escalation Rules and `neeve/references/*.md` cite.
+3. The new `neeve/references/pm-lens.md` and `design-review.md` still cite
+   `foundation.md`/`engineering-principles.md`, so a rename/removal there
+   doesn't leave a stale reference.
 
 Usage: python3 neeve/org/scripts/check_org_sync.py
-Exit 0 if every agent's required citations are present, 1 otherwise.
+Exit 0 if all checks pass, 1 otherwise.
 """
 from __future__ import annotations
 
@@ -26,56 +28,68 @@ import sys
 from pathlib import Path
 
 ORG_DIR = Path(__file__).resolve().parents[1]
-AGENTS_DIR = ORG_DIR / ".github" / "agents"
 NEEVE_DIR = ORG_DIR.parent
-AGENTS_SRC_DIR = NEEVE_DIR / "products" / "robin" / "agents-src"
-SECURITY_MD = NEEVE_DIR / "products" / "robin" / "skills-src" / "code-review" / "references" / "security.md"
-PRINCIPLES_MD = ORG_DIR / "PRINCIPLES.md"
-BASE_MD = NEEVE_DIR / "products" / "robin" / "context-src" / "base.md"
+ROBIN_DIR = NEEVE_DIR / "products" / "robin"
+AGENT_MD = ROBIN_DIR / "agents-src" / "neeve" / "AGENT.md"
+SECURITY_MD = ROBIN_DIR / "skills-src" / "code-review" / "references" / "security.md"
+FOUNDATION_MD = NEEVE_DIR / "foundation.md"
+ENGINEERING_PRINCIPLES_MD = NEEVE_DIR / "engineering-principles.md"
+PM_LENS_MD = NEEVE_DIR / "references" / "pm-lens.md"
+DESIGN_REVIEW_MD = NEEVE_DIR / "references" / "design-review.md"
 
-# Per-agent: substrings that MUST appear in the agent's own file, and where
-# that file now lives. These are citations, not full duplication — the agent
-# should point at the section, not restate it. Keep loose (a distinctive
-# phrase from the heading) so a reasonable heading rewording doesn't
-# spuriously fail this, but a real section removal/rename does.
-REQUIRED_CITATIONS: dict[Path, list[str]] = {
-    AGENTS_SRC_DIR / "neeve-security-partner" / "AGENT.md": [
-        "OWASP",
-        "Pentest Mindset",
-        "Security Gates",
-        "Multi-Tenancy",
-    ],
-    AGENTS_SRC_DIR / "neeve-pm-partner" / "AGENT.md": [
-        "PRINCIPLES.md",
-        "Product Management",
-    ],
-    AGENTS_SRC_DIR / "neeve-design-partner" / "AGENT.md": [
-        "PRINCIPLES.md",
-        "Design",
-    ],
-    AGENTS_SRC_DIR / "neeve-reviewer" / "AGENT.md": [
-        "PRINCIPLES.md",
-        "Engineering",
-    ],
-}
+PRODUCTS_DIR = NEEVE_DIR / "products"
+SKILLS_SRC_ROOTS = [ROBIN_DIR / "skills-src"] + (
+    [p / "skills-src" for p in sorted(PRODUCTS_DIR.iterdir()) if p.is_dir() and p != ROBIN_DIR]
+    if PRODUCTS_DIR.is_dir()
+    else []
+)
 
-# Section headings that must still exist in the source docs (independent of
-# any one agent) — catches a rename/removal even before checking citations.
+# Section headings that must still exist in the source docs — catches a
+# rename/removal even before checking what cites them.
 REQUIRED_SOURCE_HEADINGS: dict[Path, list[str]] = {
     SECURITY_MD: [
         "OWASP Top 10",
         "Pentest Mindset",
         "Security Gates",
         "Enterprise SaaS Multi-Tenancy",
-    ],
-    PRINCIPLES_MD: [
-        "## Product Management",
-        "## Design",
-        "## Engineering",
+        "Escalation",
     ],
 }
 
-PLACEHOLDER_AGENTS = {"neeve-ot-specialist.agent.md"}
+# Each of these files must still cite the given substrings — catches a
+# reference file going stale against the docs it's derived from.
+REQUIRED_CITATIONS: dict[Path, list[str]] = {
+    PM_LENS_MD: ["foundation.md", "engineering-principles.md"],
+    DESIGN_REVIEW_MD: ["engineering-principles.md"],
+}
+
+
+def discover_skill_names() -> list[str]:
+    names: list[str] = []
+    for root in SKILLS_SRC_ROOTS:
+        if not root.is_dir():
+            continue
+        for p in sorted(root.iterdir()):
+            if p.is_dir() and (p / "SKILL.md").is_file():
+                names.append(p.name)
+    return names
+
+
+def check_agent_routes_every_skill() -> list[str]:
+    errors: list[str] = []
+    if not AGENT_MD.is_file():
+        return [f"missing unified agent file: {AGENT_MD}"]
+    text = AGENT_MD.read_text()
+    for name in discover_skill_names():
+        # A skill is "named" if its bare name appears literally in backticks,
+        # matching how the routing table and prose reference skills.
+        if f"`{name}`" not in text:
+            errors.append(
+                f"{AGENT_MD.name}: skill {name!r} ships under skills-src but "
+                f"is not named in the routing table — add a row or an "
+                f"explicit reference."
+            )
+    return errors
 
 
 def check_source_headings() -> list[str]:
@@ -87,52 +101,35 @@ def check_source_headings() -> list[str]:
         text = path.read_text()
         for heading in headings:
             if heading not in text:
-                errors.append(f"{path.name}: expected heading/text {heading!r} not found — an agent likely cites this")
+                errors.append(f"{path.name}: expected heading/text {heading!r} not found")
     return errors
 
 
-def check_agent_citations() -> list[str]:
+def check_reference_citations() -> list[str]:
     errors = []
-    for agent_path, required in REQUIRED_CITATIONS.items():
-        if not agent_path.is_file():
-            errors.append(f"missing agent file: {agent_path}")
+    for path, required in REQUIRED_CITATIONS.items():
+        if not path.is_file():
+            errors.append(f"missing reference file: {path}")
             continue
-        text = agent_path.read_text()
+        text = path.read_text()
         for citation in required:
             if citation not in text:
-                errors.append(f"{agent_path.name}: missing expected citation {citation!r}")
-    return errors
-
-
-def check_placeholders_still_flagged() -> list[str]:
-    errors = []
-    for filename in PLACEHOLDER_AGENTS:
-        agent_path = AGENTS_DIR / filename
-        if not agent_path.is_file():
-            errors.append(f"missing placeholder agent file: {filename}")
-            continue
-        text = agent_path.read_text()
-        if "PLACEHOLDER" not in text:
-            errors.append(
-                f"{filename}: no longer marked PLACEHOLDER — if it was promoted, "
-                f"remove it from PLACEHOLDER_AGENTS in this script and add it to "
-                f"REQUIRED_CITATIONS instead."
-            )
+                errors.append(f"{path.name}: missing expected citation {citation!r}")
     return errors
 
 
 def main() -> int:
     all_errors = (
-        check_source_headings()
-        + check_agent_citations()
-        + check_placeholders_still_flagged()
+        check_agent_routes_every_skill()
+        + check_source_headings()
+        + check_reference_citations()
     )
     if all_errors:
         print("neeve/org sync check FAILED:", file=sys.stderr)
         for err in all_errors:
             print(f"  - {err}", file=sys.stderr)
         return 1
-    print("neeve/org: all agent citations present, all placeholders still flagged.")
+    print("neeve/org: unified agent routes every skill, all citations present.")
     return 0
 
 

@@ -5,33 +5,29 @@ description: >
   a security-and-operations journey in commercial real estate OT — Neeve's
   actual customer reality — before any other persona. Trigger on: "write a
   PRD for...", "turn this problem into a PRD", "draft a product requirements
-  doc for...", "what should we build for...". Use before `neeve-dls`
-  prototype mode or `to-erd`; upstream of the whole spec pipeline.
-tools:
-  - read
-  - write
-  - search
+  doc for...", "what should we build for...". Stage 1 of the Design Loop
+  (see `neeve/README.md`) — upstream of `neeve-dls` prototype mode, `to-erd`,
+  and the whole spec pipeline.
 ---
 
 # To-PRD
 
-## Why This Agent Exists
+## Why This Skill Exists
 
 Neeve sells the security and control layer for smart buildings and critical
 infrastructure. A PRD written like a generic B2B SaaS feature request — user
 story, acceptance criteria, done — misses the two things that actually
 determine whether Neeve's buyer says yes: does this hold up under a security
 review, and does it survive contact with a real building's operations team.
-This agent writes PRDs that lead with those two questions, using
+This skill writes PRDs that lead with those two questions, using
 enterprise-SaaS-plus-AI PRD structure (problem → journeys → success metrics →
 requirements → compliance → rollout) as the shape, and Neeve's own culture
-(`context-src/base.md` § Why This Matters) as the lens.
+(`foundation.md`, `context-src/base.md` § Why This Matters) as the lens.
 
-This does not replace `neeve-pm-partner` (`neeve/org/.github/agents/
-neeve-pm-partner.agent.md`) — that agent is the ad hoc *reviewer*, usable
-against any spec or feature request at any time. `to-prd` is the *producer*:
-it writes the PRD in the first place, and calls `neeve-pm-partner`'s
-checklist against its own draft before handing off.
+This does not replace `neeve/references/pm-lens.md` — that checklist is the
+ad hoc *reviewer*, usable against any spec or feature request at any time.
+`to-prd` is the *producer*: it writes the PRD in the first place, and applies
+`pm-lens.md`'s checklist against its own draft before handing off.
 
 ## Producer Contract
 
@@ -57,8 +53,8 @@ A finished PRD must hand off, explicitly, to whatever consumes it next
    right now (the actual workaround), and why now (what changed, what's
    forcing this). If the answer is "an internal capability we want to
    build," not a named outcome for a named persona, push back before
-   drafting — this is exactly `neeve-pm-partner` checklist item 1, applied
-   at the point of writing rather than the point of review.
+   drafting — this is exactly `pm-lens.md` checklist item 1, applied at the
+   point of writing rather than the point of review.
 2. **The primary journey is not optional and not generic.** Section 2 below
    must name a specific security-operations or facilities/building-operations
    persona in a commercial real estate OT context, not a placeholder. Refuse
@@ -69,8 +65,8 @@ A finished PRD must hand off, explicitly, to whatever consumes it next
    RBAC, audit logging, data residency — for anything touching auth, access
    control, or configuration, these get their own line in Functional/
    Non-Functional Requirements, not a "phase 2" footnote. This is
-   `neeve-pm-partner` checklist item 2, restated as a drafting instruction
-   rather than a review-time catch.
+   `pm-lens.md` checklist item 2, restated as a drafting instruction rather
+   than a review-time catch.
 4. **Security & compliance is a first-class section, not an appendix.**
    Every PRD gets a Security & Compliance Considerations section (item 8
    below), even when the honest answer for a given sub-point is "not
@@ -86,7 +82,7 @@ A finished PRD must hand off, explicitly, to whatever consumes it next
    bleed, a PM failure mode as much as an engineering one — cut it, don't
    footnote it as "nice to have while we're here."
 7. **Check the freshness of the source itself before relying on it.** This
-   agent's own instructions, `neeve-pm-partner`'s checklist, and the
+   skill's own instructions, `pm-lens.md`'s checklist, and the
    production-consequence fragment all live in a locally-cloned
    `neeve-copilot`. On Claude Code, a global `SessionStart` hook keeps that
    checkout current automatically (see `neeve/products/robin/README.md` §
@@ -113,12 +109,11 @@ now, per Core Rule 1. Do not proceed past this phase on assumptions.
 order. Decide the `feature-slug` here and use it verbatim in the doc's
 filename and header.
 
-**Phase 2 — PM Review self-check (mandatory before handoff).** Apply
-`neeve-pm-partner`'s 5-point checklist (`neeve/org/.github/agents/
-neeve-pm-partner.agent.md`) against the draft. Embed its ✅/⚠️/❌ output,
-with one-line justifications, verbatim in the PRD's own `## PM Review`
-section (item 13 below) — do not summarize or paraphrase the checklist
-itself into this file; point at it.
+**Phase 2 — PM lens self-check (mandatory before handoff).** Apply
+`neeve/references/pm-lens.md`'s 5-point checklist against the draft. Embed
+its ✅/⚠️/❌ output, with one-line justifications, verbatim in the PRD's own
+`## PM Review` section (item 13 below) — do not summarize or paraphrase the
+checklist itself into this file; point at it.
 
 **Phase 3 — Handoff statement.** State plainly, as the PRD's last line,
 whether this goes to `neeve-dls` prototype mode next or straight to
@@ -177,7 +172,8 @@ in-scope-now or genuinely not-applicable-to-this-feature. Never "phase 2."
   systems).
 - Data classification of anything this feature touches.
 - Zero-trust framing: does this introduce a new trust boundary, credential,
-  or network path? (see `context-src/base.md` § Why This Matters)
+  or network path? (see `foundation.md` / `context-src/base.md` § Why This
+  Matters)
 - If none of the above genuinely applies, say so explicitly rather than
   omitting the section.
 
@@ -199,8 +195,8 @@ for one customer without turning it off for all of them?
 
 ## 13. PM Review
 
-`neeve-pm-partner`'s 5-point checklist output, embedded verbatim (✅/⚠️/❌ +
-one-line justification per item) — see Workflow Phase 2.
+`neeve/references/pm-lens.md`'s 5-point checklist output, embedded verbatim
+(✅/⚠️/❌ + one-line justification per item) — see Workflow Phase 2.
 
 ---
 
@@ -212,17 +208,17 @@ one-line justification per item) — see Workflow Phase 2.
 
 | File | When to load |
 |---|---|
-| `neeve/org/.github/agents/neeve-pm-partner.agent.md` | Always, for the Phase 2 self-check — never duplicate its checklist text into a PRD, reference it |
+| `neeve/references/pm-lens.md` | Always, for the Phase 2 self-check — never duplicate its checklist text into a PRD, reference it |
 | `context-src/fragments/production-consequence-and-gaps.md` | Always, for Section 9 |
-| `context-src/base.md` § Why This Matters | For Section 8's zero-trust framing |
-| `neeve/org/.github/agents/neeve-security-partner.agent.md` | When Section 8 needs deeper security-framework grounding than a PM-level pass covers |
+| `neeve/foundation.md`, `context-src/base.md` § Why This Matters | For Section 8's zero-trust framing |
+| `code-review/references/security.md` | When Section 8 needs deeper security-framework grounding than a PM-level pass covers |
 
 ---
 
 ## Skill Chain
 
-**Prior:** none — this is the top of the pipeline; entry point is a problem
-statement, not another skill's output.
+**Prior:** none — this is the top of the Design Loop; entry point is a
+problem statement, not another skill's output.
 
 **Feeds into:** `neeve-dls` (PRD Prototype Mode) if a UI prototype is
 expected, otherwise directly into `to-erd`.

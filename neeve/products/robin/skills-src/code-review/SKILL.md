@@ -359,6 +359,15 @@ Start with findings. Findings are the product.
   or cross-tenant case, a deferred compliance control — or "none identified,
   verified via [what was checked]". Never leave this blank by omission.
 
+## Needs A Decision, Not Just A Fix
+
+- Anything from `references/security.md`'s "Escalation" section — a missing
+  audit trail requiring new schema, a deferred SSO/RBAC requirement, a
+  disabled Security Gate, a compliance gap the diff surfaces but can't fix
+  alone. State the decision needed and who should make it (product,
+  security/compliance owner, engineering lead) — or omit this section
+  entirely if nothing surfaced.
+
 ## Review Coverage
 
 - Reviewed: specs/docs/files/tests/config you actually inspected
@@ -390,6 +399,7 @@ Load these on demand while working through the gates:
 - `references/smells.md`: maintainability and test-smell checks
 - `references/typing.md`: mypy/ruff/type-safety checks
 - `references/quality-gates.md`: production standard — verify all 7 gates are met by the change under review
+- `neeve/references/design-review.md`: when the diff touches customer-facing UI — DLS fidelity, accessibility, failure-state design
 
 ---
 

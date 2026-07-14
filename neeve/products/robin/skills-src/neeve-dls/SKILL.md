@@ -60,6 +60,7 @@ Then read [`references/repo-map.md`](references/repo-map.md) — substituting `$
 - Do not improvise visual treatments that are merely similar. Prefer reusing an existing DLS component or token over recreating one by hand.
 - When a design artifact or existing DLS example conflicts with local assumptions, trust the DLS implementation and docs first, then reconcile the consuming page to match them.
 - Treat "close enough" as incorrect for DLS-facing work unless the user explicitly asks for a deliberate deviation.
+- For a design *review* (not implementation) of a customer-facing surface, apply `neeve/references/design-review.md` in full — it adds accessibility-as-compliance-surface and failure-state-designed-first checks this skill's own implementation workflow doesn't independently gate on.
 
 ## Visual Verification
 

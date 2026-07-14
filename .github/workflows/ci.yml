@@ -94,5 +94,5 @@ jobs:
 
       - name: Verify neeve/org Consistency
         run: |
-          echo "Checking neeve/org agent citations stay consistent with security.md/PRINCIPLES.md..."
+          echo "Checking the neeve agent routes every skill and reference citations stay consistent..."
           python3 neeve/org/scripts/check_org_sync.py

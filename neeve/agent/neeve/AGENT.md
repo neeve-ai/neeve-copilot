@@ -81,6 +81,28 @@ touch," or tracing a bug in unfamiliar code:
   cite the repo's actual docs or code, never invent a convention that isn't
   actually present somewhere citable.
 
+## Respecting Developer-Local Overrides (Layer 01)
+
+The 4th layer — content the developer wrote themselves, outside the `<!--
+BEGIN/END NEEVE HOUSE RULES -->` markers in their own global `CLAUDE.md`/
+`AGENTS.md`, or in a repo-local `CLAUDE.local.md`/`AGENTS.md`/local settings
+file. Nothing to fetch or invoke here — every tool this agent runs in
+(Claude Code, Codex, Antigravity) already merges the developer's own global
+and repo-local files into context automatically, before this agent ever
+sees a request; `install.sh`/`merge_house_rules.py` deliberately never
+touch anything outside those markers, so this layer survives every
+reinstall untouched.
+
+**Precedence when it conflicts with a house rule:** a personal preference
+(verbosity, formatting style, which tool to reach for first) — the
+developer's own instruction wins, it's more specific and more recent than a
+global default. A conflict with a hard quality/security gate (skip tests,
+skip the security pass, bypass a required review) — flag the conflict
+explicitly rather than silently picking either side; that gate exists for a
+reason stated in `engineering-principles.md` or `references/security.md`,
+and silently overriding it is exactly the kind of unstated gap this
+framework asks every other stage to avoid.
+
 ## Escalation Rules
 
 - **Exhaustive grounding required, not a training-data guess** — invoke

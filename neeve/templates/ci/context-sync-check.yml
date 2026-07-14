@@ -2,9 +2,10 @@
 #
 # Copied into a product repo's .github/workflows/ by neeve-copilot's
 # init-repo.sh (--with-ci). Runs the SAME deterministic script as the
-# committed .githooks/pre-commit, over the whole tree — so a stale
-# introduction.md/index.md/appendix.md can't merge even if the local hook
-# was skipped with `git commit --no-verify`.
+# committed .githooks/pre-commit, scoped to the files this PR changed — so
+# a stale introduction.md/index.md/appendix.md can't merge even if the
+# local hook was skipped with `git commit --no-verify`, without blocking a
+# brownfield repo on documenting its entire history at once.
 #
 # The local hook is warn-only by default; THIS check is the real gate.
 name: context-sync-check
@@ -18,11 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Verify OKF book (introduction.md / index.md / appendix.md) is current
         run: |
-          if [[ ! -x .githooks/pre-commit ]]; then
+          if [[ ! -f .githooks/pre-commit ]]; then
             echo "::error::.githooks/pre-commit not found — run neeve-copilot's init-repo.sh in this repo and commit the result"
             exit 1
           fi
-          python3 .githooks/pre-commit --all
+          python3 .githooks/pre-commit --diff "origin/${{ github.base_ref }}"

@@ -42,7 +42,7 @@ global_path() {
   case "$1" in
     claude-code)  echo "${HOME}/.claude/skills" ;;
     codex)        echo "${HOME}/.codex/skills" ;;
-    antigravity)  echo "${HOME}/.gemini/antigravity/skills" ;;
+    antigravity)  echo "${HOME}/.gemini/config/skills" ;;
     copilot)      echo "${HOME}/.copilot/skills" ;;
     cursor)       echo "${HOME}/.cursor/skills" ;;
   esac
@@ -103,7 +103,7 @@ if ! $DO_CLAUDE && ! $DO_CODEX && ! $DO_ANTIGRAVITY && ! $DO_COPILOT && ! $DO_CU
   echo "No agent specified — auto-detecting..."
   command -v claude      &>/dev/null && { DO_CLAUDE=true;      echo "  found: Claude Code"; }
   command -v codex       &>/dev/null && { DO_CODEX=true;       echo "  found: Codex CLI"; }
-  [[ -d "${HOME}/.gemini/antigravity" ]] && { DO_ANTIGRAVITY=true; echo "  found: Antigravity"; }
+  { command -v antigravity &>/dev/null || [[ -d "${HOME}/.gemini" ]]; } && { DO_ANTIGRAVITY=true; echo "  found: Antigravity"; }
   [[ -d "${HOME}/.copilot" ]]            && { DO_COPILOT=true;     echo "  found: GitHub Copilot"; }
   [[ -d "${HOME}/.cursor"  ]]            && { DO_CURSOR=true;      echo "  found: Cursor"; }
 
@@ -187,11 +187,45 @@ install_to() {
 TOTAL_OK=0
 TOTAL_FAIL=0
 
+# Every run is a reset to exactly the current skills-src, not an additive
+# overlay: a manifest file records which skill names neeve-copilot installed
+# into this directory last run, so a skill that's renamed or removed from
+# skills-src gets its old, now-orphaned directory removed too — instead of
+# silently surviving forever like a stale skill would with the old
+# install-only-what's-currently-listed behavior. This never touches a
+# directory not in *our own* manifest, so a third-party skill some other tool
+# put in the same shared folder is never at risk.
+MANIFEST_NAME=".neeve-manifest"
+
+prune_stale_skills() {
+  local dest_dir="$1"
+  local manifest="${dest_dir}/${MANIFEST_NAME}"
+  [[ -f "${manifest}" ]] || return 0
+
+  local previously_installed name
+  previously_installed="$(cat "${manifest}")"
+  for name in ${previously_installed}; do
+    if ! printf '%s\n' ${SKILLS} | grep -qx "${name}"; then
+      if [[ -d "${dest_dir}/${name}" ]]; then
+        rm -rf "${dest_dir}/${name}"
+        ok "Removed stale skill (no longer in skills-src): ${name}"
+      fi
+    fi
+  done
+}
+
+write_skills_manifest() {
+  local dest_dir="$1"
+  printf '%s\n' ${SKILLS} > "${dest_dir}/${MANIFEST_NAME}"
+}
+
 install_agent() {
   local agent="$1"
   local dest
   dest="$(global_path "$agent")"
   hdr "${agent}  →  ${dest}"
+  mkdir -p "${dest}"
+  prune_stale_skills "${dest}"
   for skill in $SKILLS; do
     if install_to "${skill}" "${dest}"; then
       ok "${skill}"
@@ -201,6 +235,7 @@ install_agent() {
       TOTAL_FAIL=$((TOTAL_FAIL + 1))
     fi
   done
+  write_skills_manifest "${dest}"
 }
 
 $DO_CLAUDE      && install_agent "claude-code"
@@ -244,7 +279,8 @@ if [[ -f "${RENDER_SCRIPT}" ]]; then
     fi
 
     if $DO_ANTIGRAVITY; then
-      warn "Antigravity: no confirmed global-instructions file location yet — skipped. Flag to Neeve tooling if you know it."
+      python3 "${MERGE_SCRIPT}" "${HOME}/.gemini/AGENTS.md" "${HOUSE_RULES_TMP}" >/dev/null
+      ok "Antigravity  →  ~/.gemini/AGENTS.md (cross-tool global rules; Antigravity-only overrides live in ~/.gemini/GEMINI.md, untouched by this installer)"
     fi
 
     if $DO_CURSOR; then
@@ -260,6 +296,15 @@ if [[ -f "${RENDER_SCRIPT}" ]]; then
   fi
 else
   warn "No scripts/context_render.py found — skipping house-rules install (skills-only mode)"
+fi
+
+# ── One-time cleanup: wrong Antigravity path from before this was verified ──
+# Confirmed against Antigravity's own docs: global skills live in
+# ~/.gemini/config/skills, not ~/.gemini/antigravity/skills. Nothing valid
+# ever depended on the old path — it's dead, misplaced data, safe to remove.
+if $DO_ANTIGRAVITY && [[ -d "${HOME}/.gemini/antigravity" ]]; then
+  rm -rf "${HOME}/.gemini/antigravity"
+  ok "Removed ~/.gemini/antigravity (wrong path from before the correct location was confirmed)"
 fi
 
 # ── Prune retired agents ──────────────────────────────────────────────────────

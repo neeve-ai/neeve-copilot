@@ -53,7 +53,7 @@ The skills behave the same everywhere. Only invocation details differ:
 | **GitHub Copilot** (VS Code, agent mode) | auto, or `/skill-name` | pick from the **agent picker** (no auto-routing) | auto-loaded from `~/.copilot/instructions/` | re-run `sync_skills.sh` |
 | **Cursor** | auto, or `/skill-name` | auto (installed as a skill) | one-time paste into Settings → User Rules (installer prints it) | re-run `sync_skills.sh` |
 | **Codex CLI** | `$skill-name` | `/agent` (explicit only) | merged into `~/.codex/AGENTS.md` | re-run `sync_skills.sh` |
-| **Antigravity** | auto, or `@skills` | auto (installed as a skill) | **not supported yet** — skills only | re-run `sync_skills.sh` |
+| **Antigravity 2.0** | auto, or `@skills` | auto (installed as a skill) | merged into `~/.gemini/AGENTS.md` | re-run `sync_skills.sh` |
 
 ---
 
@@ -141,8 +141,8 @@ real building equipment — using a stale map of the repo. Every mechanism
 above makes staleness *loud* (a warning, a red check, a TODO marker)
 instead of silent.
 
-**Known gaps:** Antigravity has no house-rules support yet; tools other
-than Claude Code refresh only when you re-run `sync_skills.sh`; the hook's
+**Known gaps:** tools other than Claude Code refresh only when you re-run
+`sync_skills.sh`; the hook's
 symbol detection is exact for Python but conservative for TypeScript/Go
 (one reason it starts warn-only); and the repo-setup flow should be
 piloted on one small repo before rolling out everywhere.

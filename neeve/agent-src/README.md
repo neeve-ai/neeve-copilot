@@ -49,7 +49,7 @@ documentation, not assumed:
 | GitHub Copilot (VS Code) | user-profile agents folder | `.agent.md`, same family, plus `target`/`user-invocable` | Picker-first; can opt into model-invocation, but the default is explicit selection |
 | Codex CLI | `~/.codex/agents/*.toml` | **TOML**, not Markdown | No — explicit only, via `/agent` |
 | Cursor | none — "Custom Modes" was deprecated in 2026, no replacement | — | — |
-| Antigravity | none confirmed — orchestrator invents its own ephemeral subagents at runtime, no user-authored persistent mechanism | — | — |
+| Antigravity 2.0 | `~/.gemini/config/skills/` (skills) + `agents.md` (persona/house-rules definitions) — confirmed against Antigravity's own docs | Markdown + YAML frontmatter | `agents.md` is a persona/house-rules concept (same family as AGENTS.md elsewhere), not a discrete named-agent-with-its-own-tool-restrictions mechanism like Claude Code's or Copilot's — so `neeve` still renders as a skill there, not a distinct custom-agent file |
 
 Cursor and Antigravity get a **Skill-shaped fallback** rendered from the
 same `AGENT.md` source instead of a hand-authored second file. Notably, the

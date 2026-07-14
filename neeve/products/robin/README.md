@@ -97,7 +97,7 @@ dependencies), and a clean code review.
 | VS Code + Claude extension | ✅ | Same skills as the terminal |
 | VS Code + GitHub Copilot | ✅ | Only in Copilot's "agent mode" |
 | Cursor | ✅ | Skills in the chat panel; house rules need one manual paste (see below) |
-| Antigravity | ✅ (skills) / ⚠️ (house rules) | House-rules global-instructions location not yet confirmed for this tool |
+| Antigravity 2.0 | ✅ | Real skill auto-triggering (semantic match on description) confirmed against Antigravity's own docs, not assumed |
 | Codex CLI | ✅ | Type `$skill-name` instead of `/skill-name` |
 
 ---
@@ -146,7 +146,7 @@ bash install.sh --claude-code --cursor       # only specific agents
 | GitHub Copilot | `~/.copilot/skills/` | `~/.copilot/instructions/neeve-house-rules.instructions.md` |
 | Cursor | `~/.cursor/skills/` | Settings → Rules → User Rules (manual paste) |
 | Codex CLI | `~/.codex/skills/` | `~/.codex/AGENTS.md` (merged block) |
-| Antigravity | `~/.gemini/antigravity/skills/` | not yet supported |
+| Antigravity | `~/.gemini/config/skills/` | `~/.gemini/AGENTS.md` (merged block; cross-tool — Antigravity-only overrides live in `~/.gemini/GEMINI.md`, untouched by this installer) |
 
 Nothing above is ever written into a product repo. If you see `AGENTS.md`,
 `.github/copilot-instructions.md`, or `.cursorrules` show up as uncommitted
@@ -398,10 +398,14 @@ local bare repo):
   repo-local `AGENTS.md` on top automatically, root-to-leaf, if one exists)
 
 ### Antigravity (Google)
-- Personal skills load from `~/.gemini/antigravity/skills/`
+- Personal skills load from `~/.gemini/config/skills/` — Antigravity 2.0
+  semantic-matches your prompt against each skill's `description`, same
+  auto-trigger model as Claude Code
 - Check they're there: `@skills`
-- House rules: not yet supported — no confirmed global-instructions file
-  location for this tool. Flag it if you find one.
+- House rules: `~/.gemini/AGENTS.md` (global, cross-tool — shared with any
+  other tool that reads `AGENTS.md`). Antigravity-only overrides live in
+  `~/.gemini/GEMINI.md`, which takes precedence over `AGENTS.md` but is
+  never written by this installer.
 
 ---
 

@@ -132,7 +132,7 @@ Deck: "Git & CI/CD lifecycle event triggers and validations" +
 3. **Integration Verification** — NEW: a template GitHub Actions job
    (`neeve/templates/ci/integration-verify.yml`) that consuming repos copy in,
    running each repo's declared integration/system test command (sourced from
-   the repo yaml's existing `test_cmd` field) on every PR. This is new scope
+  the repo's own documented test command) on every PR. This is new scope
    this repo now owns as a template, not a live workflow in every product repo.
 4. **Repo-book freshness (`pre-commit-context-sync`)** — the Layer 02
    mechanism described above: a committed pre-commit hook per target repo
@@ -235,7 +235,7 @@ neeve-copilot/
     │   └── pre-merge-checklist.sh    # NEW — Stop-hook, Pillar 2 item 5
     └── products/robin/
         ├── product-overview.md       # feeds foundation.md's Product section for Robin
-        ├── context-src/repos/*.yaml  # 16 repo files, seed repo-intel's per-repo book
+        ├── repo-level OKF books       # committed in each repo, seeded by init-repo.sh
         └── skills-src/  neeve-dls/  ot-building-automation/
 ```
 
@@ -352,8 +352,7 @@ hand-duplicated.
 1. `python3 neeve/scripts/test_context_render.py -v` (+ other test files, +
    new shared-refs tests).
 2. `bash neeve/scripts/skills_sync.sh check` and `shared_refs_sync.sh check`.
-3. Render smoke: all 16 repo yamls `--write $(mktemp -d)` for the thin
-   house-rules pointer files; `--house-rules`.
+3. Render smoke: `--house-rules` for the thin global pointer files.
 4. Full install into throwaway `HOME`: assert 10 skills per tool, exactly one
    `neeve` agent per tool (old 8 absent), `pre-merge-checklist.sh` present
    alongside `refresh-context.sh` in the Claude hook config.
@@ -369,7 +368,7 @@ hand-duplicated.
    revisit if `to-spec` becomes too large; flagged, not silently decided away.
 2. **Symbol extraction tooling per language** — `pre-commit-context-sync`
    needs a real chosen tool (ctags vs tree-sitter vs per-language scripts) for
-   each stack across the 16 repos (Python, TypeScript, Go per the repo yamls).
+  each stack across the product repos (Python, TypeScript, Go from the repos themselves).
    Pick one during Phase 3, validated against the Phase 5 pilot repo before
    generalizing — do not assume one tool covers every stack without checking.
 3. **Hook enforcement is per-repo, not global** — a repo owner could remove

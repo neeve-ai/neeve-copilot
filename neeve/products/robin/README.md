@@ -53,7 +53,7 @@ two are Robin-specific and live here in `skills-src/`:
 |-------|-------------|
 | `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a CRE-OT security/ops journey |
 | `to-erd` | Breaks a PRD into compliance-aware, dependency-ordered work items |
-| `repo-intel` | Scans a whole codebase and fills the repo's OKF book (introduction.md / index.md / appendix.md) |
+| `repo-intel` | Scans a whole codebase and fills the repo's OKF book (`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) |
 | `repo-ask` | Answers "how does X work" by tracing the actual code, not guessing |
 | `to-spec` | Turns a feature idea or bug into a proper Neeve-style spec (including the Design/architecture lock), ready to hand off |
 | `implement-spec` | Builds a spec's task: reuse what exists, write typed code, write real tests |
@@ -154,7 +154,7 @@ files in a product repo, that's a leftover from an earlier design — safe to
 delete.
 
 **One deliberate exception:** the per-repo **OKF book**
-(`introduction.md` / `index.md` / `appendix.md`) and its `.githooks/pre-commit`
+(`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) and its `.githooks/pre-commit`
 freshness hook ARE committed into each product repo — set up once per repo by
 `neeve/init-repo.sh`, filled by the `repo-intel` skill. Repo-level knowledge
 only works if every clone carries it; see `neeve/README.md` Pillar 1,
@@ -219,13 +219,8 @@ neeve-copilot/
          code-review-checklist.md — repo-specific, not part of the
          universal house-rules variant; their content lives in the skills
          that already trigger on their own)
-      product-overview.md  ← what Robin offers + a repo-contribution table,
-                               generated from each repo's own product_role
-      repos/<repo>.yaml    ← per-repo facts (stack, test/lint commands, do
-                               not modify, local dev) — reference material,
-                               not currently distributed anywhere; kept here
-                               as the source of truth if a repo-specific
-                               delivery mechanism is added later
+      product-overview.md  ← what Robin offers + a static repo-contribution
+                               table, hand-maintained here
     scripts/
       context_render.py     ← renders base.md; --house-rules produces the
                                universal-only variant (no repo-specific
@@ -263,13 +258,13 @@ One agent, `neeve`, invoked by name rather than a workflow you have to
 trigger. It handles setup help, plus routing every request to the right
 skill by Design Loop stage (PRD → Design → ERD → Spec → Implement → Code
 Review → Merge → CI Pass — see `neeve/README.md`). Source lives in
-[`agents-src/`](agents-src/README.md), `agents-src/neeve/AGENT.md`, rendered
+[`agent-src/`](../../agent-src/README.md), `agent-src/neeve/AGENT.md`, rendered
 by `scripts/agents_render.py` into every tool's own native custom-agent
 mechanism where one exists, and into a Skill where it doesn't.
 
 This replaces an earlier eight-agent model (`neeve-guide`, `to-prd`,
 `to-erd`, `repo-guide`, plus four specialist reviewers) — see
-[`agents-src/README.md`](agents-src/README.md#what-changed-and-why) for why
+[`agent-src/README.md`](../../agent-src/README.md#what-changed-and-why) for why
 that duplicated content already in the skills and gave Copilot users an
 eight-item picker instead of one router. `neeve` deliberately stays a
 lightweight **router** (classify the ask, point at one skill), not a
@@ -282,7 +277,7 @@ for it.
 no separate step, and re-running it prunes any of the eight retired agent
 files a prior install left behind. **Invocation differs by tool, on
 purpose, not by accident** (researched directly, not assumed — see
-`agents-src/README.md` for the full matrix):
+[`agent-src/README.md`](../../agent-src/README.md) for the full matrix):
 
 | Tool | Where it lands | How you invoke it |
 |---|---|---|
@@ -293,8 +288,8 @@ purpose, not by accident** (researched directly, not assumed — see
 
 ## Keeping It Fresh: The SessionStart Hook
 
-`context-src/repos/*.yaml` (what `repo-ask`/`repo-intel` and the pipeline
-skills read) is one canonical source in principle — but every engineer has
+the repo-level OKF book (`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) is
+the canonical per-repo source in principle — but every engineer has
 their own
 local clone of `neeve-copilot`, and it's only as current as their last
 `sync_skills.sh` run. Two engineers asking the same question on the same
@@ -467,11 +462,11 @@ git commit -m "skills: describe your change"
 
 **Editing the house rules:**
 ```bash
-code neeve/products/robin/context-src/base.md           # make your edit
+code neeve/context-src/base.md                          # make your edit
 python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md
 cat /tmp/preview.md                                       # check it before installing
 bash sync_skills.sh                                       # installs it on your own machine
-git add neeve/products/robin/context-src/
+git add neeve/context-src/ neeve/products/robin/context-src/
 git commit -m "house-rules: describe your change"
 ```
 

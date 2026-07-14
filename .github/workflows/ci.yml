@@ -31,23 +31,9 @@ jobs:
 
       - name: Verify Context Renderer
         run: |
-          echo "Smoke-testing context_render.py against every registered repo..."
-          FAIL=0
-          for repo_yaml in neeve/products/robin/context-src/repos/*.yaml; do
-            repo="$(basename "$repo_yaml" .yaml)"
-            tmp_dir="$(mktemp -d)"
-            if ! python3 neeve/scripts/context_render.py "$repo" --write "$tmp_dir"; then
-              echo "::error::context_render.py failed to render repo: $repo"
-              FAIL=1
-            fi
-            rm -rf "$tmp_dir"
-          done
           echo "Smoke-testing --house-rules (global, no repo arg)..."
           if ! python3 neeve/scripts/context_render.py --house-rules "$(mktemp)"; then
             echo "::error::context_render.py --house-rules failed"
-            FAIL=1
-          fi
-          if [ "$FAIL" -eq 1 ]; then
             exit 1
           fi
 

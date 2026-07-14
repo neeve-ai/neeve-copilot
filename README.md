@@ -165,9 +165,9 @@ lenses (`neeve/references/pm-lens.md`, `design-review.md`) run as part of
 separate agents to remember.
 
 **Not built yet:**
-- **Living context, in full** — `repo-intel` now proposes a fix whenever it
-  catches a stale `context-src/repos/<repo>.yaml` fact or a real gap,
-  closing the per-repo half of this. What's still open: whether
+- **Living context, in full** — `repo-intel` now refreshes the repo-level
+        OKF book whenever it catches a stale fact or a real gap, closing the
+        per-repo half of this. What's still open: whether
   `context-src/product-overview.md`'s cross-repo narrative facts stay
   current the same way. A per-repo bot-PR version of a broader mechanism was
   tried and abandoned (see "History" in

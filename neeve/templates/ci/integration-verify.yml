@@ -4,9 +4,8 @@
 #
 # Copied into a product repo's .github/workflows/ by neeve-copilot's
 # init-repo.sh (--with-ci). EDIT THE TWO RUN STEPS to this repo's real
-# commands — the right values usually already exist in neeve-copilot's
-# context-src/repos/<this-repo>.yaml (test_cmd / lint_cmd) and this repo's
-# Makefile. This is a template, not a drop-in: a template that runs the
+# commands — the right values should come from this repo's own OKF book,
+# CI workflow, or Makefile. This is a template, not a drop-in: a template that runs the
 # wrong command green is worse than no template.
 name: integration-verify
 
@@ -28,7 +27,7 @@ jobs:
       - name: Run integration tests
         run: |
           echo "::error::EDIT ME — replace with this repo's real integration/system test command"
-          echo "  (see context-src/repos/<repo>.yaml's test_cmd in neeve-copilot, or this repo's Makefile)"
+          echo "  (see this repo's OKF book, CI workflow, or Makefile)"
           exit 1
         # e.g.  make test-integration
         #       pytest tests/integration -v

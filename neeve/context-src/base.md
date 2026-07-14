@@ -2,11 +2,12 @@
 
 Read by: GitHub Copilot · OpenAI Codex · Google Antigravity · Claude Code · Cursor
 
-This file is rendered, not hand-edited, into every repo's `AGENTS.md`,
-`.github/copilot-instructions.md`, `CLAUDE.md`, and `.cursorrules` by
-`scripts/context_render.sh`. Edit `context-src/base.md` and the relevant
-`context-src/repos/<repo>.yaml` — never edit a rendered file directly, it will
-be overwritten and flagged as drift by `context-drift-check` CI.
+This file is the source for the house-rules variant that
+`scripts/context_render.py --house-rules` renders and `install.sh` installs
+once, globally, per engineer (`~/.claude/CLAUDE.md`, Copilot's
+`instructions/`, etc.) — never committed into any product repo. Edit this
+file and the product-level fragments/product overview; never hand-edit a
+rendered output file, it will be overwritten on the next install.
 
 ---
 
@@ -40,14 +41,6 @@ explicitly): `neeve/engineering-principles.md`.
 {{PRODUCT_OVERVIEW_FRAGMENT}}
 
 {{PRODUCTION_CONSEQUENCE_FRAGMENT}}
-
----
-
-## This Repo
-
-{{REPO_STACK_BLOCK}}
-
-{{REPO_LOCAL_DEV_BLOCK}}
 
 ---
 
@@ -138,7 +131,7 @@ when the description matches your request, or invoke manually.
 |-------|---------------------|---------------|
 | `to-prd` | Ask to turn a problem into a PRD | `/to-prd` / `$to-prd` |
 | `to-erd` | Ask to break a PRD into engineering work items | `/to-erd` / `$to-erd` |
-| `repo-intel` | Ask to map/document this repo, generate CONTEXT.md | `/repo-intel` / `$repo-intel` |
+| `repo-intel` | Ask to map/document this repo, fill or refresh its OKF book (`.help/introduction.md`/`.help/index.md`/`.help/appendix.md`) | `/repo-intel` / `$repo-intel` |
 | `repo-ask` | Ask how/why something works, trace a call path | `/repo-ask` / `$repo-ask` |
 | `to-spec` | Ask to write a spec, plan a feature, or break into tasks (includes Design/architecture lock, Stage 2 of the Design Loop) | `/to-spec` / `$to-spec` |
 | `implement-spec` | Ask to implement a task, build from a spec, or write code | `/implement-spec` / `$implement-spec` |

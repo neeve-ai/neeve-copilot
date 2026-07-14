@@ -195,7 +195,7 @@ Before handoff, verify the spec satisfies all structural requirements:
 | Bounded context | Metadata or Definitions identifies the owning domain (`auth`, `task`, `membership`, …) |
 | Type aliases | `NewType` aliases named for typed identifiers (OrgId, UserUuid, …) |
 | Definition of Done | Must include: ≥ 95% line + branch coverage · zero `mypy --strict` errors · every AC has ≥ 1 annotated test · named constraints · observability metrics |
-| CONTEXT.md alignment | New domain terms introduced in Definitions should appear in `CONTEXT.md` |
+| OKF book alignment | New domain terms introduced in Definitions should appear in the repo's OKF book (`.help/index.md`/`.help/introduction.md`) |
 
 ### Rule 6: Specs must decompose into implementation-sized tasks
 
@@ -254,9 +254,9 @@ Read the best available sources before inventing structure:
 - existing repo docs / README / contracts
 - current code structure and reusable components
 - bug report or incident details, if this is a fix
-- **this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if this
-  repo is registered there** — cite its `do_not_modify` list, `stack`, and
-  `spec_based_development` flag directly. This is mandatory, not optional:
+- **this repo's committed OKF book (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`), if this
+  repo has one** — cite its guarded surfaces, stack, and development workflow
+  directly when available. This is mandatory, not optional:
   a spec that proposes touching something on the do-not-modify list must
   call that out explicitly here, regardless of who's writing it.
 

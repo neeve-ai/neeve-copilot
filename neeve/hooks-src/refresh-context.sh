@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs as a global Claude Code SessionStart hook (installed via
-# merge_session_hook.py). Keeps context-src/repos/*.yaml, house rules, and
-# the cross-tool agents current on this machine without relying on anyone
+# merge_session_hook.py). Keeps house rules, skills, and the cross-tool
+# agents current on this machine without relying on anyone
 # remembering to re-run sync_skills.sh — the freshness problem a single
 # canonical source doesn't solve by itself (every engineer has their own
 # local clone, which is only as fresh as their last pull).

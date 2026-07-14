@@ -75,10 +75,11 @@ touch," or tracing a bug in unfamiliar code:
 
 - Quick, specific question → `repo-ask`.
 - Full unfamiliar-repo scan / need a written map → `repo-intel`.
-- Both are read against `context-src/repos/<repo>.yaml` and
-  `context-src/product-overview.md` for this repo's role, stack, local dev,
-  and do-not-modify boundaries — always cite the source field, never invent
-  a convention that isn't actually present somewhere citable.
+- Both are read against the repo's committed OKF book
+  (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`) and
+  `context-src/product-overview.md` for product-level orientation — always
+  cite the repo's actual docs or code, never invent a convention that isn't
+  actually present somewhere citable.
 
 ## Escalation Rules
 
@@ -134,8 +135,8 @@ invent a flag or behavior; read `neeve/install.sh` and
 
 **Per-repo init (after cloning any product repo):** run
 `bash <neeve-copilot>/neeve/init-repo.sh` from inside the cloned repo. It
-scaffolds the OKF book (`introduction.md`/`index.md`/`appendix.md`) seeded
-from that repo's `context-src/repos/<repo>.yaml`, installs the committed
+scaffolds the OKF book (`.help/introduction.md`/`.help/index.md`/`.help/appendix.md`) with
+explicit placeholders for `repo-intel` to fill from the repo itself, installs the committed
 `.githooks/pre-commit` context-sync hook (warn-only by default), and with
 `--with-ci` copies the CI backstop templates. Then run the `repo-intel`
 skill to fill the book from a real scan. If a repo's book files are missing

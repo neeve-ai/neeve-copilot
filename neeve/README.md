@@ -17,7 +17,7 @@ context bloat, not one giant file.
 |---|---|---|---|
 | 04. Neeve Foundation | What Neeve is, why, culture, products, customers, personas | [`foundation.md`](foundation.md) + per-product [`products/robin/context-src/product-overview.md`](products/robin/context-src/product-overview.md) | House rules, installed globally (`install.sh`) |
 | 03. Engineering Principles | SDLC process principles per Design Loop stage; security/quality canonicals | [`engineering-principles.md`](engineering-principles.md) + [`references/`](references/) (quality-gates, security via code-review, pm-lens, design-review) | House rules + cited by every skill |
-| 02. Repository-Level Context | The per-repo **OKF book**: `introduction.md` (agent-facing README: stack, wiring, make/docker/deploy) · `index.md` (functional area → location) · `appendix.md` (public symbols: purpose, dependencies, impact) | **Committed into each product repo** — scaffolded by [`init-repo.sh`](init-repo.sh), filled by the `repo-intel` skill, kept fresh by the committed `.githooks/pre-commit` | Read directly in the repo by any harness |
+| 02. Repository-Level Context | The per-repo **OKF book**, under `.help/` (a dot-directory so `.dockerignore` can exclude it): `introduction.md` (agent-facing README: stack, wiring, make/docker/deploy) · `index.md` (functional area → location) · `appendix.md` (public symbols: purpose, dependencies, impact) | **Committed into each product repo** — scaffolded by [`init-repo.sh`](init-repo.sh), filled by the `repo-intel` skill, kept fresh by the committed `.githooks/pre-commit` | Read directly in the repo by any harness |
 | 01. Custom & User Context | Developer-local instructions and overrides | Not in any repo — content outside the `BEGIN/END NEEVE` markers in `~/.claude/CLAUDE.md`, `CLAUDE.local.md`, local settings | Owned by the developer; the installer never touches it |
 
 ## Pillar 2 — Harness with Hooks
@@ -70,7 +70,7 @@ neeve/
 ├── install.sh            # global install (skills, house rules, agent, hook)
 ├── init-repo.sh          # per-repo init (OKF book scaffold + pre-commit hook)
 ├── scripts/              # render/sync/merge + tests
-└── products/robin/       # product-specific: repo yamls, product overview,
+└── products/robin/       # product-specific: product overview,
                           #   OT/DLS fragments, neeve-dls + ot-building-automation skills
 ```
 

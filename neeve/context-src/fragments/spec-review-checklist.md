@@ -137,9 +137,9 @@ Reference: {{SPEC_WIKI_REF_SHORT}} → Spec Template and Spec Review Checklist s
 - Where the spec passes a raw primitive for a typed identifier, it should name a typed alias. Check the Enums / Type Aliases section.
 - 🟢 Missing type aliases where primitives are used.
 
-**CONTEXT.md alignment:**
-- Every new domain term in the Definitions table should also appear in `CONTEXT.md` (when it exists). Flag if the spec introduces terms that do not appear in `CONTEXT.md`.
-- 🟢 New terms not in `CONTEXT.md` (non-blocking if `CONTEXT.md` has not yet been created for this service).
+**OKF book alignment:**
+- Every new domain term in the Definitions table should also appear in the repo's OKF book (`.help/index.md`/`.help/introduction.md`, when it exists). Flag if the spec introduces terms that don't appear there.
+- 🟢 New terms not yet in the OKF book (non-blocking if this repo hasn't run `init-repo.sh`/`repo-intel` yet).
 
 **Definition of Done completeness:**
 - DoD must include: ≥95% line + branch coverage, zero strict-type-checker errors, every AC has ≥1 annotated test (`# spec: AC-xx`), named constraints used, observability metrics specified.

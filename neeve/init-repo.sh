@@ -11,18 +11,23 @@
 # exception to "nothing per-repo": the OKF book and its freshness hook only
 # work if every clone gets them):
 #
-#   1. Scaffolds the OKF book at the repo root, if missing:
-#        introduction.md  — contextual README for agents (stack, wiring,
-#                           make targets, docker, deploy), seeded from
-#                           neeve-copilot's context-src/repos/<repo>.yaml
-#        index.md         — table of contents: functional area → location
-#        appendix.md      — public symbols: purpose, dependencies, impact
+#   1. Scaffolds the OKF book under .help/ at the repo root, if missing
+#      (a dot-directory so it reads as tooling/metadata, and so a repo's
+#      .dockerignore can exclude it from build/image context in one line):
+#        .help/introduction.md — contextual README for agents (stack, wiring,
+#                                make targets, docker, deploy), scaffolded
+#                                with honest placeholders for repo-intel to
+#                                fill from the repo itself
+#        .help/index.md        — table of contents: functional area → location
+#        .help/appendix.md     — public symbols: purpose, dependencies, impact
 #      The scaffolds are honest skeletons full of TODO(repo-intel) markers —
 #      the narrative content comes from running the repo-intel skill next,
 #      never from this script guessing.
 #   2. Installs .githooks/pre-commit (the deterministic context-sync check,
 #      warn-only by default) and sets `git config core.hooksPath .githooks`.
-#   3. With --with-ci: copies context-sync-check.yml (the CI backstop for
+#   3. Adds `.help/` to .dockerignore if the file exists and doesn't already
+#      exclude it — the book is for agents, not the image build context.
+#   4. With --with-ci: copies context-sync-check.yml (the CI backstop for
 #      --no-verify) and integration-verify.yml (EDIT-ME template) into
 #      .github/workflows/.
 #
@@ -34,8 +39,6 @@ set -euo pipefail
 COPILOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # neeve/
 HOOK_TEMPLATE="${COPILOT_DIR}/templates/hooks/pre-commit-context-sync"
 CI_TEMPLATES_DIR="${COPILOT_DIR}/templates/ci"
-REPOS_YAML_DIR="${COPILOT_DIR}/products/robin/context-src/repos"
-
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 ok()   { echo -e "  ${GREEN}✓${NC} $*"; }
 warn() { echo -e "  ${YELLOW}!${NC} $*"; }
@@ -59,43 +62,24 @@ fi
 cd "$(git rev-parse --show-toplevel)"
 REPO_DIR="$(pwd)"
 
-# ── Identify the repo against neeve-copilot's registry ───────────────────────
+# ── Identify the repo name for the scaffold placeholders ─────────────────────
 REPO_NAME="$(basename "${REPO_DIR}")"
 origin_url="$(git remote get-url origin 2>/dev/null || true)"
 if [[ -n "${origin_url}" ]]; then
   REPO_NAME="$(basename "${origin_url%.git}")"
 fi
 
-YAML_FILE="${REPOS_YAML_DIR}/${REPO_NAME}.yaml"
-yaml_get() {  # yaml_get <key> — first-level scalar from the repo yaml
-  [[ -f "${YAML_FILE}" ]] || return 0
-  sed -n "s/^$1:[[:space:]]*//p" "${YAML_FILE}" | head -1 | sed 's/^"\(.*\)"$/\1/'
-}
+PRODUCT_ROLE="TODO(repo-intel): what this repo contributes to the product — grounded in the repo's actual code and docs."
+STACK="TODO(repo-intel): languages, frameworks, package manager, versions — from the actual manifests, not memory."
+TEST_CMD="TODO(repo-intel)"
+LINT_CMD="TODO(repo-intel)"
 
-if [[ -f "${YAML_FILE}" ]]; then
-  ok "Registered repo: ${REPO_NAME} (context-src/repos/${REPO_NAME}.yaml)"
-else
-  warn "Repo '${REPO_NAME}' is not registered in neeve-copilot's context-src/repos/ —"
-  warn "scaffolding with generic placeholders; consider adding ${REPO_NAME}.yaml there (reviewed PR)."
-fi
-
-PRODUCT_ROLE="$(yaml_get product_role)"
-STACK="$(yaml_get stack)"
-TEST_CMD="$(yaml_get test_cmd)"
-LINT_CMD="$(yaml_get lint_cmd)"
-
-# Precomputed fallbacks — bash 3.2 mis-parses ${var:-long text} defaults
-# containing nested expansions/apostrophes inside heredocs.
-[[ -n "${PRODUCT_ROLE}" ]] || PRODUCT_ROLE="TODO(repo-intel): what this repo contributes to the product — one paragraph, from context-src/repos/${REPO_NAME}.yaml product_role and the actual code."
-[[ -n "${STACK}" ]] || STACK="TODO(repo-intel): languages, frameworks, package manager, versions — from the actual manifests, not memory."
-[[ -n "${TEST_CMD}" ]] || TEST_CMD="TODO(repo-intel)"
-[[ -n "${LINT_CMD}" ]] || LINT_CMD="TODO(repo-intel)"
-
-# ── 1. Scaffold the OKF book (never overwrite an existing file) ──────────────
+# ── 1. Scaffold the OKF book under .help/ (never overwrite an existing file) ─
+mkdir -p .help
 scaffolded=""
 
-if [[ ! -f introduction.md ]]; then
-  cat > introduction.md <<INTRO
+if [[ ! -f .help/introduction.md ]]; then
+  cat > .help/introduction.md <<INTRO
 ---
 manifest-hash: 0000000000000000
 ---
@@ -130,11 +114,11 @@ TODO(repo-intel): every make target and what it does; how local dev spins up
 (docker-compose file(s), env setup); how this deploys (Helm chart, which CI
 workflow builds the image).
 INTRO
-  scaffolded="${scaffolded} introduction.md"
+  scaffolded="${scaffolded} .help/introduction.md"
 fi
 
-if [[ ! -f index.md ]]; then
-  cat > index.md <<'INDEX'
+if [[ ! -f .help/index.md ]]; then
+  cat > .help/index.md <<'INDEX'
 # Index (for agents)
 
 > OKF book, 2 of 3. The table of contents: functional areas mapped to where
@@ -145,11 +129,11 @@ if [[ ! -f index.md ]]; then
 |---|---|---|---|
 | TODO(repo-intel): e.g. Auth | `src/auth/**` | `src/auth/middleware.ts` | see appendix.md#AuthService |
 INDEX
-  scaffolded="${scaffolded} index.md"
+  scaffolded="${scaffolded} .help/index.md"
 fi
 
-if [[ ! -f appendix.md ]]; then
-  cat > appendix.md <<'APPENDIX'
+if [[ ! -f .help/appendix.md ]]; then
+  cat > .help/appendix.md <<'APPENDIX'
 # Appendix (for agents)
 
 > OKF book, 3 of 3. The deep reference: every public method/class with its
@@ -168,13 +152,13 @@ if [[ ! -f appendix.md ]]; then
 
 TODO(repo-intel): populate from a real scan.
 APPENDIX
-  scaffolded="${scaffolded} appendix.md"
+  scaffolded="${scaffolded} .help/appendix.md"
 fi
 
 if [[ -n "${scaffolded}" ]]; then
   ok "Scaffolded:${scaffolded}"
 else
-  ok "OKF book already present (introduction.md / index.md / appendix.md) — left untouched"
+  ok "OKF book already present (.help/introduction.md / .help/index.md / .help/appendix.md) — left untouched"
 fi
 
 # ── 2. Install the committed pre-commit hook ─────────────────────────────────
@@ -191,9 +175,21 @@ git config core.hooksPath .githooks
 ok "git config core.hooksPath .githooks"
 
 # Stamp the manifest hash so the very first commit doesn't warn spuriously.
-python3 .githooks/pre-commit --stamp >/dev/null && ok "Stamped introduction.md manifest-hash"
+python3 .githooks/pre-commit --stamp >/dev/null && ok "Stamped .help/introduction.md manifest-hash"
 
-# ── 3. Optional CI templates ─────────────────────────────────────────────────
+# ── 3. Keep the book out of the image build context ──────────────────────────
+if [[ -f .dockerignore ]]; then
+  if grep -qxF ".help" .dockerignore || grep -qxF ".help/" .dockerignore; then
+    ok ".dockerignore already excludes .help/"
+  else
+    printf '\n# Agent-facing OKF book — not needed in the image build context\n.help/\n' >> .dockerignore
+    ok "Added .help/ to .dockerignore"
+  fi
+else
+  warn "No .dockerignore in this repo — skipped (add one + \".help/\" if this repo builds a Docker image)"
+fi
+
+# ── 4. Optional CI templates ─────────────────────────────────────────────────
 if $WITH_CI; then
   mkdir -p .github/workflows
   for tmpl in context-sync-check.yml integration-verify.yml; do
@@ -212,7 +208,7 @@ fi
 echo ""
 echo "Done. Commit the result on a branch and open a PR:"
 echo "  git checkout -b chore/okf-book-init"
-echo "  git add introduction.md index.md appendix.md .githooks/${WITH_CI:+ .github/workflows/}"
+echo "  git add .help/ .githooks/ .dockerignore${WITH_CI:+ .github/workflows/}"
 echo "  git commit -m 'chore: init OKF book + context-sync hook (neeve-copilot init-repo.sh)'"
 echo ""
 echo "Then fill the book from real code: open this repo in your AI tool and run"

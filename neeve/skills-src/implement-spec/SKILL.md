@@ -170,9 +170,9 @@ Check the strongest local style sources that apply:
 - testing guides
 - contract docs
 - Helm/deployment docs
-- **this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if
-  registered** — its `do_not_modify` list (call out explicitly before
-  touching anything on it), and its documented `test_cmd`/`lint_cmd`. This
+- **this repo's committed OKF book (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`), if
+  present** — its guarded surfaces (call out explicitly before touching
+  anything on them), plus its documented test/lint commands if they exist. This
   check is mandatory here, not left to whether someone thought to check
   separately.
 - **this repo's actual CI workflow** (`.github/workflows/*.yml` or
@@ -180,10 +180,9 @@ Check the strongest local style sources that apply:
   yaml's documented commands or this skill's own judgment. Read what CI
   actually runs (lint, type-check, unit/integration tests, security/SCA
   scans) and treat that as the ground truth for "what must pass" — if it
-  differs from what `test_cmd`/`lint_cmd` documents, CI wins; flag the
-  drift as a gap (a `context-src` fix candidate, proposed the same way
-  `repo-intel` proposes one) rather than silently trusting the possibly-stale
-  yaml.
+  differs from what the repo's OKF book documents, CI wins; flag the
+  drift as a gap and update the repo-level book rather than silently trusting
+  stale docs.
 
 **Don't paraphrase away environment quirks when running those commands.**
 A repo's real test/lint invocation often isn't the bare tool name — check

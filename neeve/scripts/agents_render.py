@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render agents-src/<name>/AGENT.md into every tool's native agent format.
+"""Render agent-src/<name>/AGENT.md into every tool's native agent format.
 
 Same "one source, N rendered targets" pattern context_render.py already uses
 for house rules — applied to a new asset type: agents. Three tools have a
@@ -243,7 +243,7 @@ def cmd_write(agent_name: str, renderer, out_path: Path, is_skill_fallback: bool
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("name", help="Agent name, matching agents-src/<name>/AGENT.md")
+    parser.add_argument("name", help="Agent name, matching agent-src/<name>/AGENT.md")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--claude", metavar="OUTPUT_FILE")
     mode.add_argument("--copilot", metavar="OUTPUT_FILE")

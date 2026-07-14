@@ -73,8 +73,8 @@ Before reviewing, gather enough context to understand the change in-system.
    - `specs/`, `docs/contracts/`, `openapi.yaml`, or feature docs
    - `README*`, `docs/`, `AGENTS.md`, `CLAUDE.md`, release/testing guides
    - Helm chart docs and values when runtime behavior is affected
-   - this repo's `context-src/repos/<repo>.yaml` in `neeve-copilot`, if
-     registered — its `do_not_modify` list; a diff touching anything on it
+    - this repo's committed OKF book (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`), if
+      present — its guarded or `do not modify` guidance; a diff touching anything on it
      without a called-out reason is a finding here, not something to wave
      through because the reviewer happens to trust the author
    - this repo's actual CI workflow (`.github/workflows/*.yml` or

@@ -3,7 +3,7 @@
 # Copied into a product repo's .github/workflows/ by neeve-copilot's
 # init-repo.sh (--with-ci). Runs the SAME deterministic script as the
 # committed .githooks/pre-commit, scoped to the files this PR changed — so
-# a stale introduction.md/index.md/appendix.md can't merge even if the
+# a stale book (.help/introduction.md, index.md, appendix.md) can't merge even if the
 # local hook was skipped with `git commit --no-verify`, without blocking a
 # brownfield repo on documenting its entire history at once.
 #

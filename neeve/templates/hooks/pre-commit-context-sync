@@ -6,26 +6,47 @@ Installed into a product repo as `.githooks/pre-commit` by neeve-copilot's
 applies to every clone). The same script runs in CI via `--all` as the
 backstop for `git commit --no-verify`.
 
-The OKF book is three committed files at the repo root, read by any AI
-harness before touching code:
-  introduction.md — contextual README for agents: stack, wiring, make
-                    targets, docker, deploy
-  index.md        — table of contents: functional area → where it lives
-  appendix.md     — public symbols with purpose, dependencies, impact
+The OKF book is three committed files under `.help/` at the repo root (a
+dot-directory so it reads as tooling/metadata, not application code — easy
+to exclude via `.dockerignore`, still trivially findable by any AI harness
+before touching code):
+  .help/introduction.md — contextual README for agents: stack, wiring, make
+                          targets, docker, deploy
+  .help/index.md        — table of contents: functional area → where it lives
+  .help/appendix.md      — public symbols with purpose, dependencies, impact
 
 This hook is DETERMINISTIC — no model call, no network. It flags drift; it
 never regenerates narrative content (that's an explicit, agent-assisted
 `repo-intel` run). Checks:
 
-  1. introduction.md freshness: the frontmatter records a hash over the
-     manifest files that drive it (package manifest, Dockerfile, Makefile,
-     compose files, OpenAPI spec). Hash mismatch => the stack/wiring story
-     may be stale.
-  2. index.md coverage: top-level source directories not mentioned anywhere
-     in index.md.
-  3. appendix.md coverage: public symbols added/changed in this commit
-     (Python via ast; TypeScript/JS and Go via conservative regex) that
-     appendix.md doesn't mention.
+  1. .help/introduction.md freshness: the frontmatter records a hash over
+     the manifest files that drive it (package manifest, Dockerfile,
+     Makefile, compose files, OpenAPI spec). Hash mismatch => the
+     stack/wiring story may be stale.
+  2. .help/index.md coverage: top-level source directories not mentioned
+     anywhere in it.
+  3. .help/appendix.md coverage: public symbols added/changed in this commit
+     (Python via ast; TypeScript/JS and Go via conservative regex) that it
+     doesn't mention.
+  4. Drift since the book was last verified: .help/introduction.md's
+     frontmatter records `book-verified-commit`, the SHA as of which a human
+     or repo-intel last confirmed the book was accurate. `--stamp` updates it
+     to the current HEAD. Every check after that walks `git log
+     <that-commit>..HEAD` (plus anything currently staged) and surfaces the
+     MECHANICAL facts only — symbols added, symbols removed, files with
+     modified existing symbols. It deliberately does NOT try to classify
+     those facts as "a contract change" vs. "a new feature" vs. "just an
+     internal refactor" — that's a judgment call about meaning, not syntax,
+     and belongs to the repo-intel skill (which reads the actual diff with a
+     model in the loop), never to this deterministic, no-model script. The
+     finding always ends by pointing at repo-intel to do that assessment and
+     re-stamp.
+     KNOWN LAG: a commit can't embed its own future SHA, so a commit that
+     bundles a code change together with the `--stamp` that certifies it will
+     still show that commit's own diff as drift on the *next* check. The lag
+     is at most one commit and self-corrects on the next `--stamp` — commit
+     the book refresh separately (touching no source files) to avoid it
+     entirely.
 
 Modes:
   (default)     check only files staged for commit
@@ -34,7 +55,7 @@ Modes:
                 blocked on documenting its entire history at once)
   --all         check the whole tree (full audit — advisory on brownfield
                 repos until the appendix is complete)
-  --stamp       recompute and write the manifest hash into introduction.md's
+  --stamp       recompute and write the manifest hash into .help/introduction.md's
                 frontmatter (run by repo-intel after a refresh)
 
 Per-repo excludes (beyond the built-in ignored dirs), for directories that
@@ -61,7 +82,8 @@ REPO = Path(subprocess.run(
     ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
 ).stdout.strip())
 
-BOOK = {name: REPO / name for name in ("introduction.md", "index.md", "appendix.md")}
+HELP_DIR = REPO / ".help"
+BOOK = {name: HELP_DIR / name for name in ("introduction.md", "index.md", "appendix.md")}
 
 MANIFEST_GLOBS = [
     "package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml",
@@ -82,6 +104,7 @@ def _config_excludes() -> set[str]:
     return {d.strip() for d in out.split(",") if d.strip()}
 
 HASH_RE = re.compile(r"^manifest-hash:\s*([0-9a-f]{16})\s*$", re.MULTILINE)
+VERIFIED_RE = re.compile(r"^book-verified-commit:\s*([0-9a-f]{7,40})\s*$", re.MULTILINE)
 
 
 def manifest_hash() -> str:
@@ -122,47 +145,51 @@ def all_source_files() -> list[Path]:
     return files
 
 
-def public_symbols(path: Path) -> list[str]:
+def _symbols_from_text(text: str, suffix: str) -> set[str]:
     """Conservative public-symbol extraction. Python is exact (ast); TS/JS
     and Go are regex over export/declaration forms — misses are possible,
     false positives are rare, which is the right bias for a warn hook."""
+    if suffix == ".py":
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            return set()
+        return {n.name for n in tree.body
+                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                and not n.name.startswith("_")}
+    if suffix in {".ts", ".tsx", ".js", ".jsx"}:
+        return set(re.findall(
+            r"^export\s+(?:default\s+)?(?:async\s+)?"
+            r"(?:function|class|const|interface|type|enum)\s+([A-Za-z_$][\w$]*)",
+            text, re.MULTILINE))
+    if suffix == ".go":
+        # Exported Go identifiers start uppercase.
+        return set(re.findall(r"^func\s+(?:\([^)]*\)\s+)?([A-Z]\w*)\s*\(", text, re.MULTILINE)) | \
+               set(re.findall(r"^type\s+([A-Z]\w*)\s+", text, re.MULTILINE))
+    return set()
+
+
+def public_symbols(path: Path) -> list[str]:
     try:
         text = path.read_text(errors="replace")
     except OSError:
         return []
-    if path.suffix == ".py":
-        try:
-            tree = ast.parse(text)
-        except SyntaxError:
-            return []
-        return [n.name for n in tree.body
-                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
-                and not n.name.startswith("_")]
-    if path.suffix in {".ts", ".tsx", ".js", ".jsx"}:
-        return re.findall(
-            r"^export\s+(?:default\s+)?(?:async\s+)?"
-            r"(?:function|class|const|interface|type|enum)\s+([A-Za-z_$][\w$]*)",
-            text, re.MULTILINE)
-    if path.suffix == ".go":
-        # Exported Go identifiers start uppercase.
-        return re.findall(r"^func\s+(?:\([^)]*\)\s+)?([A-Z]\w*)\s*\(", text, re.MULTILINE) + \
-               re.findall(r"^type\s+([A-Z]\w*)\s+", text, re.MULTILINE)
-    return []
+    return sorted(_symbols_from_text(text, path.suffix))
 
 
 def check_introduction(findings: list[str]) -> None:
     intro = BOOK["introduction.md"]
     if not intro.is_file():
-        findings.append("introduction.md is missing — run neeve-copilot's init-repo.sh, then repo-intel")
+        findings.append(".help/introduction.md is missing — run neeve-copilot's init-repo.sh, then repo-intel")
         return
     m = HASH_RE.search(intro.read_text())
     if not m:
-        findings.append("introduction.md has no manifest-hash frontmatter — re-run repo-intel --refresh (or init-repo.sh)")
+        findings.append(".help/introduction.md has no manifest-hash frontmatter — re-run repo-intel --refresh (or init-repo.sh)")
         return
     current = manifest_hash()
     if m.group(1) != current:
         findings.append(
-            "introduction.md may be stale: manifest files (package manifest/Dockerfile/"
+            ".help/introduction.md may be stale: manifest files (package manifest/Dockerfile/"
             "Makefile/compose/OpenAPI) changed since it was last refreshed — "
             "run repo-intel --refresh, or `pre-commit --stamp` if the prose is still accurate"
         )
@@ -171,7 +198,7 @@ def check_introduction(findings: list[str]) -> None:
 def check_index(findings: list[str]) -> None:
     index = BOOK["index.md"]
     if not index.is_file():
-        findings.append("index.md is missing — run neeve-copilot's init-repo.sh, then repo-intel")
+        findings.append(".help/index.md is missing — run neeve-copilot's init-repo.sh, then repo-intel")
         return
     text = index.read_text()
     ignored = IGNORED_DIRS | _config_excludes()
@@ -180,13 +207,13 @@ def check_index(findings: list[str]) -> None:
                 and any(f.suffix in SOURCE_EXTS for f in p.rglob("*") if f.is_file())}
     missing = sorted(d for d in top_dirs if d not in text)
     if missing:
-        findings.append(f"index.md doesn't mention top-level source dir(s): {', '.join(missing)}")
+        findings.append(f".help/index.md doesn't mention top-level source dir(s): {', '.join(missing)}")
 
 
 def check_appendix(files: list[Path], findings: list[str]) -> None:
     appendix = BOOK["appendix.md"]
     if not appendix.is_file():
-        findings.append("appendix.md is missing — run neeve-copilot's init-repo.sh, then repo-intel")
+        findings.append(".help/appendix.md is missing — run neeve-copilot's init-repo.sh, then repo-intel")
         return
     text = appendix.read_text()
     ignored = IGNORED_DIRS | _config_excludes()
@@ -203,26 +230,135 @@ def check_appendix(files: list[Path], findings: list[str]) -> None:
         shown = missing[:20]
         more = f" (+{len(missing) - 20} more)" if len(missing) > 20 else ""
         findings.append(
-            "appendix.md is missing purpose/dependency/impact entries — TODO(purpose): "
+            ".help/appendix.md is missing purpose/dependency/impact entries — TODO(purpose): "
             + ", ".join(shown) + more
         )
+
+
+def _commit_exists(sha: str) -> bool:
+    return subprocess.run(
+        ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+        capture_output=True,
+    ).returncode == 0
+
+
+def _git_show(ref: str, relpath: str) -> str | None:
+    res = subprocess.run(["git", "show", f"{ref}:{relpath}"], capture_output=True, text=True)
+    return res.stdout if res.returncode == 0 else None
+
+
+def check_drift_since_checkpoint(findings: list[str]) -> None:
+    """Mechanical facts only, since last verified — no judgment about
+    whether a change 'matters'. That call (contract change vs. new feature
+    vs. a consequence change to existing behavior) is for the repo-intel
+    skill to make by actually reading the diff, not for this script to guess
+    at with a hardcoded heuristic."""
+    intro = BOOK["introduction.md"]
+    if not intro.is_file():
+        return  # already reported by check_introduction
+
+    m = VERIFIED_RE.search(intro.read_text())
+    if not m:
+        findings.append(
+            ".help/introduction.md has no book-verified-commit checkpoint yet — "
+            "run `pre-commit --stamp` once the book is confirmed accurate, so future "
+            "commits have a known-good point to be checked against"
+        )
+        return
+
+    checkpoint = m.group(1)
+    if not _commit_exists(checkpoint):
+        findings.append(
+            f".help/introduction.md's book-verified-commit ({checkpoint[:8]}) isn't in "
+            "this branch's history (rebase/squash?) — re-stamp against the current HEAD"
+        )
+        return
+
+    out = subprocess.run(
+        ["git", "diff", "--name-only", "--diff-filter=ACMR", f"{checkpoint}..HEAD"],
+        capture_output=True, text=True,
+    ).stdout
+    changed = {line.strip() for line in out.splitlines() if line.strip()}
+    changed |= {str(f.relative_to(REPO)) for f in staged_files()}
+
+    ignored = IGNORED_DIRS | _config_excludes()
+    added_symbols: list[str] = []
+    removed_symbols: list[str] = []
+    modified_files: set[str] = set()
+
+    for rel in sorted(changed):
+        f = REPO / rel
+        if f.suffix not in SOURCE_EXTS or not f.is_file():
+            continue
+        if any(part in ignored or part.startswith(".") for part in Path(rel).parts[:-1]):
+            continue
+
+        try:
+            current_text = f.read_text(errors="replace")
+        except OSError:
+            continue
+        current_symbols = _symbols_from_text(current_text, f.suffix)
+        old_text = _git_show(checkpoint, rel)
+
+        if old_text is None:
+            added_symbols.extend(f"{s} ({rel})" for s in sorted(current_symbols))
+            continue
+
+        old_symbols = _symbols_from_text(old_text, f.suffix)
+        added_symbols.extend(f"{s} ({rel})" for s in sorted(current_symbols - old_symbols))
+        removed_symbols.extend(f"{s} ({rel})" for s in sorted(old_symbols - current_symbols))
+        if (current_symbols & old_symbols) and old_text != current_text:
+            modified_files.add(rel)
+
+    if not (added_symbols or removed_symbols or modified_files):
+        return
+
+    commit_count = subprocess.run(
+        ["git", "rev-list", "--count", f"{checkpoint}..HEAD"],
+        capture_output=True, text=True,
+    ).stdout.strip()
+
+    findings.append(
+        f"{commit_count} commit(s) touching source since the book was last verified "
+        f"(checkpoint {checkpoint[:8]}): {len(added_symbols)} symbol(s) added, "
+        f"{len(removed_symbols)} removed, {len(modified_files)} file(s) with modified "
+        "existing symbols. This needs a judgment call, not a mechanical pass — run "
+        f"repo-intel to read the actual diff (`git log {checkpoint[:8]}..HEAD`) and assess "
+        "each as a contract change (API/schema/event shape), a new feature/logic, or a "
+        "consequence change to already-documented behavior; update the book honestly, "
+        "then `pre-commit --stamp` to reset the checkpoint."
+    )
 
 
 def stamp() -> int:
     intro = BOOK["introduction.md"]
     if not intro.is_file():
-        print("introduction.md not found — nothing to stamp", file=sys.stderr)
+        print(".help/introduction.md not found — nothing to stamp", file=sys.stderr)
         return 1
     text = intro.read_text()
-    new_line = f"manifest-hash: {manifest_hash()}"
+
+    new_hash_line = f"manifest-hash: {manifest_hash()}"
     if HASH_RE.search(text):
-        text = HASH_RE.sub(new_line, text, count=1)
+        text = HASH_RE.sub(new_hash_line, text, count=1)
     elif text.startswith("---\n"):
-        text = text.replace("---\n", f"---\n{new_line}\n", 1)
+        text = text.replace("---\n", f"---\n{new_hash_line}\n", 1)
     else:
-        text = f"---\n{new_line}\n---\n\n{text}"
+        text = f"---\n{new_hash_line}\n---\n\n{text}"
+
+    head_res = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True)
+    stamped_lines = [f"Stamped .help/introduction.md: {new_hash_line}"]
+    if head_res.returncode == 0:
+        new_verified_line = f"book-verified-commit: {head_res.stdout.strip()}"
+        if VERIFIED_RE.search(text):
+            text = VERIFIED_RE.sub(new_verified_line, text, count=1)
+        else:
+            text = text.replace(new_hash_line, f"{new_hash_line}\n{new_verified_line}", 1)
+        stamped_lines.append(new_verified_line)
+    else:
+        stamped_lines.append("(no commits yet — book-verified-commit not set; re-run --stamp after the first commit)")
+
     intro.write_text(text)
-    print(f"Stamped introduction.md: {new_line}")
+    print(", ".join(stamped_lines))
     return 0
 
 
@@ -255,12 +391,13 @@ def main() -> int:
     check_introduction(findings)
     check_index(findings)
     check_appendix(files, findings)
+    check_drift_since_checkpoint(findings)
 
     if not findings:
         return 0
 
-    print("\n[context-sync] The repo's OKF book (introduction.md / index.md / "
-          "appendix.md) looks out of date:", file=sys.stderr)
+    print("\n[context-sync] The repo's OKF book (.help/introduction.md / .help/index.md / "
+          ".help/appendix.md) looks out of date:", file=sys.stderr)
     for f in findings:
         print(f"  - {f}", file=sys.stderr)
     print("[context-sync] Fix: run the repo-intel skill (full refresh) or "

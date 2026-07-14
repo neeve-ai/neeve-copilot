@@ -9,7 +9,24 @@ by design, because its actions sit upstream of real building equipment.
 
 ### Repos in this product
 
-{{PRODUCT_REPO_TABLE}}
+| Repo | Contribution to Robin |
+|---|---|
+| `alc-hello-addon` | Example/scaffold WebCTRL add-on — reference implementation for building-automation integrations, not a production Robin surface. |
+| `alc-robin-agent` | WebCTRL agent — exposes ALC WebCTRL building-automation data/actions to Robin. |
+| `dls-neeve` | Shared design system (@neeve/dls) and fonts package — the single source of pixel-perfect components/tokens consumed by robin-web and robin. |
+| `mcp-nats-handler` | NATS-to-MCP bridge — exposes internal NATS-based services as MCP tools other Robin components can call. |
+| `neeve-web` | Placeholder repo — not yet built out; stack/role to be filled in once work starts here. |
+| `niagara-robin-agent` | Niagara N4/BQL agent — exposes Tridium Niagara station data (alarms, points, schedules, history) to Robin via read-only MCP tools. |
+| `robin-adr` | Product-wide planning repo — ADRs, work-item breakdowns, and (new) PRDs/ERDs live here; the source of truth for what's being built and why, one level above any single repo. |
+| `robin-ai` | Main backend — the policy/API authority for Robin; owns the primary database schema and orchestrates the other services. |
+| `robin-commons` | Shared Python library (resilience, observability, messaging helpers) used across robin-ai and the other backend services to avoid duplicated infrastructure code. |
+| `robin-expirements` | Scratch space for AI/eval research experiments — not a shipped product surface. |
+| `robin-helm` | Helm charts that deploy the full Robin stack (robin-ai, robin-web, gateway, observability) to Kubernetes, including each developer's own sandbox namespace. |
+| `robin-kb-service` | Knowledge-base / long-term-memory service backing Robin's AI features. |
+| `robin-testbench` | Automated browser-based test harness that exercises Robin's Chrome extension flows end-to-end. |
+| `robin-web` | Admin portal — the enterprise/org-management frontend (React) and its BFF backend (FastAPI), used by facilities/security-ops admins, not end users of the extension. |
+| `robin` | The Robin Chrome extension itself — the AI co-pilot surface an end user (facilities/security-ops staff) actually installs and uses inside their existing OT web apps. |
+| `wstunnel-reverse-proxy` | WebSocket tunnel reverse proxy — exposes MCP servers sitting behind NAT (e.g. an OT-side Niagara connection) back to robin-ai. |
 
 ### How to run Robin locally
 

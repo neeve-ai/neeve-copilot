@@ -26,18 +26,11 @@ shopt -s nullglob
 
 usage() {
   cat <<USAGE
-Usage: $(basename "$0") <check|pack|check-target TARGET_PATH>
+Usage: $(basename "$0") <check|pack>
 
 Commands:
   check                   Verify skills-src can be packaged into valid zip archives
   pack                    Build zip archives from skills-src
-  check-target TARGET_PATH
-                          Diff TARGET_PATH/.github/skills/<skill> against
-                          skills-src/<skill> for every skill actually
-                          installed there (skills not present in the target
-                          are skipped, not an error — not every repo installs
-                          every skill). Fails if any installed copy has
-                          drifted from source.
 USAGE
 }
 
@@ -153,39 +146,6 @@ pack_one() {
   echo "Packed: ${skill}.zip"
 }
 
-check_target() {
-  local target_dir="$1"
-  local target_skills_dir="${target_dir}/.github/skills"
-  local failed=0
-  local found_any=0
-
-  if [[ ! -d "${target_skills_dir}" ]]; then
-    echo "No .github/skills/ in ${target_dir} — nothing installed there, nothing to check."
-    return 0
-  fi
-
-  for skill in "${SKILLS[@]}"; do
-    local installed_dir="${target_skills_dir}/${skill}"
-    [[ -d "${installed_dir}" ]] || continue
-    found_any=1
-    local src_dir
-    src_dir="$(skill_src_dir "${skill}")"
-    if diff -ru "${src_dir}" "${installed_dir}" >/dev/null 2>&1; then
-      echo "OK: ${skill}"
-    else
-      echo "DRIFT: ${skill} (installed copy differs from ${src_dir})" >&2
-      diff -ru "${src_dir}" "${installed_dir}" || true
-      failed=1
-    fi
-  done
-
-  if [[ "${found_any}" -eq 0 ]]; then
-    echo "No known skills found installed under ${target_skills_dir}."
-  fi
-
-  return "${failed}"
-}
-
 prune_stale_zips() {
   [[ -d "${ZIP_DIR}" ]] || return 0
 
@@ -227,15 +187,6 @@ main() {
       for skill in "${SKILLS[@]}"; do
         pack_one "${skill}" "${ZIP_DIR}"
       done
-      ;;
-    check-target)
-      local target_path="${2:-}"
-      if [[ -z "${target_path}" ]]; then
-        echo "check-target requires a TARGET_PATH argument" >&2
-        usage
-        exit 1
-      fi
-      check_target "${target_path}"
       ;;
     *)
       usage

@@ -104,8 +104,8 @@ persistence/cache boundary, a specific external service, or "as far as
 first-party code goes." Unlike `repo-ask`, do not scope this down to the
 minimum — scope it to the full boundary the situation actually requires.
 
-If this repo is registered in `context-src/repos/<repo>.yaml`, note its
-`do_not_modify` list and stack up front — the same mandatory check every
+If this repo has a committed OKF book, note its guarded surfaces and stack
+up front — the same mandatory check every
 pipeline skill now performs, not optional here either.
 
 ### Phase 1 — Exhaustive Call-Chain Mapping

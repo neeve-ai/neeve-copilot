@@ -354,9 +354,9 @@ else
 fi
 
 # ── Freshness: global Claude Code SessionStart hook ──────────────────────────
-# Every engineer has their own local clone of neeve-copilot — a single
-# canonical context-src/repos/*.yaml only produces consistent answers across
-# engineers if everyone's clone is actually current, not just "current as of
+# Every engineer has their own local clone of neeve-copilot — the shared
+# house rules and skills only produce consistent answers across engineers if
+# everyone's clone is actually current, not just "current as of
 # whoever's last sync_skills.sh run." Claude Code supports a real global
 # SessionStart hook (~/.claude/settings.json) that can pull this repo and
 # reinstall automatically, quietly, only on days something actually changed —

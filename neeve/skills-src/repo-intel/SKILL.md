@@ -76,16 +76,11 @@ Before scanning, confirm with the user:
 
 ### Phase 1 — Stack and Entry Point Discovery
 
-**First, check whether this repo is already registered in `neeve-copilot`'s
-`context-src/repos/<repo>.yaml`.** If it is, cross-check what follows
-against its `stack`, `do_not_modify`, and `test_cmd`/`lint_cmd` fields
-rather than deriving everything from scratch as if nothing were known —
-cite it, and if this scan finds something that contradicts the yaml (stack
-changed, a command no longer works), name that as a finding and propose the
-concrete `context-src/repos/<repo>.yaml` diff to fix it — never silently
-prefer one source over the other, and never write the fix directly into
-`neeve-copilot`'s `context-src/` yourself; hand the diff to the engineer to
-commit there on a reviewed branch.
+**First, read the repo's own OKF book if it exists** (`introduction.md`,
+`index.md`, `appendix.md`). Cross-check what follows against those repo-level
+facts rather than treating the scan as if nothing were already documented.
+If the code contradicts the existing OKF book, name that as a finding and
+update the repo-level book directly as part of the refresh.
 
 Identify the project's foundation without reading every file:
 
@@ -204,13 +199,13 @@ Write only what is grounded in Phase 1–5 findings. Do not invent sections.
 
 #### 6a — The OKF book (`introduction.md`, `index.md`, `appendix.md`)
 
-Fill (or refresh) the three book files at the project root. Use
-[`references/context-template.md`](references/context-template.md) as the structural
-guide for what `introduction.md` covers; `index.md` and `appendix.md` follow the table
-formats the init-repo.sh scaffolds establish.
+Fill (or refresh) the three book files at the project root. `introduction.md`,
+`index.md`, and `appendix.md` follow the table formats the init-repo.sh
+scaffolds establish and the content rules below — there is no separate
+template file; the scaffold plus these rules is the structural guide.
 
 - `introduction.md` — Phases 1 + 5 findings: role in the product (cross-checked against
-  `context-src/repos/<repo>.yaml`), stack/runtime, how it wires into the product
+  the repo's committed OKF book (`introduction.md`, `index.md`, `appendix.md`), stack/runtime, how it wires into the product
   (Phase 3's owned/consumed contracts, summarized with pointers into `index.md`), every
   make target, local-dev spin-up including environment quirks, deploy path. Keep it
   small — it's the always-read-first file, not the encyclopedia.

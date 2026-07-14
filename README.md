@@ -24,7 +24,7 @@ repo to make this work.
 **Stuck, or not sure what to use next?** Ask `neeve` — "help me set up
 neeve-copilot" or "what should I use for X" — it's the one agent meant to be
 asked first, for setup and for routing across every skill by Design Loop
-stage. See [`agents-src/README.md`](neeve/products/robin/agents-src/README.md).
+stage. See [`agents-src/README.md`](neeve/agent-src/README.md).
 
 > **Keep skills up to date:** run `sync_skills.sh` any time — it pulls the latest
 > from this repo and reinstalls everything. Bookmark it or alias it.
@@ -118,7 +118,7 @@ Antigravity) get taught how Neeve works. In short:
   invocable on their own.
 - **One unified agent, `neeve`**, routes across every skill by Design Loop
   stage and handles setup/onboarding — source at
-  [`neeve/products/robin/agents-src/`](neeve/products/robin/agents-src/README.md),
+  [`neeve/agent-src/`](neeve/agent-src/README.md),
   rendered into each tool's own native custom-agent mechanism where one
   exists (Claude Code, Copilot, Codex), and into the skill mechanism where
   it doesn't (Cursor, Antigravity). Invocation isn't identical everywhere —
@@ -177,18 +177,18 @@ separate agents to remember.
 
 ## Contributing Skills
 
-Skills live in [`neeve/products/robin/skills-src/`](neeve/products/robin/skills-src/).
+Skills live in [`neeve/skills-src/`](neeve/skills-src/) (product-specific ones under [`neeve/products/<product>/skills-src/`](neeve/products/robin/skills-src/)).
 Each skill is a directory with a `SKILL.md` and optional `references/` files.
 
 ```bash
 # Edit a skill
-code neeve/products/robin/skills-src/to-spec/SKILL.md
+code neeve/skills-src/to-spec/SKILL.md
 
 # Test your change locally (reinstalls all skills)
 bash sync_skills.sh
 
 # Commit and push — the post-commit hook pushes automatically
-git add neeve/products/robin/skills-src/
+git add neeve/skills-src/
 git commit -m "skills: describe your change"
 ```
 

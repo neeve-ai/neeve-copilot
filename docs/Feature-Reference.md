@@ -12,7 +12,7 @@ committed into a product repo. Content lives once in this repo
 globally.
 
 ## Key Functionalities
-- **One-command global install (`sync_skills.sh` → `neeve/products/robin/install.sh --all`)**:
+- **One-command global install (`sync_skills.sh` → `neeve/install.sh --all`)**:
   pulls the latest from this repo and installs both:
   - the 6 core skills into every supported agent's global skill directory
     (`~/.claude/skills`, `~/.codex/skills`, `~/.copilot/skills`,
@@ -39,7 +39,7 @@ globally.
    machine, in every supported agent.
 2. **Verify:** open any project, type `/skills` (Claude Code) or check the
    `/`-command picker (Copilot/Cursor/Codex). Preview the house rules with
-   `python3 neeve/products/robin/scripts/context_render.py --house-rules /tmp/preview.md`.
+   `python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md`.
 3. **Usage:** the skills trigger automatically on matching phrasing, or
    invoke explicitly via `/to-spec`, `/implement-spec`, `/code-review`,
    `/repo-ask`, `/repo-intel`, `/neeve-dls`. House rules apply automatically,

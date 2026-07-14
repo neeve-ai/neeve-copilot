@@ -17,11 +17,22 @@ import difflib
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]  # neeve/products/robin
+ROOT = Path(__file__).resolve().parents[1]  # neeve/
+# Org-level (product-agnostic) context: base.md + tier-1 fragments.
 CONTEXT_SRC = ROOT / "context-src"
 BASE_MD = CONTEXT_SRC / "base.md"
-FRAGMENTS_DIR = CONTEXT_SRC / "fragments"
-REPOS_DIR = CONTEXT_SRC / "repos"
+# Product-level context: per-repo yamls, product overview, and the
+# product-specific fragments (OT domain notes, DLS usage notes).
+PRODUCT_CONTEXT_SRC = ROOT / "products" / "robin" / "context-src"
+REPOS_DIR = PRODUCT_CONTEXT_SRC / "repos"
+
+
+def _fragment_path(name: str) -> Path:
+    """Resolve a fragment by name: org fragments first, then product."""
+    org = CONTEXT_SRC / "fragments" / name
+    if org.is_file():
+        return org
+    return PRODUCT_CONTEXT_SRC / "fragments" / name
 
 OUTPUT_FILES = ["AGENTS.md", ".github/copilot-instructions.md", "CLAUDE.md", ".cursorrules"]
 
@@ -149,7 +160,7 @@ def render_do_not_modify_block(v: dict) -> str:
 def render_spec_review_fragment(v: dict) -> str:
     if not v.get("spec_based_development"):
         return ""
-    text = (FRAGMENTS_DIR / "spec-review-checklist.md").read_text()
+    text = _fragment_path("spec-review-checklist.md").read_text()
     text = text.replace("{{ADR_SOURCE_OF_TRUTH}}", v.get("adr_source_of_truth") or "the team's work-item tracker")
     text = text.replace("{{SPEC_WIKI_REF}}", v.get("spec_wiki_ref") or "")
     text = text.replace("{{SPEC_WIKI_REF_SHORT}}", v.get("spec_wiki_ref_short") or "the team's Spec-Based-Development doc")
@@ -158,11 +169,11 @@ def render_spec_review_fragment(v: dict) -> str:
 
 
 def render_code_review_fragment() -> str:
-    return (FRAGMENTS_DIR / "code-review-checklist.md").read_text()
+    return _fragment_path("code-review-checklist.md").read_text()
 
 
 def render_production_consequence_fragment() -> str:
-    return (FRAGMENTS_DIR / "production-consequence-and-gaps.md").read_text()
+    return _fragment_path("production-consequence-and-gaps.md").read_text()
 
 
 def render_product_repo_table() -> str:
@@ -181,20 +192,20 @@ def render_product_repo_table() -> str:
 
 
 def render_product_overview_fragment() -> str:
-    text = (CONTEXT_SRC / "product-overview.md").read_text()
+    text = (PRODUCT_CONTEXT_SRC / "product-overview.md").read_text()
     return text.replace("{{PRODUCT_REPO_TABLE}}", render_product_repo_table())
 
 
 def render_ot_domain_fragment(v: dict) -> str:
     if v.get("domain_extension") != "ot-building-automation":
         return ""
-    return (FRAGMENTS_DIR / "ot-domain-notes.md").read_text()
+    return _fragment_path("ot-domain-notes.md").read_text()
 
 
 def render_dls_fragment(v: dict) -> str:
     if not v.get("dls_extension"):
         return ""
-    return (FRAGMENTS_DIR / "dls-usage-notes.md").read_text()
+    return _fragment_path("dls-usage-notes.md").read_text()
 
 
 MINIMAL_TEMPLATE = """# Neeve Engineering — Agent Instructions

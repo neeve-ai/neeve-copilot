@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for context_render.py — stdlib unittest only, no new dependency.
 
-Run: python3 neeve/products/robin/scripts/test_context_render.py
+Run: python3 neeve/scripts/test_context_render.py
 """
 from __future__ import annotations
 

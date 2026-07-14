@@ -34,15 +34,15 @@ jobs:
 
       - name: Diff installed skills against skills-src
         run: |
-          bash neeve-copilot/neeve/products/robin/scripts/skills_sync.sh \
+          bash neeve-copilot/neeve/scripts/skills_sync.sh \
             check-target "${{ github.workspace }}/target"
 
       - name: Diff installed prompts against prompts-src
         run: |
-          bash neeve-copilot/neeve/products/robin/scripts/prompts_sync.sh \
+          bash neeve-copilot/neeve/scripts/prompts_sync.sh \
             check-target "${{ github.workspace }}/target"
 
       - name: Diff installed hooks against hooks-src
         run: |
-          bash neeve-copilot/neeve/products/robin/scripts/hooks_sync.sh \
+          bash neeve-copilot/neeve/scripts/hooks_sync.sh \
             check-target "${{ github.workspace }}/target"

@@ -24,16 +24,16 @@ jobs:
       - name: Build release zip assets
         run: |
           mkdir -p "${ZIP_DIR}"
-          SKILLS_ZIP_DIR="${ZIP_DIR}" neeve/products/robin/scripts/skills_sync.sh pack
+          SKILLS_ZIP_DIR="${ZIP_DIR}" neeve/scripts/skills_sync.sh pack
 
       - name: Validate release zip assets
         run: |
-          neeve/products/robin/scripts/skills_sync.sh check
+          neeve/scripts/skills_sync.sh check
 
       - name: Smoke test installer against release assets
         run: |
           tmp_home="$(mktemp -d)"
-          HOME="${tmp_home}" SKILLS_ZIP_DIR="${ZIP_DIR}" bash neeve/products/robin/install.sh --codex
+          HOME="${tmp_home}" SKILLS_ZIP_DIR="${ZIP_DIR}" bash neeve/install.sh --codex
           test -f "${tmp_home}/.codex/skills/code-review/SKILL.md"
           test -f "${tmp_home}/.codex/skills/to-spec/SKILL.md"
           test -f "${tmp_home}/.codex/skills/implement-spec/SKILL.md"
@@ -42,7 +42,7 @@ jobs:
       - name: Assemble release bundle
         run: |
           mkdir -p "${BUNDLE_DIR}/zips"
-          cp neeve/products/robin/install.sh "${BUNDLE_DIR}/install.sh"
+          cp neeve/install.sh "${BUNDLE_DIR}/install.sh"
           cp neeve/products/robin/AGENTS.md "${BUNDLE_DIR}/AGENTS.md"
           cp neeve/products/robin/README.md "${BUNDLE_DIR}/README.md"
           cp "${ZIP_DIR}"/*.zip "${BUNDLE_DIR}/zips/"

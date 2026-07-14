@@ -228,7 +228,7 @@ neeve-copilot/
 ### Verifying what a fresh install would produce
 
 ```bash
-python3 neeve/products/robin/scripts/context_render.py --house-rules /tmp/preview.md
+python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md
 cat /tmp/preview.md
 ```
 
@@ -436,16 +436,16 @@ actually ship, and `security.md`'s headings consistent with what cites them).
 
 **Editing a skill:**
 ```bash
-code neeve/products/robin/skills-src/to-spec/SKILL.md   # make your edit
+code neeve/skills-src/to-spec/SKILL.md   # make your edit
 bash sync_skills.sh                                       # reinstall everywhere, to test it
-git add neeve/products/robin/skills-src/
+git add neeve/skills-src/
 git commit -m "skills: describe your change"
 ```
 
 **Editing the house rules:**
 ```bash
 code neeve/products/robin/context-src/base.md           # make your edit
-python3 neeve/products/robin/scripts/context_render.py --house-rules /tmp/preview.md
+python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md
 cat /tmp/preview.md                                       # check it before installing
 bash sync_skills.sh                                       # installs it on your own machine
 git add neeve/products/robin/context-src/

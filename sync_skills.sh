@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALLER="${REPO_DIR}/neeve/products/robin/install.sh"
+INSTALLER="${REPO_DIR}/neeve/install.sh"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 ok()  { echo -e "  ${GREEN}✓${NC} $*"; }

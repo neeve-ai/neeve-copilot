@@ -29,17 +29,16 @@ from pathlib import Path
 
 ORG_DIR = Path(__file__).resolve().parents[1]
 NEEVE_DIR = ORG_DIR.parent
-ROBIN_DIR = NEEVE_DIR / "products" / "robin"
-AGENT_MD = ROBIN_DIR / "agents-src" / "neeve" / "AGENT.md"
-SECURITY_MD = ROBIN_DIR / "skills-src" / "code-review" / "references" / "security.md"
+AGENT_MD = NEEVE_DIR / "agent-src" / "neeve" / "AGENT.md"
+SECURITY_MD = NEEVE_DIR / "skills-src" / "code-review" / "references" / "security.md"
 FOUNDATION_MD = NEEVE_DIR / "foundation.md"
 ENGINEERING_PRINCIPLES_MD = NEEVE_DIR / "engineering-principles.md"
 PM_LENS_MD = NEEVE_DIR / "references" / "pm-lens.md"
 DESIGN_REVIEW_MD = NEEVE_DIR / "references" / "design-review.md"
 
 PRODUCTS_DIR = NEEVE_DIR / "products"
-SKILLS_SRC_ROOTS = [ROBIN_DIR / "skills-src"] + (
-    [p / "skills-src" for p in sorted(PRODUCTS_DIR.iterdir()) if p.is_dir() and p != ROBIN_DIR]
+SKILLS_SRC_ROOTS = [NEEVE_DIR / "skills-src"] + (
+    [p / "skills-src" for p in sorted(PRODUCTS_DIR.iterdir()) if p.is_dir()]
     if PRODUCTS_DIR.is_dir()
     else []
 )

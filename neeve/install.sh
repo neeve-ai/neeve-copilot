@@ -6,14 +6,18 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Auto-discovered from skills-src/ (mirrors skills_sync.sh's own discover_skills()
-# and the agents-src discovery loop below) — a hardcoded list here previously let
+# Auto-discovered from both skill roots — org-level skills-src/ plus every
+# product's skills-src/ (mirrors skills_sync.sh's own discover_skills() and
+# the agent-src discovery loop below) — a hardcoded list here previously let
 # ot-building-automation silently never get installed after it was added to
 # skills-src/ without this list being updated. Never hardcode this again.
 SKILLS=""
-for skill_dir in "${SCRIPT_DIR}"/skills-src/*/; do
-  [[ -f "${skill_dir}SKILL.md" ]] || continue
-  SKILLS="${SKILLS} $(basename "${skill_dir}")"
+for skills_root in "${SCRIPT_DIR}/skills-src" "${SCRIPT_DIR}"/products/*/skills-src; do
+  [[ -d "${skills_root}" ]] || continue
+  for skill_dir in "${skills_root}"/*/; do
+    [[ -f "${skill_dir}SKILL.md" ]] || continue
+    SKILLS="${SKILLS} $(basename "${skill_dir}")"
+  done
 done
 SKILLS="${SKILLS# }"
 ZIP_DIR="${SKILLS_ZIP_DIR:-}"
@@ -21,10 +25,10 @@ SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
 RENDER_SCRIPT="${SCRIPT_DIR}/scripts/context_render.py"
 MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_house_rules.py"
 AGENTS_RENDER_SCRIPT="${SCRIPT_DIR}/scripts/agents_render.py"
-AGENTS_SRC_DIR="${SCRIPT_DIR}/agents-src"
+AGENTS_SRC_DIR="${SCRIPT_DIR}/agent-src"
 SESSION_HOOK_MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_session_hook.py"
 REFRESH_CONTEXT_SCRIPT="${SCRIPT_DIR}/hooks-src/refresh-context.sh"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()  { echo -e "  ${GREEN}✓${NC} $*"; }
@@ -291,13 +295,13 @@ for name in "${RETIRED_AGENTS_SKILL_FALLBACK_ONLY[@]}"; do
   fi
 done
 
-# ── Agents: cross-tool, rendered from agents-src/ ────────────────────────────
+# ── Agents: cross-tool, rendered from agent-src/ ────────────────────────────
 # Claude Code, Copilot (VS Code), and Codex CLI each have a real, working,
 # global custom-agent mechanism — in three incompatible formats. Cursor and
 # Antigravity have none, so they get the same content as a Skill instead
 # (skills auto-trigger on phrasing, so this isn't a downgrade). One source
-# per agent (agents-src/<name>/AGENT.md), rendered per tool — see
-# agents-src/README.md.
+# per agent (agent-src/<name>/AGENT.md), rendered per tool — see
+# agent-src/README.md.
 if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
   AGENT_NAMES=()
   for agent_dir in "${AGENTS_SRC_DIR}"/*/; do
@@ -306,7 +310,7 @@ if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
   done
 
   if [[ ${#AGENT_NAMES[@]} -gt 0 ]]; then
-    hdr "Agents (cross-tool, rendered from agents-src/)"
+    hdr "Agents (cross-tool, rendered from agent-src/)"
     for agent in "${AGENT_NAMES[@]}"; do
       if $DO_CLAUDE; then
         if python3 "${AGENTS_RENDER_SCRIPT}" "${agent}" --claude "${HOME}/.claude/agents/${agent}.md" >/dev/null; then
@@ -346,7 +350,7 @@ if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
     done
   fi
 else
-  warn "No scripts/agents_render.py or agents-src/ found — skipping agent install"
+  warn "No scripts/agents_render.py or agent-src/ found — skipping agent install"
 fi
 
 # ── Freshness: global Claude Code SessionStart hook ──────────────────────────

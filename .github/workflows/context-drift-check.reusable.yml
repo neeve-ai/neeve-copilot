@@ -33,7 +33,7 @@ jobs:
 
       - name: Render and diff against committed context files
         run: |
-          python3 neeve-copilot/neeve/products/robin/scripts/context_render.py \
+          python3 neeve-copilot/neeve/scripts/context_render.py \
             "${{ inputs.repo }}" --check "${{ github.workspace }}/target"
 
       - name: Guard against gitignored rendered files

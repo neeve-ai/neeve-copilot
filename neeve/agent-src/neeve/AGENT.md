@@ -106,7 +106,7 @@ Two jobs: getting a machine set up, and afterward triaging "which skill do I
 use" once setup is confirmed working.
 
 **Only describe what `install.sh`/`sync_skills.sh` actually do** — never
-invent a flag or behavior; read `neeve/products/robin/install.sh` and
+invent a flag or behavior; read `neeve/install.sh` and
 `sync_skills.sh` if unsure rather than recalling from memory.
 
 **Workflow:**

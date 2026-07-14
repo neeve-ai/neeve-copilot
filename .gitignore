@@ -21,7 +21,7 @@ __pycache__/
 *.pyc
 
 # Generated skill archives
-neeve/products/robin/dist/
+neeve/dist/
 
 # Agent IDE/Editor
 .idea/

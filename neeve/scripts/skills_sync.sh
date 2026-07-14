@@ -2,9 +2,26 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SRC_DIR="${ROOT_DIR}/skills-src"
+# Two skill roots: org-level (product-agnostic SDLC skills) and per-product
+# (e.g. robin's neeve-dls / ot-building-automation). Skill names must be
+# unique across roots — discover_skills fails loudly on a collision.
+SRC_ROOTS=("${ROOT_DIR}/skills-src")
+for product_dir in "${ROOT_DIR}"/products/*/; do
+  [[ -d "${product_dir}skills-src" ]] && SRC_ROOTS+=("${product_dir}skills-src")
+done
 ZIP_DIR="${SKILLS_ZIP_DIR:-${ROOT_DIR}/dist/zips}"
 SKILLS=()
+
+skill_src_dir() {
+  local name="$1" root
+  for root in "${SRC_ROOTS[@]}"; do
+    if [[ -d "${root}/${name}" ]]; then
+      echo "${root}/${name}"
+      return 0
+    fi
+  done
+  return 1
+}
 shopt -s nullglob
 
 usage() {
@@ -34,19 +51,35 @@ require_cmd() {
 
 discover_skills() {
   SKILLS=()
-  while IFS= read -r dir; do
-    SKILLS+=("$(basename "${dir}")")
-  done < <(find "${SRC_DIR}" -mindepth 1 -maxdepth 1 -type d | LC_ALL=C sort)
-
+  local root name
+  for root in "${SRC_ROOTS[@]}"; do
+    [[ -d "${root}" ]] || continue
+    while IFS= read -r dir; do
+      name="$(basename "${dir}")"
+      if contains_skill "${name}"; then
+        echo "Skill name collision across roots: ${name}" >&2
+        exit 1
+      fi
+      SKILLS+=("${name}")
+    done < <(find "${root}" -mindepth 1 -maxdepth 1 -type d | LC_ALL=C sort)
+  done
   if [[ ${#SKILLS[@]} -eq 0 ]]; then
-    echo "No skills found under ${SRC_DIR}" >&2
+    echo "No skills found under: ${SRC_ROOTS[*]}" >&2
     exit 1
   fi
+
+  # Stable overall order regardless of which root a skill lives in.
+  local sorted=()
+  while IFS= read -r name; do
+    sorted+=("${name}")
+  done < <(printf '%s\n' "${SKILLS[@]}" | LC_ALL=C sort)
+  SKILLS=("${sorted[@]}")
 }
 
 contains_skill() {
   local name="$1"
   local skill
+  [[ ${#SKILLS[@]} -eq 0 ]] && return 1
   for skill in "${SKILLS[@]}"; do
     if [[ "${skill}" == "${name}" ]]; then
       return 0
@@ -56,18 +89,19 @@ contains_skill() {
 }
 
 validate_layout() {
-  if [[ ! -d "${SRC_DIR}" ]]; then
-    echo "Missing skills source directory: ${SRC_DIR}" >&2
+  if [[ ! -d "${SRC_ROOTS[0]}" ]]; then
+    echo "Missing skills source directory: ${SRC_ROOTS[0]}" >&2
     exit 1
   fi
 
+  local skill src
   for skill in "${SKILLS[@]}"; do
-    if [[ ! -d "${SRC_DIR}/${skill}" ]]; then
-      echo "Missing source directory: ${SRC_DIR}/${skill}" >&2
+    if ! src="$(skill_src_dir "${skill}")"; then
+      echo "Missing source directory for skill: ${skill}" >&2
       exit 1
     fi
-    if [[ ! -f "${SRC_DIR}/${skill}/SKILL.md" ]]; then
-      echo "Missing SKILL.md in: ${SRC_DIR}/${skill}" >&2
+    if [[ ! -f "${src}/SKILL.md" ]]; then
+      echo "Missing SKILL.md in: ${src}" >&2
       exit 1
     fi
   done
@@ -75,7 +109,8 @@ validate_layout() {
 
 compare_one() {
   local skill="$1" zip_file="$2"
-  local src_skill_dir="${SRC_DIR}/${skill}"
+  local src_skill_dir
+  src_skill_dir="$(skill_src_dir "${skill}")"
   local tmp_dir
 
   tmp_dir="$(mktemp -d)"
@@ -108,7 +143,7 @@ pack_one() {
   tmp_zip="${tmp_dir}/${skill}.zip"
 
   (
-    cd "${SRC_DIR}"
+    cd "$(dirname "$(skill_src_dir "${skill}")")"
     # File list is sorted for stable archive structure.
     find "${skill}" -type f | LC_ALL=C sort | zip -X -q "${tmp_zip}" -@
   )
@@ -133,11 +168,13 @@ check_target() {
     local installed_dir="${target_skills_dir}/${skill}"
     [[ -d "${installed_dir}" ]] || continue
     found_any=1
-    if diff -ru "${SRC_DIR}/${skill}" "${installed_dir}" >/dev/null 2>&1; then
+    local src_dir
+    src_dir="$(skill_src_dir "${skill}")"
+    if diff -ru "${src_dir}" "${installed_dir}" >/dev/null 2>&1; then
       echo "OK: ${skill}"
     else
-      echo "DRIFT: ${skill} (installed copy differs from skills-src/${skill})" >&2
-      diff -ru "${SRC_DIR}/${skill}" "${installed_dir}" || true
+      echo "DRIFT: ${skill} (installed copy differs from ${src_dir})" >&2
+      diff -ru "${src_dir}" "${installed_dir}" || true
       failed=1
     fi
   done

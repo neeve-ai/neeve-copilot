@@ -27,8 +27,8 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]  # neeve/products/robin
-AGENTS_SRC = ROOT / "agents-src"
+ROOT = Path(__file__).resolve().parents[1]  # neeve/
+AGENTS_SRC = ROOT / "agent-src"
 
 
 @dataclass

@@ -5,7 +5,7 @@
 This folder used to hold `PRINCIPLES.md` (the reasoning-lineage charter) and
 stage two agent generations: five agents originally gated on a
 GitHub-Enterprise-only export path that reached zero engineers, then four of
-them migrated to `neeve/products/robin/agents-src/` to reach every engineer
+them migrated to `neeve/agent-src/` (then at products/robin/agents-src) to reach every engineer
 through the render pipeline instead. That migration was the right call at the
 time — see git history on this file for the full account — but it left eight
 narrow specialist agents (`to-prd`, `to-erd`, `repo-guide`,
@@ -21,7 +21,7 @@ already existed (`code-review`'s security/principles references, `neeve-dls`,
   culture, product, customers, personas) and `neeve/engineering-principles.md`
   (the SDLC process principles), reorganized around the Design Loop's stages
   rather than a Product/Design/Engineering department split.
-- `to-prd` and `to-erd` are now skills (`neeve/products/robin/skills-src/
+- `to-prd` and `to-erd` are now skills (`neeve/skills-src/
   to-prd/`, `to-erd/`) instead of agents — this makes them auto-trigger in
   GitHub Copilot too, where a custom agent only ever appeared in a picker.
 - `repo-guide`, `neeve-reviewer`, `neeve-security-partner`,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for agents_render.py — stdlib unittest only, no new dependency.
 
-Run: python3 neeve/products/robin/scripts/test_agents_render.py
+Run: python3 neeve/scripts/test_agents_render.py
 """
 from __future__ import annotations
 

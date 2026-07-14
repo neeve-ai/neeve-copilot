@@ -36,7 +36,7 @@ Principles.
    asked? Scope bleed is a PM failure mode, not just something spec-review
    catches after the fact.
 5. **Business/operational stakes and gaps stated, not implied.** Per
-   `context-src/fragments/production-consequence-and-gaps.md`, does the spec
+   `context/fragments/production-consequence-and-gaps.md`, does the spec
    or PR description name the operational consequence (downtime, an exposed
    credential, a support cost) *and* explicitly list what's deferred or
    unaddressed, rather than letting it go unstated?

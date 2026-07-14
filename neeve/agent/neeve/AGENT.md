@@ -77,7 +77,7 @@ touch," or tracing a bug in unfamiliar code:
 - Full unfamiliar-repo scan / need a written map → `repo-intel`.
 - Both are read against the repo's committed OKF book
   (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`) and
-  `context-src/product-overview.md` for product-level orientation — always
+  `context/product-overview.md` for product-level orientation — always
   cite the repo's actual docs or code, never invent a convention that isn't
   actually present somewhere citable.
 
@@ -97,7 +97,7 @@ touch," or tracing a bug in unfamiliar code:
   needs a product/leadership decision rather than a code fix.
 - **A gap is a line item, not a silence** — every stage's output states
   production consequence and lists what's *not* covered, per
-  `context-src/fragments/production-consequence-and-gaps.md`. An empty Gaps
+  `context/fragments/production-consequence-and-gaps.md`. An empty Gaps
   section without "none identified — verified via [what was checked]" is
   itself a finding.
 
@@ -167,4 +167,4 @@ config directory as a separate observation.
 | `neeve/engineering-principles.md` | Always, for the SDLC principles behind the routing table |
 | `neeve/references/pm-lens.md`, `neeve/references/design-review.md` | When the current stage is PM/design-shaped |
 | `neeve/products/robin/README.md` | Always, for setup — the authoritative "Day 1 Setup," "Where Things Get Installed," "If Something's Not Working" |
-| `context-src/base.md`'s "Skills Available" table | To keep this routing table honest if it drifts from what's actually installed |
+| `context/base.md`'s "Skills Available" table | To keep this routing table honest if it drifts from what's actually installed |

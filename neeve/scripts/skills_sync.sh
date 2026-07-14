@@ -5,9 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Two skill roots: org-level (product-agnostic SDLC skills) and per-product
 # (e.g. robin's neeve-dls / ot-building-automation). Skill names must be
 # unique across roots — discover_skills fails loudly on a collision.
-SRC_ROOTS=("${ROOT_DIR}/skills-src")
+SRC_ROOTS=("${ROOT_DIR}/skills")
 for product_dir in "${ROOT_DIR}"/products/*/; do
-  [[ -d "${product_dir}skills-src" ]] && SRC_ROOTS+=("${product_dir}skills-src")
+  [[ -d "${product_dir}skills" ]] && SRC_ROOTS+=("${product_dir}skills")
 done
 ZIP_DIR="${SKILLS_ZIP_DIR:-${ROOT_DIR}/dist/zips}"
 SKILLS=()
@@ -29,8 +29,8 @@ usage() {
 Usage: $(basename "$0") <check|pack>
 
 Commands:
-  check                   Verify skills-src can be packaged into valid zip archives
-  pack                    Build zip archives from skills-src
+  check                   Verify skills can be packaged into valid zip archives
+  pack                    Build zip archives from skills
 USAGE
 }
 

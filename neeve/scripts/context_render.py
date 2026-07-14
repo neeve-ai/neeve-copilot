@@ -13,10 +13,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]  # neeve/
 # Org-level (product-agnostic) context: base.md + tier-1 fragments.
-CONTEXT_SRC = ROOT / "context-src"
+CONTEXT_SRC = ROOT / "context"
 BASE_MD = CONTEXT_SRC / "base.md"
 # Product-level context: product overview plus product-specific fragments.
-PRODUCT_CONTEXT_SRC = ROOT / "products" / "robin" / "context-src"
+PRODUCT_CONTEXT_SRC = ROOT / "products" / "robin" / "context"
 
 
 def _fragment_path(name: str) -> Path:
@@ -58,11 +58,11 @@ HOUSE_RULES_HEADER = """# Neeve Engineering — House Rules
 Read by: GitHub Copilot · OpenAI Codex · Claude Code (global instructions,
 every workspace on this machine).
 
-This file is rendered from `context-src/base.md` (house-rules variant, the
+This file is rendered from `context/base.md` (house-rules variant, the
 universal parts only — no repo-specific stack/commands/do-not-modify) by
 `scripts/context_render.py --house-rules`. It is installed once per engineer
 via `install.sh`/`sync_skills.sh` into each tool's user-level instructions
-location, not committed into any product repo. Edit `context-src/base.md`,
+location, not committed into any product repo. Edit `context/base.md`,
 then re-run the installer to refresh it on your machine."""
 
 REPO_SPECIFIC_FRAGMENT_POINTER = """If this repo does spec-based development, touches the `dls-neeve` design

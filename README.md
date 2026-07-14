@@ -24,7 +24,7 @@ repo to make this work.
 **Stuck, or not sure what to use next?** Ask `neeve` — "help me set up
 neeve-copilot" or "what should I use for X" — it's the one agent meant to be
 asked first, for setup and for routing across every skill by Design Loop
-stage. See [`agents-src/README.md`](neeve/agent-src/README.md).
+stage. See [`agents-src/README.md`](neeve/agent/README.md).
 
 **Full usage guide** — per-tool notes, repo setup, and how context is
 managed: [`HOW-TO-USE.md`](HOW-TO-USE.md).
@@ -121,7 +121,7 @@ Antigravity) get taught how Neeve works. In short:
   invocable on their own.
 - **One unified agent, `neeve`**, routes across every skill by Design Loop
   stage and handles setup/onboarding — source at
-  [`neeve/agent-src/`](neeve/agent-src/README.md),
+  [`neeve/agent/`](neeve/agent/README.md),
   rendered into each tool's own native custom-agent mechanism where one
   exists (Claude Code, Copilot, Codex), and into the skill mechanism where
   it doesn't (Cursor, Antigravity). Invocation isn't identical everywhere —
@@ -168,30 +168,30 @@ separate agents to remember.
 - **Living context, in full** — `repo-intel` now refreshes the repo-level
         OKF book whenever it catches a stale fact or a real gap, closing the
         per-repo half of this. What's still open: whether
-  `context-src/product-overview.md`'s cross-repo narrative facts stay
+  `context/product-overview.md`'s cross-repo narrative facts stay
   current the same way. A per-repo bot-PR version of a broader mechanism was
   tried and abandoned (see "History" in
   [`docs/Feature-Reference.md`](docs/Feature-Reference.md)) — it fought the
   centralized, nothing-per-repo model this repo settled on; whatever closes
-  the remaining gap has to update `context-src/` itself, in this repo, not
+  the remaining gap has to update `context/` itself, in this repo, not
   16 others.
 
 ---
 
 ## Contributing Skills
 
-Skills live in [`neeve/skills-src/`](neeve/skills-src/) (product-specific ones under [`neeve/products/<product>/skills-src/`](neeve/products/robin/skills-src/)).
+Skills live in [`neeve/skills/`](neeve/skills/) (product-specific ones under [`neeve/products/<product>/skills/`](neeve/products/robin/skills/)).
 Each skill is a directory with a `SKILL.md` and optional `references/` files.
 
 ```bash
 # Edit a skill
-code neeve/skills-src/to-spec/SKILL.md
+code neeve/skills/to-spec/SKILL.md
 
 # Test your change locally (reinstalls all skills)
 bash sync_skills.sh
 
 # Commit and push — the post-commit hook pushes automatically
-git add neeve/skills-src/
+git add neeve/skills/
 git commit -m "skills: describe your change"
 ```
 

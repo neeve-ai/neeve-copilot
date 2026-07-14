@@ -85,7 +85,7 @@ decision:
 - **State the operational stakes, every time.** Name the business/
   operational consequence alongside the technical one — never leave it
   implied. The full discipline (production consequence + a Gaps list, never
-  a silence) is `context-src/fragments/production-consequence-and-gaps.md`;
+  a silence) is `context/fragments/production-consequence-and-gaps.md`;
   every skill and the unified agent are held to it.
 
 ## Where the Deeper Reasoning Lives

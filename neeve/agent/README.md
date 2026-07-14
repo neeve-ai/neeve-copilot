@@ -6,9 +6,9 @@ skill). It previously held eight narrow agents (`to-prd`, `to-erd`,
 `repo-guide`, `neeve-guide`, `neeve-reviewer`, `neeve-security-partner`,
 `neeve-pm-partner`, `neeve-design-partner`); see "What changed" below for
 why that was retired in favor of one agent plus the skills it routes to.
-Each agent is authored once as `agent-src/<name>/AGENT.md` and rendered by
+Each agent is authored once as `agent/<name>/AGENT.md` and rendered by
 `scripts/agents_render.py` into every tool's own native format. It exists
-alongside `skills-src/` (the Agent Skills: `to-prd`, `to-erd`, `repo-intel`,
+alongside `skills/` (the Agent Skills: `to-prd`, `to-erd`, `repo-intel`,
 `repo-ask`, `to-spec`, `implement-spec`, `code-review`, `neeve-dls`,
 `ot-building-automation`, `debug-trace`) for workflows that specifically
 need agent behavior — see "When to write an agent instead of a skill" below.
@@ -35,7 +35,7 @@ became `neeve/references/pm-lens.md` and `design-review.md`, cited from
 `to-spec`/`to-prd` and `neeve-dls`/`code-review` respectively; `repo-guide`
 retired in favor of the rendered repo context plus `repo-ask`/`repo-intel`.
 One agent, `neeve`, now routes across all of it by Design Loop stage — see
-`agent-src/neeve/AGENT.md` and `neeve/engineering-principles.md`.
+`agent/neeve/AGENT.md` and `neeve/engineering-principles.md`.
 
 ## Why a render step, not one shared file
 
@@ -60,7 +60,7 @@ difference across tools, not a rounding error.
 ## Source format
 
 ```
-agent-src/
+agent/
   neeve/
     AGENT.md
 ```
@@ -79,7 +79,7 @@ markdown content, only the frontmatter wrapper differs per tool.
 Skills remain the default — cross-tool portable everywhere, load
 automatically, no per-tool format translation needed, and bundled behind
 `neeve`'s own routing rather than needing separate discovery. Write a new
-`agent-src/<name>/AGENT.md` only when the workflow needs something a skill
+`agent/<name>/AGENT.md` only when the workflow needs something a skill
 can't express as cleanly, and think hard before doing it — the eight-agent
 history above is exactly what happens when that bar isn't held:
 

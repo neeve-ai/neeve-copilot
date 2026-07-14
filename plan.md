@@ -141,7 +141,7 @@ Deck: "Git & CI/CD lifecycle event triggers and validations" +
    so `--no-verify` can't silently merge stale context.
 5. **Agent CI Guardrails** — the SessionStart `refresh-context.sh` hook
    already auto-injects context; add a companion **Stop-hook template**
-   (`neeve/hooks-src/pre-merge-checklist.sh`, Claude-Code-only, best-effort
+   (`neeve/hooks/pre-merge-checklist.sh`, Claude-Code-only, best-effort
    elsewhere) that runs the quality-gates checklist locally before the agent
    reports a task done — mirroring "checklist-based quality audits before
    merging code" without requiring a runtime control loop (still no model
@@ -176,7 +176,7 @@ unified agent's routing table is this table, not a separate invention.
 
 One agent, compatible with Claude Code and GitHub Copilot (Copilot has no
 subagents — the agent routes to *skills*, never delegates to sub-agents).
-Source: `neeve/agent-src/neeve/AGENT.md`, same frontmatter dialect as today
+Source: `neeve/agent/neeve/AGENT.md`, same frontmatter dialect as today
 (`name` / folded `description` / `tools: [read, write, search, bash]`) so
 `agents_render.py` needs no parser changes. Renders to
 `~/.claude/agents/neeve.md` and `~/.copilot/agents/neeve.agent.md`
@@ -223,20 +223,20 @@ neeve-copilot/
     ├── install.sh                    # moved from products/robin/
     ├── scripts/                      # moved + shared_refs_sync.sh, check_org_sync.py (rewritten)
     ├── dist/zips/                    # gitignored
-    ├── agent-src/neeve/AGENT.md      # THE unified agent
-    ├── skills-src/                   # to-prd/ to-erd/ to-spec/ implement-spec/ code-review/
+    ├── agent/neeve/AGENT.md      # THE unified agent
+    ├── skills/                   # to-prd/ to-erd/ to-spec/ implement-spec/ code-review/
     │   │                             #   repo-ask/ debug-trace/
     │   └── repo-intel/               # UPDATED: now produces the 3-file OKF book (see Layer 02)
     │                                 #   + installs the pre-commit hook into the target repo
-    ├── context-src/
+    ├── context/
     │   └── base.md                   # house rules = foundation.md + engineering-principles.md digest
-    ├── prompts-src/  hooks-src/
+    ├── prompts/  hooks/
     │   ├── refresh-context.sh        # existing SessionStart hook
     │   └── pre-merge-checklist.sh    # NEW — Stop-hook, Pillar 2 item 5
     └── products/robin/
         ├── product-overview.md       # feeds foundation.md's Product section for Robin
         ├── repo-level OKF books       # committed in each repo, seeded by init-repo.sh
-        └── skills-src/  neeve-dls/  ot-building-automation/
+        └── skills/  neeve-dls/  ot-building-automation/
 ```
 
 Note: each target product repo (robin-ai, robin-web, dls-neeve, ...) gets its
@@ -272,8 +272,8 @@ hand-duplicated.
 
 ## Script / installer changes
 
-- `install.sh`: two-root skill discovery (`neeve/skills-src`,
-  `neeve/products/*/skills-src`); `AGENTS_SRC_DIR` → `neeve/agent-src`;
+- `install.sh`: two-root skill discovery (`neeve/skills`,
+  `neeve/products/*/skills`); `AGENTS_SRC_DIR` → `neeve/agent`;
   **add prune step** removing the 8 retired agent filenames from every
   installed harness location so ghost agents stop auto-triggering.
 - `skills_sync.sh`: two-root discovery, fail on name collision, calls
@@ -300,7 +300,7 @@ hand-duplicated.
 ## Docs / CI for this repo
 
 - `check_org_sync.py` (→ `neeve/scripts/`): asserts the agent's routing table
-  names every shipped skill exactly once (derived from both skills-src
+  names every shipped skill exactly once (derived from both skills
   roots); asserts `security.md` headings; asserts `foundation.md`/
   `engineering-principles.md` citations in pm-lens/design-review.
 - `ci.yml`: path updates; add `shared_refs_sync.sh check`; add a lint step
@@ -324,7 +324,7 @@ hand-duplicated.
   security-partner/reviewer content into `references/security.md` and
   `code-review/references/principles.md`; convert `to-prd`/`to-erd` to
   skills; add explicit Design-phase + SOLID-mapping checklist lines to
-  `to-spec`; write `agent-src/neeve/AGENT.md` with the 8-stage routing table;
+  `to-spec`; write `agent/neeve/AGENT.md` with the 8-stage routing table;
   `git rm` the 8 agent dirs + OT placeholder; update `check_org_sync.py`,
   `base.md` tables, `ci.yml`, install summary text, cross-references.
 - **Phase 2 — directory restructure**: `git mv` skills/agent/scripts/install
@@ -335,7 +335,7 @@ hand-duplicated.
   the 3-file OKF book + hook install step; write
   `templates/hooks/pre-commit-context-sync` (symbol diff, hash check,
   structural diff) with a small fixture repo for its tests; write
-  `templates/ci/integration-verify.yml`, `hooks-src/pre-merge-checklist.sh`,
+  `templates/ci/integration-verify.yml`, `hooks/pre-merge-checklist.sh`,
   `shared_refs_sync.sh`, `{{QUALITY_GATES_FRAGMENT}}` wiring, CI check steps.
 - **Phase 4 — docs**: `neeve/README.md` architecture summary (all 3 pillars +
   where Layer 02's files actually live), `products/robin/README.md` slim,

@@ -34,7 +34,7 @@ Instead of `repo-ask`" below before invoking either.
 ## Why This Matters Here Specifically
 
 Neeve's code frequently sits upstream of physical building equipment
-(`context-src/base.md`'s Why This Matters). A wrong belief about how a call
+(`context/base.md`'s Why This Matters). A wrong belief about how a call
 chain actually persists or caches data, or an outdated assumption about how a
 dependency currently behaves, is not just an engineering miss here — it can
 mean an operator or a piece of OT equipment acting on a misunderstanding that
@@ -82,10 +82,10 @@ nobody actually verified. Depth is the whole point of this skill; treat
 
 5. **State the consequence and impact for Neeve and its customers in
    production.** Every trace concludes by applying — not re-deriving —
-   `context-src/fragments/production-consequence-and-gaps.md`'s Consequence
+   `context/fragments/production-consequence-and-gaps.md`'s Consequence
    and Gaps discipline: what breaks if this is wrong, who notices, blast
    radius, and rollback story where relevant. Frame it against Neeve's actual
-   customer reality from `context-src/base.md`'s Why This Matters and Product
+   customer reality from `context/base.md`'s Why This Matters and Product
    Overview: an operator watching a building system, OT equipment upstream of
    this code, or a facilities/security-ops team relying on Robin staying
    advisory-only. Don't repeat the discipline's text — apply it to this
@@ -165,7 +165,7 @@ Same shape as `repo-ask`'s confidence block, adjusted for exhaustiveness:
 - [any hop not fully traced, any version that couldn't be confirmed, any
   external boundary not readable from here]
 **Consequence for Neeve / customers in production:**
-- [per context-src/fragments/production-consequence-and-gaps.md]
+- [per context/fragments/production-consequence-and-gaps.md]
 ```
 
 A trace that reaches "High" confidence without an explicit persistence/cache
@@ -216,7 +216,7 @@ every time it makes a claim of the kind in "When To Use This Instead of
 
 The third option matters most: if a step recognizes in hindsight that this
 depth was warranted but wasn't applied, that omission is written down as a
-gap (per `context-src/fragments/production-consequence-and-gaps.md`'s "a gap
+gap (per `context/fragments/production-consequence-and-gaps.md`'s "a gap
 is a line item, not a silence"), not quietly dropped. This doesn't force
 compliance — a skill that skips the disclosure line has skipped the whole
 thing again, invisibly, and no tooling here closes that residual gap. What

@@ -9,8 +9,8 @@ are now skills, `repo-guide`/`neeve-reviewer`/`neeve-security-partner`/
 two new reference files, and a single `neeve` agent routes to all of them.
 This check now asserts three things instead:
 
-1. `agent-src/neeve/AGENT.md`'s routing table names every skill that ships
-   under either skills-src root exactly once — a new skill added without a
+1. `agent/neeve/AGENT.md`'s routing table names every skill that ships
+   under either skills root exactly once — a new skill added without a
    routing-table entry fails this, catching silent drift between what's
    installed and what the agent tells engineers to use.
 2. `code-review/references/security.md` still has the section headings the
@@ -28,16 +28,16 @@ import sys
 from pathlib import Path
 
 NEEVE_DIR = Path(__file__).resolve().parents[1]  # neeve/
-AGENT_MD = NEEVE_DIR / "agent-src" / "neeve" / "AGENT.md"
-SECURITY_MD = NEEVE_DIR / "skills-src" / "code-review" / "references" / "security.md"
+AGENT_MD = NEEVE_DIR / "agent" / "neeve" / "AGENT.md"
+SECURITY_MD = NEEVE_DIR / "skills" / "code-review" / "references" / "security.md"
 FOUNDATION_MD = NEEVE_DIR / "foundation.md"
 ENGINEERING_PRINCIPLES_MD = NEEVE_DIR / "engineering-principles.md"
 PM_LENS_MD = NEEVE_DIR / "references" / "pm-lens.md"
 DESIGN_REVIEW_MD = NEEVE_DIR / "references" / "design-review.md"
 
 PRODUCTS_DIR = NEEVE_DIR / "products"
-SKILLS_SRC_ROOTS = [NEEVE_DIR / "skills-src"] + (
-    [p / "skills-src" for p in sorted(PRODUCTS_DIR.iterdir()) if p.is_dir()]
+SKILLS_SRC_ROOTS = [NEEVE_DIR / "skills"] + (
+    [p / "skills" for p in sorted(PRODUCTS_DIR.iterdir()) if p.is_dir()]
     if PRODUCTS_DIR.is_dir()
     else []
 )
@@ -83,7 +83,7 @@ def check_agent_routes_every_skill() -> list[str]:
         # matching how the routing table and prose reference skills.
         if f"`{name}`" not in text:
             errors.append(
-                f"{AGENT_MD.name}: skill {name!r} ships under skills-src but "
+                f"{AGENT_MD.name}: skill {name!r} ships under skills but "
                 f"is not named in the routing table — add a row or an "
                 f"explicit reference."
             )

@@ -7,5 +7,5 @@ to answer. If the trail touches a concept, package, library, or tool, research
 it for real and ground the exact version running here rather than answering
 from memory. Translate the finding into plain language and state the
 production consequence for Neeve and its customers, per
-`context-src/fragments/production-consequence-and-gaps.md`. If no target was
+`context/fragments/production-consequence-and-gaps.md`. If no target was
 given, ask what needs this level of depth before proceeding.

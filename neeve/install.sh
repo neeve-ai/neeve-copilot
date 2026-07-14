@@ -6,13 +6,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Auto-discovered from both skill roots — org-level skills-src/ plus every
-# product's skills-src/ (mirrors skills_sync.sh's own discover_skills() and
-# the agent-src discovery loop below) — a hardcoded list here previously let
+# Auto-discovered from both skill roots — org-level skills/ plus every
+# product's skills/ (mirrors skills_sync.sh's own discover_skills() and
+# the agent discovery loop below) — a hardcoded list here previously let
 # ot-building-automation silently never get installed after it was added to
-# skills-src/ without this list being updated. Never hardcode this again.
+# skills/ without this list being updated. Never hardcode this again.
 SKILLS=""
-for skills_root in "${SCRIPT_DIR}/skills-src" "${SCRIPT_DIR}"/products/*/skills-src; do
+for skills_root in "${SCRIPT_DIR}/skills" "${SCRIPT_DIR}"/products/*/skills; do
   [[ -d "${skills_root}" ]] || continue
   for skill_dir in "${skills_root}"/*/; do
     [[ -f "${skill_dir}SKILL.md" ]] || continue
@@ -25,9 +25,9 @@ SYNC_SCRIPT="${SCRIPT_DIR}/scripts/skills_sync.sh"
 RENDER_SCRIPT="${SCRIPT_DIR}/scripts/context_render.py"
 MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_house_rules.py"
 AGENTS_RENDER_SCRIPT="${SCRIPT_DIR}/scripts/agents_render.py"
-AGENTS_SRC_DIR="${SCRIPT_DIR}/agent-src"
+AGENTS_SRC_DIR="${SCRIPT_DIR}/agent"
 SESSION_HOOK_MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_session_hook.py"
-REFRESH_CONTEXT_SCRIPT="${SCRIPT_DIR}/hooks-src/refresh-context.sh"
+REFRESH_CONTEXT_SCRIPT="${SCRIPT_DIR}/hooks/refresh-context.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -125,11 +125,11 @@ ensure_skill_packages() {
     fi
   fi
 
-  # Prefer a fresh rebuild from skills-src so source edits always propagate.
+  # Prefer a fresh rebuild from skills so source edits always propagate.
   # (Reusing pre-built zips silently installs stale skills when sources change.)
-  if [[ -d "${SCRIPT_DIR}/skills-src" && -f "${SYNC_SCRIPT}" ]]; then
+  if [[ -d "${SCRIPT_DIR}/skills" && -f "${SYNC_SCRIPT}" ]]; then
     mkdir -p "${ZIP_DIR}"
-    warn "Rebuilding skill packages from local skills-src into ${ZIP_DIR}"
+    warn "Rebuilding skill packages from local skills into ${ZIP_DIR}"
     SKILLS_ZIP_DIR="${ZIP_DIR}" bash "${SYNC_SCRIPT}" pack
   else
     # No local sources — fall back to whatever zips were shipped in the bundle.
@@ -139,7 +139,7 @@ ensure_skill_packages() {
       [[ -f "${zip}" ]] || missing=$((missing + 1))
     done
     if [[ "${missing}" -gt 0 ]]; then
-      err "Skill packages are missing and no local skills-src packer is available."
+      err "Skill packages are missing and no local skills packer is available."
       err "Download the GitHub release bundle or clone the full repository checkout."
       exit 1
     fi
@@ -187,10 +187,10 @@ install_to() {
 TOTAL_OK=0
 TOTAL_FAIL=0
 
-# Every run is a reset to exactly the current skills-src, not an additive
+# Every run is a reset to exactly the current skills, not an additive
 # overlay: a manifest file records which skill names neeve-copilot installed
 # into this directory last run, so a skill that's renamed or removed from
-# skills-src gets its old, now-orphaned directory removed too — instead of
+# skills gets its old, now-orphaned directory removed too — instead of
 # silently surviving forever like a stale skill would with the old
 # install-only-what's-currently-listed behavior. This never touches a
 # directory not in *our own* manifest, so a third-party skill some other tool
@@ -208,7 +208,7 @@ prune_stale_skills() {
     if ! printf '%s\n' ${SKILLS} | grep -qx "${name}"; then
       if [[ -d "${dest_dir}/${name}" ]]; then
         rm -rf "${dest_dir}/${name}"
-        ok "Removed stale skill (no longer in skills-src): ${name}"
+        ok "Removed stale skill (no longer in skills): ${name}"
       fi
     fi
   done
@@ -246,10 +246,10 @@ $DO_CURSOR      && install_agent "cursor"
 
 # ── House rules: global, user-level, every workspace on this machine ────────
 # The shared culture/ethos/principles/quality-gates/product-overview content
-# (context-src/base.md, minus anything repo-specific) installs once per
+# (context/base.md, minus anything repo-specific) installs once per
 # engineer, into each tool's own user-level instructions location. Nothing is
 # ever written into a product repo — re-run this installer to refresh it
-# after context-src/base.md changes.
+# after context/base.md changes.
 if [[ -f "${RENDER_SCRIPT}" ]]; then
   HOUSE_RULES_TMP="$(mktemp)"
   trap 'rm -f "${HOUSE_RULES_TMP}"' EXIT
@@ -340,13 +340,13 @@ for name in "${RETIRED_AGENTS_SKILL_FALLBACK_ONLY[@]}"; do
   fi
 done
 
-# ── Agents: cross-tool, rendered from agent-src/ ────────────────────────────
+# ── Agents: cross-tool, rendered from agent/ ────────────────────────────
 # Claude Code, Copilot (VS Code), and Codex CLI each have a real, working,
 # global custom-agent mechanism — in three incompatible formats. Cursor and
 # Antigravity have none, so they get the same content as a Skill instead
 # (skills auto-trigger on phrasing, so this isn't a downgrade). One source
-# per agent (agent-src/<name>/AGENT.md), rendered per tool — see
-# agent-src/README.md.
+# per agent (agent/<name>/AGENT.md), rendered per tool — see
+# agent/README.md.
 if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
   AGENT_NAMES=()
   for agent_dir in "${AGENTS_SRC_DIR}"/*/; do
@@ -355,7 +355,7 @@ if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
   done
 
   if [[ ${#AGENT_NAMES[@]} -gt 0 ]]; then
-    hdr "Agents (cross-tool, rendered from agent-src/)"
+    hdr "Agents (cross-tool, rendered from agent/)"
     for agent in "${AGENT_NAMES[@]}"; do
       if $DO_CLAUDE; then
         if python3 "${AGENTS_RENDER_SCRIPT}" "${agent}" --claude "${HOME}/.claude/agents/${agent}.md" >/dev/null; then
@@ -395,7 +395,7 @@ if [[ -f "${AGENTS_RENDER_SCRIPT}" && -d "${AGENTS_SRC_DIR}" ]]; then
     done
   fi
 else
-  warn "No scripts/agents_render.py or agent-src/ found — skipping agent install"
+  warn "No scripts/agents_render.py or agent/ found — skipping agent install"
 fi
 
 # ── Freshness: global Claude Code SessionStart hook ──────────────────────────

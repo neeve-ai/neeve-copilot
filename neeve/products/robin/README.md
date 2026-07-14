@@ -22,7 +22,7 @@ Think of it like onboarding a new engineer:
 |---|---|---|---|
 | 1 | **House rules** | The onboarding doc every new hire reads on day one — always in the back of their mind | Culture/ethos, engineering principles, quality gates, the "state consequence and gaps" discipline, what Robin is and how its repos fit together. Installed once, globally, on your machine — not a file in any repo |
 | 2 | **Skills** | A manual the assistant only opens when the task calls for it | How to write a Neeve spec, how to review code, how to work with our design system, how to work with our building-automation stack |
-| 3 | **The unified agent** | A specialist invoked by name, not a manual you have to open | `neeve` — ask this one first (setup + Design Loop routing across every skill) — see `neeve/agent-src/` |
+| 3 | **The unified agent** | A specialist invoked by name, not a manual you have to open | `neeve` — ask this one first (setup + Design Loop routing across every skill) — see `neeve/agent/` |
 
 **One-line summary:** house rules set the mindset everywhere, all the time;
 skills give the deep how-to and only load when relevant; the unified `neeve`
@@ -46,8 +46,8 @@ global location — no repo ever needs a file for it.
 ## The Skills
 
 Ten skills covering the full Design Loop (see `neeve/README.md` for the
-architecture). Eight are product-agnostic and live in `neeve/skills-src/`;
-two are Robin-specific and live here in `skills-src/`:
+architecture). Eight are product-agnostic and live in `neeve/skills/`;
+two are Robin-specific and live here in `skills/`:
 
 | Skill | What it does |
 |-------|-------------|
@@ -110,8 +110,8 @@ bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh
 ```
 
 That's it. This one command:
-1. Installs all 10 skills (both skills-src roots) into every detected tool's global skill directory.
-2. Renders the house-rules content from `context-src/base.md` and installs it
+1. Installs all 10 skills (both skills roots) into every detected tool's global skill directory.
+2. Renders the house-rules content from `context/base.md` and installs it
    into each tool's global instructions location (merging into
    `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` without touching any other
    personal content already there; writing a standalone file for Copilot).
@@ -126,7 +126,7 @@ alias sync-skills='bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh'
 can't be fully automated. The installer prints a one-time manual step:
 open Cursor → Command Palette → "Rules: User Rules" → paste the content it
 shows you. Do this once; re-run the installer and re-paste only when
-`context-src/base.md` changes materially.
+`context/base.md` changes materially.
 
 ### Choosing specific tools
 
@@ -209,7 +209,7 @@ to drift, because there's only one copy.
 ```
 neeve-copilot/
   neeve/products/robin/
-    context-src/
+    context/
       base.md              ← the shared write-up: house rules, quality bar,
                                layer rules, skill list, product overview.
                                Edit this — it's the only source of truth
@@ -236,7 +236,7 @@ neeve-copilot/
 
 ### Changing the house rules for everyone
 
-1. Edit `context-src/base.md` (the universal sections — culture/ethos,
+1. Edit `context/base.md` (the universal sections — culture/ethos,
    engineering principles, quality gates, production-consequence-and-gaps,
    product overview).
 2. Merge that change to `neeve-copilot`'s own `main`.
@@ -258,13 +258,13 @@ One agent, `neeve`, invoked by name rather than a workflow you have to
 trigger. It handles setup help, plus routing every request to the right
 skill by Design Loop stage (PRD → Design → ERD → Spec → Implement → Code
 Review → Merge → CI Pass — see `neeve/README.md`). Source lives in
-[`agent-src/`](../../agent-src/README.md), `agent-src/neeve/AGENT.md`, rendered
+[`agent/`](../../agent/README.md), `agent/neeve/AGENT.md`, rendered
 by `scripts/agents_render.py` into every tool's own native custom-agent
 mechanism where one exists, and into a Skill where it doesn't.
 
 This replaces an earlier eight-agent model (`neeve-guide`, `to-prd`,
 `to-erd`, `repo-guide`, plus four specialist reviewers) — see
-[`agent-src/README.md`](../../agent-src/README.md#what-changed-and-why) for why
+[`agent/README.md`](../../agent/README.md#what-changed-and-why) for why
 that duplicated content already in the skills and gave Copilot users an
 eight-item picker instead of one router. `neeve` deliberately stays a
 lightweight **router** (classify the ask, point at one skill), not a
@@ -277,7 +277,7 @@ for it.
 no separate step, and re-running it prunes any of the eight retired agent
 files a prior install left behind. **Invocation differs by tool, on
 purpose, not by accident** (researched directly, not assumed — see
-[`agent-src/README.md`](../../agent-src/README.md) for the full matrix):
+[`agent/README.md`](../../agent/README.md) for the full matrix):
 
 | Tool | Where it lands | How you invoke it |
 |---|---|---|
@@ -301,7 +301,7 @@ it's "everyone asked, and got different answers."
 
 Installing for Claude Code (`install.sh --claude-code` or `--all`) adds one
 more thing: a global `SessionStart` hook in `~/.claude/settings.json` that
-runs `hooks-src/refresh-context.sh` at the start of every Claude Code
+runs `hooks/refresh-context.sh` at the start of every Claude Code
 session, anywhere on the machine. It:
 
 1. Pulls `neeve-copilot` and compares the commit hash before/after.
@@ -447,8 +447,8 @@ There are two source trees you edit here, each with its own local check:
 
 | You edit | It produces | Command to check it locally |
 |---|---|---|
-| `skills-src/` | Downloadable `.zip` files for each skill | `scripts/skills_sync.sh check` |
-| `context-src/` | The house-rules content installed globally | `scripts/context_render.py --house-rules <path>` (preview) |
+| `skills/` | Downloadable `.zip` files for each skill | `scripts/skills_sync.sh check` |
+| `context/` | The house-rules content installed globally | `scripts/context_render.py --house-rules <path>` (preview) |
 
 `scripts/test_context_render.py` and `scripts/test_merge_house_rules.py`
 (stdlib `unittest`, no extra dependency) cover the rendering/merging logic
@@ -458,19 +458,19 @@ actually ship, and `security.md`'s headings consistent with what cites them).
 
 **Editing a skill:**
 ```bash
-code neeve/skills-src/to-spec/SKILL.md   # make your edit
+code neeve/skills/to-spec/SKILL.md   # make your edit
 bash sync_skills.sh                                       # reinstall everywhere, to test it
-git add neeve/skills-src/
+git add neeve/skills/
 git commit -m "skills: describe your change"
 ```
 
 **Editing the house rules:**
 ```bash
-code neeve/context-src/base.md                          # make your edit
+code neeve/context/base.md                          # make your edit
 python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md
 cat /tmp/preview.md                                       # check it before installing
 bash sync_skills.sh                                       # installs it on your own machine
-git add neeve/context-src/ neeve/products/robin/context-src/
+git add neeve/context/ neeve/products/robin/context/
 git commit -m "house-rules: describe your change"
 ```
 

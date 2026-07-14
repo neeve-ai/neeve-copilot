@@ -22,12 +22,12 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # neeve/
 # canonical_relpath -> space-separated destination relpaths (relative to neeve/)
 CANONICAL="references/quality-gates.md"
 DESTINATIONS=(
-  "skills-src/code-review/references/quality-gates.md"
-  "skills-src/implement-spec/references/quality-gates.md"
-  "skills-src/repo-ask/references/quality-gates.md"
-  "skills-src/repo-intel/references/quality-gates.md"
-  "skills-src/to-spec/references/quality-gates.md"
-  "products/robin/skills-src/neeve-dls/references/quality-gates.md"
+  "skills/code-review/references/quality-gates.md"
+  "skills/implement-spec/references/quality-gates.md"
+  "skills/repo-ask/references/quality-gates.md"
+  "skills/repo-intel/references/quality-gates.md"
+  "skills/to-spec/references/quality-gates.md"
+  "products/robin/skills/neeve-dls/references/quality-gates.md"
 )
 
 HEADER="<!-- GENERATED from neeve/${CANONICAL} — edit the canonical file and run neeve/scripts/shared_refs_sync.sh sync -->"

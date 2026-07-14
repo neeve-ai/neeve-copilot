@@ -15,7 +15,7 @@ context bloat, not one giant file.
 
 | Layer | What | Canonical source | Reaches the engineer via |
 |---|---|---|---|
-| 04. Neeve Foundation | What Neeve is, why, culture, products, customers, personas | [`foundation.md`](foundation.md) + per-product [`products/robin/context-src/product-overview.md`](products/robin/context-src/product-overview.md) | House rules, installed globally (`install.sh`) |
+| 04. Neeve Foundation | What Neeve is, why, culture, products, customers, personas | [`foundation.md`](foundation.md) + per-product [`products/robin/context/product-overview.md`](products/robin/context/product-overview.md) | House rules, installed globally (`install.sh`) |
 | 03. Engineering Principles | SDLC process principles per Design Loop stage; security/quality canonicals | [`engineering-principles.md`](engineering-principles.md) + [`references/`](references/) (quality-gates, security via code-review, pm-lens, design-review) | House rules + cited by every skill |
 | 02. Repository-Level Context | The per-repo **OKF book**, under `.help/` (a dot-directory so `.dockerignore` can exclude it): `introduction.md` (agent-facing README: stack, wiring, make/docker/deploy) · `index.md` (functional area → location) · `appendix.md` (public symbols: purpose, dependencies, impact) | **Committed into each product repo** — scaffolded by [`init-repo.sh`](init-repo.sh), filled by the `repo-intel` skill, kept fresh by the committed `.githooks/pre-commit` | Read directly in the repo by any harness |
 | 01. Custom & User Context | Developer-local instructions and overrides | Not in any repo — content outside the `BEGIN/END NEEVE` markers in `~/.claude/CLAUDE.md`, `CLAUDE.local.md`, local settings | Owned by the developer; the installer never touches it |
@@ -30,7 +30,7 @@ where:
 | Repo-book freshness | `pre-commit-context-sync` — manifest-hash, index structural diff, public-symbol diff; no model call, warn-only until a repo opts into blocking | [`templates/hooks/pre-commit-context-sync`](templates/hooks/pre-commit-context-sync), installed per repo by `init-repo.sh` |
 | `--no-verify` backstop | Same script, `--all`, as a required PR status | [`templates/ci/context-sync-check.yml`](templates/ci/context-sync-check.yml) |
 | Integration verification | Per-repo PR-build job running the repo's real integration tests (EDIT-ME template — fails until pointed at the real command) | [`templates/ci/integration-verify.yml`](templates/ci/integration-verify.yml) |
-| Context freshness on the engineer's machine | Claude Code `SessionStart` hook pulls this repo + reinstalls, quietly, only when something changed | [`hooks-src/refresh-context.sh`](hooks-src/refresh-context.sh) |
+| Context freshness on the engineer's machine | Claude Code `SessionStart` hook pulls this repo + reinstalls, quietly, only when something changed | [`hooks/refresh-context.sh`](hooks/refresh-context.sh) |
 | Framework self-consistency | CI: agent routes every skill, shared refs match canonical, skills/prompts pack cleanly, renderer tests | [`scripts/check_org_sync.py`](scripts/check_org_sync.py) + `.github/workflows/ci.yml` |
 | Quality gates (7) | Linter · strict types · unit ≥95% · integration · scale · security · code review — specced by `to-spec`, enforced by `implement-spec`, verified by `code-review` | [`references/quality-gates.md`](references/quality-gates.md) (canonical; skills carry generated copies) |
 
@@ -39,7 +39,7 @@ where:
 Eight stages, each with an acceptance contract that must hold before the
 next stage starts. CI Pass re-enters at the next feature's PRD — a loop, not
 a line. The unified `neeve` agent's routing table
-([`agent-src/neeve/AGENT.md`](agent-src/neeve/AGENT.md)) is this table made
+([`agent/neeve/AGENT.md`](agent/neeve/AGENT.md)) is this table made
 operational.
 
 | # | Stage | Owner | Acceptance contract |
@@ -61,11 +61,11 @@ one-level-deeper grounding any stage drops into.
 ```
 neeve/
 ├── foundation.md  engineering-principles.md  references/    # Layers 04–03
-├── context-src/          # base.md (house rules) + tier-1 fragments
-├── skills-src/           # 8 product-agnostic SDLC skills
-├── agent-src/neeve/      # THE unified agent (see agent-src/README.md)
-├── prompts-src/          # slash-command wrappers
-├── hooks-src/            # SessionStart freshness hook
+├── context/          # base.md (house rules) + tier-1 fragments
+├── skills/           # 8 product-agnostic SDLC skills
+├── agent/neeve/      # THE unified agent (see agent/README.md)
+├── prompts/          # slash-command wrappers
+├── hooks/            # SessionStart freshness hook
 ├── templates/            # per-repo hook + CI templates (Layer 02 tooling)
 ├── install.sh            # global install (skills, house rules, agent, hook)
 ├── init-repo.sh          # per-repo init (OKF book scaffold + pre-commit hook)
@@ -74,8 +74,8 @@ neeve/
                           #   OT/DLS fragments, neeve-dls + ot-building-automation skills
 ```
 
-A second product would add `products/<name>/` with its own `context-src/` and
-`skills-src/` — nothing at this level changes.
+A second product would add `products/<name>/` with its own `context/` and
+`skills/` — nothing at this level changes.
 
 ## The two commands that matter
 

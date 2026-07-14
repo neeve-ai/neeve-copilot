@@ -7,7 +7,7 @@ Pillar 3). This is the source document the `to-prd`, `to-erd`, `to-spec`,
 `implement-spec`, `code-review`, and `neeve-dls` skills — and the unified
 `neeve` agent — condense their operating instructions from. Edit here first
 when a principle changes, then update the affected skill(s) to match; one
-source, rendered/condensed outward, the same discipline `context-src/base.md`
+source, rendered/condensed outward, the same discipline `context/base.md`
 uses for per-repo instructions.
 
 Everything below is written against Neeve's actual offering and customers
@@ -147,7 +147,7 @@ must name what breaks if this is wrong, who notices, blast radius, and
 rollback story; and must list what's *not* covered (a missing test, a
 missing security control, a missing CI gate) as an explicit line item, never
 a silence. Full discipline:
-`context-src/fragments/production-consequence-and-gaps.md`. A blank space
+`context/fragments/production-consequence-and-gaps.md`. A blank space
 where this section belongs is itself a finding on the output.
 
 ---
@@ -157,7 +157,7 @@ where this section belongs is itself a finding on the output.
 The `to-prd`, `to-erd`, `to-spec`, `implement-spec`, `code-review`, and
 `neeve-dls` skills each condense the relevant section above into their own
 operating instructions, and the unified `neeve` agent's routing table
-(`agent-src/neeve/AGENT.md`) enforces the sequencing across all of them.
+(`agent/neeve/AGENT.md`) enforces the sequencing across all of them.
 Edit this file when the underlying principle changes, then update the
 affected skill(s) to match.
 

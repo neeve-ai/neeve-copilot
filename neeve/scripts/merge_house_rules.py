@@ -4,7 +4,7 @@ global instructions file (~/.claude/CLAUDE.md, ~/.codex/AGENTS.md) that may
 already contain the engineer's own unrelated personal content.
 
 Replaces only the content between BEGIN/END markers on re-run, so running
-the installer again after context-src/base.md changes updates the block in
+the installer again after context/base.md changes updates the block in
 place without touching anything else in the file.
 
 Usage: merge_house_rules.py <target-file> <house-rules-content-file>

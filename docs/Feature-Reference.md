@@ -7,8 +7,8 @@ Neeve Copilot Distribution System (Skills and Global House Rules)
 A central distribution system that gives every Neeve engineer the same AI
 skills and house rules — identically, across Claude Code, GitHub Copilot,
 Cursor, Codex, and Antigravity — with zero hand-copying. Global content
-lives once in this repo (`neeve/skills-src/`, `neeve/context-src/`,
-`neeve/agent-src/`) and installs to each engineer's machine. The one
+lives once in this repo (`neeve/skills/`, `neeve/context/`,
+`neeve/agent/`) and installs to each engineer's machine. The one
 deliberate per-repo artifact is the OKF book
 (introduction.md/index.md/appendix.md + its pre-commit freshness hook),
 set up per product repo by `neeve/init-repo.sh` — see `neeve/README.md`.
@@ -16,7 +16,7 @@ set up per product repo by `neeve/init-repo.sh` — see `neeve/README.md`.
 ## Key Functionalities
 - **One-command global install (`sync_skills.sh` → `neeve/install.sh --all`)**:
   pulls the latest from this repo and installs both:
-  - all 10 skills (org-level + product-level skills-src roots) into every supported agent's global skill directory
+  - all 10 skills (org-level + product-level skills roots) into every supported agent's global skill directory
     (`~/.claude/skills`, `~/.codex/skills`, `~/.copilot/skills`,
     `~/.cursor/skills`, `~/.gemini/antigravity/skills`)
   - the house-rules content (culture/ethos, engineering principles, quality
@@ -26,7 +26,7 @@ set up per product repo by `neeve/init-repo.sh` — see `neeve/README.md`.
     personal content already there, written standalone for Copilot
     (`~/.copilot/instructions/neeve-house-rules.instructions.md`)
 - **House-rules render (`context_render.py --house-rules`)**: produces the
-  universal-only variant of `context-src/base.md` — no repo-specific
+  universal-only variant of `context/base.md` — no repo-specific
   stack/commands/do-not-modify facts, no repo-conditional fragments (those
   live in the skills that already trigger on their own: `to-spec`,
   `ot-building-automation`, `neeve-dls`).
@@ -59,7 +59,7 @@ set up per product repo by `neeve/init-repo.sh` — see `neeve/README.md`.
   `~/.codex/AGENTS.md` only replace a clearly marked block, preserving any
   other personal content in that file.
 - **No third-party content**: this system only distributes Neeve's own
-  `skills-src`/`context-src` — it does not pull in or depend on any external
+  `skills`/`context` — it does not pull in or depend on any external
   community repo.
 - **Nothing committed into product repos**: no `.github/copilot-instructions.md`,
   `AGENTS.md`, `.cursorrules`, prompts, or hooks are ever written into any of

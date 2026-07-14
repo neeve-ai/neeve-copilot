@@ -21,12 +21,12 @@ jobs:
 
       - name: Verify Skill Packaging
         run: |
-          echo "Checking both skills-src roots package cleanly into release zips..."
+          echo "Checking both skills roots package cleanly into release zips..."
           neeve/scripts/skills_sync.sh check
 
       - name: Verify Robin Prompt Files
         run: |
-          echo "Checking Robin prompts-src frontmatter..."
+          echo "Checking Robin prompts frontmatter..."
           neeve/scripts/prompts_sync.sh check
 
       - name: Verify Context Renderer
@@ -56,7 +56,7 @@ jobs:
         run: |
           echo "Smoke-testing agents_render.py against every registered agent..."
           FAIL=0
-          for agent_dir in neeve/agent-src/*/; do
+          for agent_dir in neeve/agent/*/; do
             agent="$(basename "$agent_dir")"
             [ -f "${agent_dir}AGENT.md" ] || continue
             tmp_dir="$(mktemp -d)"

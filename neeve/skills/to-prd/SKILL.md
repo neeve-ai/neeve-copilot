@@ -22,7 +22,7 @@ review, and does it survive contact with a real building's operations team.
 This skill writes PRDs that lead with those two questions, using
 enterprise-SaaS-plus-AI PRD structure (problem → journeys → success metrics →
 requirements → compliance → rollout) as the shape, and Neeve's own culture
-(`foundation.md`, `context-src/base.md` § Why This Matters) as the lens.
+(`foundation.md`, `context/base.md` § Why This Matters) as the lens.
 
 This does not replace `neeve/references/pm-lens.md` — that checklist is the
 ad hoc *reviewer*, usable against any spec or feature request at any time.
@@ -73,7 +73,7 @@ A finished PRD must hand off, explicitly, to whatever consumes it next
    applicable to this feature" — an explicit "not applicable" is acceptable;
    a missing section is not.
 5. **State consequence and gaps, every time.** Section 9 below is not a new
-   invention — it is `context-src/fragments/production-consequence-and-gaps.md`'s
+   invention — it is `context/fragments/production-consequence-and-gaps.md`'s
    discipline (production consequence: what breaks, who notices, blast
    radius, rollback story; gaps: named as line items, never silent),
    applied to a PRD instead of a spec or a code review. Read that fragment
@@ -172,14 +172,14 @@ in-scope-now or genuinely not-applicable-to-this-feature. Never "phase 2."
   systems).
 - Data classification of anything this feature touches.
 - Zero-trust framing: does this introduce a new trust boundary, credential,
-  or network path? (see `foundation.md` / `context-src/base.md` § Why This
+  or network path? (see `foundation.md` / `context/base.md` § Why This
   Matters)
 - If none of the above genuinely applies, say so explicitly rather than
   omitting the section.
 
 ## 9. Operational Consequence & Gaps
 
-Per `context-src/fragments/production-consequence-and-gaps.md`: what breaks
+Per `context/fragments/production-consequence-and-gaps.md`: what breaks
 or degrades if this is wrong, who notices, blast radius, rollback/kill-switch
 story — and a **Gaps** list (named, not silent) of anything not yet
 addressed (a control not yet implemented, a rollout gate not yet defined).
@@ -209,8 +209,8 @@ for one customer without turning it off for all of them?
 | File | When to load |
 |---|---|
 | `neeve/references/pm-lens.md` | Always, for the Phase 2 self-check — never duplicate its checklist text into a PRD, reference it |
-| `context-src/fragments/production-consequence-and-gaps.md` | Always, for Section 9 |
-| `neeve/foundation.md`, `context-src/base.md` § Why This Matters | For Section 8's zero-trust framing |
+| `context/fragments/production-consequence-and-gaps.md` | Always, for Section 9 |
+| `neeve/foundation.md`, `context/base.md` § Why This Matters | For Section 8's zero-trust framing |
 | `code-review/references/security.md` | When Section 8 needs deeper security-framework grounding than a PM-level pass covers |
 
 ---

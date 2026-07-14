@@ -26,6 +26,9 @@ neeve-copilot" or "what should I use for X" — it's the one agent meant to be
 asked first, for setup and for routing across every skill by Design Loop
 stage. See [`agents-src/README.md`](neeve/agent-src/README.md).
 
+**Full usage guide** — per-tool notes, repo setup, and how context is
+managed: [`HOW-TO-USE.md`](HOW-TO-USE.md).
+
 > **Keep skills up to date:** run `sync_skills.sh` any time — it pulls the latest
 > from this repo and reinstalls everything. Bookmark it or alias it.
 > ```bash

@@ -1,4 +1,4 @@
 interface:
   display_name: "Neeve DLS"
   short_description: "Enforce pixel-perfect Neeve DLS fidelity"
-  default_prompt: "Use $neeve-dls to make a pixel-perfect update to components, colors, typography, or fonts in the dls-neeve design system."
+  default_prompt: "Use $neeve-dls to make a pixel-perfect update to components, colors, typography, or fonts in the dls-neeve design system, or to build compliant UI in one-portal that resolves to the right DLS/wrapper/standalone component."

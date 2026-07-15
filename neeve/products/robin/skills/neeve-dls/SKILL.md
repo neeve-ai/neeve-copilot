@@ -1,18 +1,24 @@
 ---
 name: neeve-dls
-description: Work with the `dls-neeve` design-system repository and the shared `fonts` package with pixel-perfect fidelity to the Neeve design system. Use when Codex needs to add or modify DLS React components, update exports, adjust Tailwind/theme tokens, change typography rules, wire Storybook docs or stories, or make font-package changes for Source Sans 3, Source Serif 4, or Source Code Pro, especially when visual parity with approved DLS components, spacing, colors, typography, and states is mandatory.
+description: Work with the `dls-neeve` design-system repository and the shared `fonts` package with pixel-perfect fidelity to the Neeve design system. Use when Codex needs to add or modify DLS React components, update exports, adjust Tailwind/theme tokens, change typography rules, wire Storybook docs or stories, or make font-package changes for Source Sans 3, Source Serif 4, or Source Code Pro, especially when visual parity with approved DLS components, spacing, colors, typography, and states is mandatory. Also use when building, prototyping, or wiring UI *inside the `one-portal` product* — a consuming app of `@neeve/dls` — since correct component resolution (DLS vs. `shared/components` wrapper vs. standalone vs. page-local) matters there just as much as library fidelity does here (see Mode: Product Consumption).
 ---
 
 # Neeve DLS
 
 Use this skill to make disciplined changes in the Neeve design system without re-discovering the repo layout, typography tokens, or shared font package. Default to exact DLS fidelity, not approximation.
 
-**Two modes.** Default mode (below) targets `dls-neeve`/`fonts` themselves —
+**Three modes.** Default mode (below) targets `dls-neeve`/`fonts` themselves —
 component, token, typography, and font-package work. **PRD Prototype Mode**
 (see its own section further down) targets a *consuming* app instead, for
 throwaway UI built from a `to-prd` PRD, on a disposable `proto/*` branch.
-Confirm which mode applies before doing anything — if the task references a
-PRD or a feature-slug rather than a DLS component/token, it's prototype mode.
+**Mode: Product Consumption (one-portal)** (further down still) targets the
+`one-portal` product — also a consuming app, but persistent production work,
+not a throwaway prototype. Confirm which mode applies before doing anything:
+- References `dls-neeve`/`fonts` source directly → default mode.
+- References a PRD/feature-slug, targets `robin-web`/`robin`, and is
+  explicitly disposable → PRD Prototype Mode.
+- Names `one-portal`, or a route/feature/screen in that product → Mode:
+  Product Consumption.
 
 ## Start Here
 
@@ -201,6 +207,152 @@ discipline every other agent/skill in this system applies, not new).
 `to-erd`. State the `feature-slug` and the `proto/<feature-slug>` branch
 name as the handoff.
 
+## Mode: Product Consumption (one-portal)
+
+Use this mode when the task is building, prototyping, mocking up, or wiring a
+screen, page, form, table, or any UI piece **inside the `one-portal` product**
+— even if the request just says "use the DLS" or names a component casually
+("add a button here", "put this in a table", "use the dialog component").
+Unlike PRD Prototype Mode, this is **persistent product work that ships**,
+not a disposable prototype on a `proto/*` branch — hold it to `one-portal`'s
+real coding standards and quality gates, not a lowered fidelity bar.
+
+`one-portal` has three layers of UI code, and almost every quality problem in
+this mode traces back to guessing which layer something belongs to instead of
+checking:
+
+```
+1. @neeve/dls          →  the design system package. Bare, unopinionated components.
+2. shared/components   →  two kinds of product-specific components:
+                            • Wrappers  — extend a DLS primitive with product logic
+                                          (e.g. TableV2, LoadingButton).
+                            • Standalones — not in the DLS for deliberate design or
+                                          engineering reasons; built exclusively for
+                                          one-portal (e.g. StepperTabs, SkeletonLoader).
+3. page-local code     →  layout only (grid/flex), written directly in the feature folder.
+                          Never a place to reinvent something that already exists above.
+```
+
+Any request for a table — including "use the table from the DLS" — must
+resolve to `TableV2`. The bare DLS `Table` primitive is an internal
+dependency of `TableV2` and is never used directly in `one-portal`. **Never
+skip the resolution step below.**
+
+### Step 1 — Resolve the component
+
+For every UI element in the request, read
+[`references/one-portal-component-resolution.md`](references/one-portal-component-resolution.md)
+and [`components/one-portal/INDEX.md`](components/one-portal/INDEX.md) to
+find which layer it belongs to:
+
+- Look it up in `components/one-portal/INDEX.md` first — it maps
+  plain-language asks ("table", "dropdown", "modal", "search box") to the
+  correct component and layer.
+- If it's a DLS component, open its file in `components/one-portal/dls/`.
+- If it's a `shared/components` wrapper, open its file in
+  `components/one-portal/wrappers/`.
+- If it's a `shared/components` standalone, open its file in
+  `components/one-portal/standalones/`.
+- If it isn't in the index at all, it may be genuinely page-local (layout) or
+  it may be a gap in this mode's coverage — say so explicitly rather than
+  silently inventing a component. See "Unknown components" below.
+
+Never assume a component comes from the DLS just because it's visual and
+reusable-looking. `shared/components` exists precisely because some things
+are intentionally *not* in the DLS.
+
+### Step 2 — Check whether the ask fits what the component can actually do
+
+Every component file lists **capabilities** and **known limitations**. Before
+writing code:
+
+1. Compare the request against the limitations list.
+2. If the request exceeds what the component supports, **do not** build a
+   one-off replacement or bolt extra logic onto the consuming page to fake the
+   missing behavior. Instead, stop and tell the user, e.g.:
+
+   > "TableV2 doesn't currently support nested/expandable rows. Do you want me
+   > to extend `shared/components/table/TableV2.tsx` to add that first, and
+   > then build this on top of it — or would you rather scope this without
+   > row expansion for now?"
+
+   This keeps the wrapper layer as the single source of truth instead of
+   accumulating page-local special cases that drift from it.
+
+### Step 3 — Fill in every required prop before writing code
+
+Each component file has a props table with a `required` column. Before
+generating code:
+
+- If a required prop's value isn't given or inferable from the conversation,
+  ask for it.
+- If the component has meaningfully different variants (e.g. Button:
+  primary/secondary/ghost), and the request doesn't specify one, ask which
+  variant — don't default silently.
+- Batch these into one clarifying turn (all missing props/variants at once).
+  See
+  [`references/one-portal-clarification-protocol.md`](references/one-portal-clarification-protocol.md)
+  for exactly when to ask vs. when a documented default is safe to use.
+
+### Step 4 — Use the correct design tokens
+
+Never hardcode a hex color, a pixel spacing value, or a font-family/size.
+Read
+[`references/one-portal-design-tokens.md`](references/one-portal-design-tokens.md)
+for how typography, color, and spacing classes map to intent (e.g.
+destructive action → `--danger-*` tokens, not a raw red). This applies inside
+page-local layout code just as much as inside components.
+
+### Step 5 — Follow one-portal's own coding standards
+
+Read
+[`references/one-portal-coding-standards.md`](references/one-portal-coding-standards.md)
+for folder structure, file naming, import ordering, and component composition
+patterns specific to `one-portal`. Code that uses the right components but
+doesn't look like it belongs in the codebase is still a compliance failure.
+
+### Step 6 — Build responsively and accessibly by default
+
+Every component file notes the a11y contract it already provides (e.g. DLS
+`Button` already handles focus rings and `aria-disabled`) versus what the
+consumer is responsible for (e.g. providing an `aria-label` when using
+`Button` in icon-only mode, correct heading hierarchy, keyboard navigation
+for anything page-local). Treat the notes as the floor, not the ceiling. Also
+check responsiveness against `one-portal`'s real breakpoints — see
+`references/one-portal-design-tokens.md`.
+
+### Unknown components
+
+If a request names something that isn't in `components/one-portal/INDEX.md`
+and doesn't look like plain layout, say so plainly: "I don't have this
+documented yet — is this a DLS component, a `shared/components` wrapper, a
+`shared/components` standalone, or something new?" Do not guess and do not
+silently fall back to building a bespoke component. Flag it so the index can
+be extended.
+
+### Compliance Sign-off (one-portal mode)
+
+Emit this checklist, filled in, before declaring any `one-portal` UI task
+done:
+
+```
+## Compliance Sign-off
+| Check | Status | Notes |
+|---|---|---|
+| Every component resolved to DLS / wrapper / page-local (none guessed) | ✅ / ❌ | |
+| No component used beyond its documented capabilities | ✅ / ❌ | |
+| All required props supplied (asked for anything missing) | ✅ / ❌ | |
+| Typography / color / spacing use DLS tokens only, no hardcoded values | ✅ / ❌ | |
+| Folder/file structure and naming match one-portal-coding-standards.md | ✅ / ❌ | |
+| Responsive behavior checked at one-portal breakpoints | ✅ / ❌ | |
+| Accessibility floor met (labels, focus, keyboard, heading hierarchy) | ✅ / ❌ | |
+```
+
+Code placed in `shared/` must also have accompanying tests per
+`references/one-portal-coding-standards.md`'s Testing Expectations — this
+mode's sign-off does not substitute for `implement-spec`'s quality gates on
+any code that isn't a design-only handoff.
+
 ## Visual Sign-off Checklist
 
 This checklist is **mandatory**. Emit it in your response — filled in — before declaring any visual task done. Do not skip or abbreviate it. If any item cannot be confirmed, mark it ❌ and block the task with an explanation.
@@ -242,15 +394,17 @@ between context gathering and review for any UI-facing task.
 | Unclear which DLS component or token to use | → `repo-ask` to trace existing usage in the consuming app |
 | Task requires understanding the consuming app's layout before changing a component | → `repo-ask` on the consuming app first |
 | PRD Prototype Mode | → `to-prd` agent (produces the PRD + feature-slug this mode consumes) |
+| Mode: Product Consumption (one-portal), and the request names an undocumented component | → flag as unknown per that mode's "Unknown components" section rather than running another skill |
 
 | Situation | Next skill after visual sign-off passes |
 |---|---|
 | Change touches TypeScript, CSS, or component logic beyond token wiring | → `code-review` for code correctness |
 | Change introduces a new DLS pattern not covered by an existing spec | → `to-spec` to document the new pattern |
 | PRD Prototype Mode sign-off passes | → `to-erd` agent (turns the PRD + prototype into work items) |
+| Mode: Product Consumption (one-portal) compliance sign-off passes, and code was placed in `shared/` | → `implement-spec`'s quality gates apply, then `code-review` |
 | All visual checks and code review pass | → task is done |
 
-**Feeds into:** `code-review` (always for logic changes), `to-spec` (new DLS patterns), `to-erd` (PRD Prototype Mode only)
+**Feeds into:** `code-review` (always for logic changes), `to-spec` (new DLS patterns), `to-erd` (PRD Prototype Mode only), `implement-spec` (Product Consumption mode, `shared/` code only)
 **Fed by:** `repo-ask`, `implement-spec`, `to-prd` (PRD Prototype Mode only)
 
 Load `references/quality-gates.md` — gates 1 (linter), 2 (type checker), 3 (unit tests),

@@ -17,7 +17,7 @@ context bloat, not one giant file.
 |---|---|---|---|
 | 04. Neeve Foundation | What Neeve is, why, culture, products, customers, personas | [`foundation.md`](foundation.md) + per-product [`products/robin/context/product-overview.md`](products/robin/context/product-overview.md) | House rules, installed globally (`install.sh`) |
 | 03. Engineering Principles | SDLC process principles per Design Loop stage; security/quality canonicals | [`engineering-principles.md`](engineering-principles.md) + [`references/`](references/) (quality-gates, security via code-review, pm-lens, design-review) | House rules + cited by every skill |
-| 02. Repository-Level Context | The per-repo **OKF book**, under `.help/` (a dot-directory so `.dockerignore` can exclude it): `introduction.md` (agent-facing README: stack, wiring, make/docker/deploy) · `index.md` (functional area → location) · `appendix.md` (public symbols: purpose, dependencies, impact) | **Committed into each product repo** — scaffolded by [`init-repo.sh`](init-repo.sh), filled by the `repo-intel` skill, kept fresh by the committed `.githooks/pre-commit` | Read directly in the repo by any harness |
+| 02. Repository-Level Context | The per-repo **OKF book**, under `.help/` (a dot-directory so `.dockerignore` can exclude it): `introduction.md` (agent-facing README: stack, wiring, make/docker/deploy) · `index.md` (functional area → location) · `appendix.md` (public symbols: purpose, dependencies, impact) · `memory.md` (bounded working-memory digest) · `lessons.md` (corrections log) | **Committed into each product repo** — scaffolded by [`init-repo.sh`](init-repo.sh), filled by the `repo-intel` skill (memory/lessons also updated directly by any skill mid-task), kept fresh by the committed `.githooks/pre-commit` | Read directly in the repo by any harness |
 | 01. Custom & User Context | Developer-local instructions and overrides | Not in any repo — content outside the `BEGIN/END NEEVE` markers in `~/.claude/CLAUDE.md`, `CLAUDE.local.md`, local settings. The one thing this repo *does* own for this layer: the precedence rule for when it conflicts with a house rule, stated in [`agent/neeve/AGENT.md`](agent/neeve/AGENT.md)'s "Respecting Developer-Local Overrides" section | Owned by the developer; the installer never touches it; every tool merges it into context natively, before the agent sees a request |
 
 ## Pillar 2 — Harness with Hooks
@@ -54,7 +54,9 @@ operational.
 | 8 | CI Pass | process (agent points at real CI) | Pipeline green — then loop to 1 |
 
 `repo-ask`/`repo-intel` orient before any stage; `debug-trace` is the
-one-level-deeper grounding any stage drops into.
+one-level-deeper grounding any stage drops into; `rca-retro-adr` captures
+incidents, retrospectives, and decisions alongside any stage, owning none
+of them.
 
 ## What's in this directory
 
@@ -62,7 +64,7 @@ one-level-deeper grounding any stage drops into.
 neeve/
 ├── foundation.md  engineering-principles.md  references/    # Layers 04–03
 ├── context/          # base.md (house rules) + tier-1 fragments
-├── skills/           # 8 product-agnostic SDLC skills
+├── skills/           # 9 product-agnostic SDLC skills
 ├── agent/neeve/      # THE unified agent (see agent/README.md)
 ├── prompts/          # slash-command wrappers
 ├── hooks/            # SessionStart freshness hook

@@ -45,21 +45,22 @@ global location — no repo ever needs a file for it.
 
 ## The Skills
 
-Ten skills covering the full Design Loop (see `neeve/README.md` for the
-architecture). Eight are product-agnostic and live in `neeve/skills/`;
+Eleven skills covering the full Design Loop (see `neeve/README.md` for the
+architecture). Nine are product-agnostic and live in `neeve/skills/`;
 two are Robin-specific and live here in `skills/`:
 
 | Skill | What it does |
 |-------|-------------|
 | `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a CRE-OT security/ops journey |
 | `to-erd` | Breaks a PRD into compliance-aware, dependency-ordered work items |
-| `repo-intel` | Scans a whole codebase and fills the repo's OKF book (`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) |
+| `repo-intel` | Scans a whole codebase and fills the repo's 5-file OKF book (`.help/introduction.md` / `.help/index.md` / `.help/appendix.md` / `.help/memory.md` / `.help/lessons.md`) |
 | `repo-ask` | Answers "how does X work" by tracing the actual code, not guessing |
 | `to-spec` | Turns a feature idea or bug into a proper Neeve-style spec (including the Design/architecture lock), ready to hand off |
 | `implement-spec` | Builds a spec's task: reuse what exists, write typed code, write real tests |
 | `code-review` | A thorough pre-merge review: does it match the spec, is it correct, is it secure |
 | `neeve-dls` (Robin) | Makes UI changes match our design system exactly, down to the pixel |
 | `ot-building-automation` (Robin) | Domain grounding for Niagara/BQL/WebCTRL work |
+| `rca-retro-adr` | Root cause analysis, sprint retrospective, and decision-time ADR capture |
 | `debug-trace` | Exhaustive grounding, invoked by the others when a step needs it |
 
 They're meant to be used in Design Loop order:
@@ -110,7 +111,7 @@ bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh
 ```
 
 That's it. This one command:
-1. Installs all 10 skills (both skills roots) into every detected tool's global skill directory.
+1. Installs all 11 skills (both skills roots) into every detected tool's global skill directory.
 2. Renders the house-rules content from `context/base.md` and installs it
    into each tool's global instructions location (merging into
    `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` without touching any other
@@ -154,7 +155,8 @@ files in a product repo, that's a leftover from an earlier design — safe to
 delete.
 
 **One deliberate exception:** the per-repo **OKF book**
-(`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) and its `.githooks/pre-commit`
+(`.help/introduction.md` / `.help/index.md` / `.help/appendix.md` / `.help/memory.md` /
+`.help/lessons.md`) and its `.githooks/pre-commit`
 freshness hook ARE committed into each product repo — set up once per repo by
 `neeve/init-repo.sh`, filled by the `repo-intel` skill. Repo-level knowledge
 only works if every clone carries it; see `neeve/README.md` Pillar 1,

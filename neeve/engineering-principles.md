@@ -152,14 +152,51 @@ where this section belongs is itself a finding on the output.
 
 ---
 
+## Working Memory & Decision Capture
+
+Every product repo's OKF book (Layer 02, `.help/introduction.md` /
+`index.md` / `appendix.md` / `memory.md` / `lessons.md`, scaffolded by
+`init-repo.sh` and maintained by `repo-intel`) includes two files that
+capture facts no code scan can derive: durable working state and past
+corrections. **Any skill, mid-task — not just `repo-intel`** — routes a fact
+to the right home the moment it's learned, rather than letting it evaporate
+at the end of the conversation:
+
+- **A correction** (the user points out a mistake) → append a terse
+  mistake → rule pair to that repo's `.help/lessons.md`.
+- **A durable operational quirk or current-state fact** (something learned
+  during work that isn't code reference and would help a later session) →
+  append it to that repo's `.help/memory.md`, keeping it within its bounded
+  ~2,500 char budget — consolidate, don't hoard.
+- **A durable architectural decision** (choosing between competing
+  approaches, adopting/replacing a dependency, a convention future work must
+  follow) → an ADR via the `rca-retro-adr` skill's ADR mode, filed at
+  `docs/adr/ADR-NNNN-<slug>.md` — the same location and template
+  `repo-intel`'s retrospective ADR stubbing already uses. One ADR home per
+  repo, not two.
+- **An incident or bug already resolved** → the `rca-retro-adr` skill's RCA
+  mode, filed at `.help/reports/rca/` — the mechanism this charter's
+  "Blameless postmortems, mechanism not memory" principle above points to.
+- **Verbose code/system reference** → the existing three book files
+  (`introduction.md`/`index.md`/`appendix.md`), never `memory.md`/
+  `lessons.md` — those two never duplicate what the other three already
+  cover.
+
+A full `repo-intel` pass is still the place to consolidate and prune
+`memory.md`/`lessons.md` when they've drifted or grown past budget — but
+day-to-day appends don't wait for that pass.
+
+---
+
 ## How This Charter Is Used
 
 The `to-prd`, `to-erd`, `to-spec`, `implement-spec`, `code-review`, and
 `neeve-dls` skills each condense the relevant section above into their own
 operating instructions, and the unified `neeve` agent's routing table
 (`agent/neeve/AGENT.md`) enforces the sequencing across all of them.
-Edit this file when the underlying principle changes, then update the
-affected skill(s) to match.
+`rca-retro-adr` and `repo-intel` carry out this charter's "Working Memory &
+Decision Capture" section specifically. Edit this file when the underlying
+principle changes, then update the affected skill(s) to match.
 
 For a customer-facing feature end to end, the intended sequence pulls in
 multiple skills, not just one:

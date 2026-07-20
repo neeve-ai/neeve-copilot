@@ -1,37 +1,90 @@
 # Feature Reference: Neeve Copilot Distribution System
 
 ## Feature Name
-Neeve Copilot Distribution System (Installer, Loader, and Uninstaller)
+Neeve Copilot Distribution System (Skills and Global House Rules)
 
 ## Description
-A central distribution system that allows developers to seamlessly install, update, and remove Neeve-specific AI agents and community-driven `awesome-copilot` agents on their local machines. This repository provides robust shell scripts that configure the user's terminal to natively load these agents right into their Copilot IDE seamlessly.
+A central distribution system that gives every Neeve engineer the same AI
+skills and house rules — identically, across Claude Code, GitHub Copilot,
+Cursor, Codex, and Antigravity — with zero hand-copying. Global content
+lives once in this repo (`neeve/skills/`, `neeve/context/`,
+`neeve/agent/`) and installs to each engineer's machine. The one
+deliberate per-repo artifact is the OKF book
+(introduction.md/index.md/appendix.md + its pre-commit freshness hook),
+set up per product repo by `neeve/init-repo.sh` — see `neeve/README.md`.
 
 ## Key Functionalities
-- **Automated Installation (`install.sh`)**: One-line command to fetch the `neeve-copilot` and `awesome-copilot` repositories efficiently using shallow clones. Automatically injects the necessary configurations into the user's shell profile (`.bashrc` / `.zshrc`).
-- **Dynamic Agent Loader (`load_agents.sh`)**: Exposes downloaded scripts and agents directly to the Copilot environment (`~/.copilot` and `~/.agents/skills`) using safe symlinking. 
-- **Automated Update Alias (`update-neeve-copilot`)**: A built-in shell alias that triggers a fresh download and update of the installation script directly from the remote origin, allowing developers to pull the newest agents effortlessly.
-- **Clean Uninstallation (`uninstall.sh`)**: Safely removes the injected configuration from shell profiles and intelligently removes the agent symlinks without wiping custom user agents that might share the same directories.
-- **Continuous Integration Pipeline (`ci.yml`)**: Automated GitHub Actions testing that enforces the Open Agent Skills specification (verifying `name` and `description` in YAML frontmatter for all components) and validates the installation shell logic against POSIX compliance.
+- **One-command global install (`sync_skills.sh` → `neeve/install.sh --all`)**:
+  pulls the latest from this repo and installs both:
+  - all 10 skills (org-level + product-level skills roots) into every supported agent's global skill directory
+    (`~/.claude/skills`, `~/.codex/skills`, `~/.copilot/skills`,
+    `~/.cursor/skills`, `~/.gemini/antigravity/skills`)
+  - the house-rules content (culture/ethos, engineering principles, quality
+    gates, production-consequence discipline, product overview) into each
+    tool's own user-level instructions location — merged into
+    `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` without disturbing any
+    personal content already there, written standalone for Copilot
+    (`~/.copilot/instructions/neeve-house-rules.instructions.md`)
+- **House-rules render (`context_render.py --house-rules`)**: produces the
+  universal-only variant of `context/base.md` — no repo-specific
+  stack/commands/do-not-modify facts, no repo-conditional fragments (those
+  live in the skills that already trigger on their own: `to-spec`,
+  `ot-building-automation`, `neeve-dls`).
+- **Idempotent merge (`merge_house_rules.py`)**: re-running the installer
+  updates the house-rules block in `~/.claude/CLAUDE.md`/`~/.codex/AGENTS.md`
+  in place, marked by BEGIN/END comments, without touching anything else an
+  engineer has in that file.
 
 ## User Flow
-1. **Install:** A developer opens their terminal and runs `curl -fsSL https://raw.githubusercontent.com/neeve-ai/neeve-copilot/main/install.sh | sh`.
-2. **Reload Shell:** The developer restarts their terminal or runs `source ~/.bashrc` / `~/.zshrc`. 
-3. **Usage:** The developer uses their IDE Copilot. The internal Neeve skills (from `.agents/skills`) and community skills (from `awesome-copilot`) are automatically available in the AI assistant.
-4. **Update:** The developer runs `update-neeve-copilot` anytime to sync the latest available agents.
-5. **Uninstall:** If desired, the developer removes everything cleanly by executing `curl .../uninstall.sh | sh`.
+1. **Day-1 install:** clone this repo, run `bash sync_skills.sh` once — the
+   all skills and the house rules are now available in every project on the
+   machine, in every supported agent.
+2. **Verify:** open any project, type `/skills` (Claude Code) or check the
+   `/`-command picker (Copilot/Cursor/Codex). Preview the house rules with
+   `python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md`.
+3. **Usage:** the skills trigger automatically on matching phrasing, or
+   invoke explicitly via `/to-spec`, `/implement-spec`, `/code-review`,
+   `/repo-ask`, `/repo-intel`, `/neeve-dls`. House rules apply automatically,
+   every request, every repo — no invocation needed.
+4. **Update:** re-run `bash sync_skills.sh` any time to pick up changes —
+   alias it (see top-level README) so it's a one-word habit.
+5. **Cursor's global rules** live in Settings, not a plain file, so the
+   installer can't write them automatically — it prints a one-time manual
+   paste step (Command Palette → "Rules: User Rules").
 
 ## Technical Implementation
-- **POSIX Shell Architecture**: All scripts (`sh`) are written strictly according to POSIX standards avoiding `bashism` to ensure seamless execution across macOS (zsh), Linux (bash/dash), and Windows (git-bash).
-- **Symlinking Strategy**: To avoid overwriting a developer's manually created agents, the script maps the target resources using isolated symlinks natively traversing from `$INSTALL_DIR` to `~/.agents/skills/` and `~/.copilot/`.
-- **Stateless Updates**: During an update, the system relies on performing `git fetch --depth=1` and `git reset --hard FETCH_HEAD` to avoid preserving massive Git histories locally.
-- **Shell Injection (`sed`)**: The configuration logic explicitly adds `# Neeve Copilot Configuration` marker comments. The uninstaller relies on `sed '/# Neeve.../,/alias.../d'` to safely delete only what was injected.
+- **Copy, not symlink**: skill installs copy files into the target location
+  rather than symlinking to a shared source.
+- **Merge, not overwrite**: house-rules installs into `~/.claude/CLAUDE.md`/
+  `~/.codex/AGENTS.md` only replace a clearly marked block, preserving any
+  other personal content in that file.
+- **No third-party content**: this system only distributes Neeve's own
+  `skills`/`context` — it does not pull in or depend on any external
+  community repo.
+- **Nothing committed into product repos**: no `.github/copilot-instructions.md`,
+  `AGENTS.md`, `.cursorrules`, prompts, or hooks are ever written into any of
+  Neeve's product repos. If you find any of those as uncommitted files in a
+  product repo, they're leftovers from an earlier design — safe to delete.
 
 ## Non-functional requirements
-- **Compatibility**: Must natively run on POSIX-compliant setups (macOS `zsh`, Linux `bash/dash`, Windows `git-bash`).
-- **Performance**: Git clones must use `--depth 1` to ensure rapid downloads. No heavy binaries should be packaged.
-- **Safety**: Do not permanently modify or delete the `~/.agents` or `~/.copilot` parent directories as they belong to the developer.
+- **Compatibility**: install/sync scripts run under bash 3.2 (macOS default)
+  without requiring Homebrew bash or other new dependencies.
+- **No supply-chain surprises**: no `curl | sh` pattern, no unpinned
+  third-party git dependency — installs are a `git clone`/`git pull` of this
+  repo plus local file copies only.
 
-## Open questions / decisions
-- **Skill Versioning**: How should we handle breaking changes in agent specifications if `awesome-copilot` introduces a structurally different format? Currently pinned to `main` branch latest.
-- **Offline Mode**: Is there a requirement to provide an offline backup/cache of the latest fetched `awesome-copilot` if GitHub is unavailable?
-- **Alias Expansion**: Could we expand `update-neeve-copilot` into a full CLI tool rather than an alias for more advanced management (e.g., listing agents locally vs remotely)?
+## History
+Two earlier designs were tried and abandoned in the same session that built
+this one:
+1. A March-2026 curl-piped installer (`install.sh`/`load_agents.sh` at the
+   repo root) that pulled in a third-party `github/awesome-copilot` repo and
+   three placeholder skills via `~/.agents/skills/` — delivered none of
+   Neeve's real skills. Removed.
+2. A per-repo render-and-commit model: `AGENTS.md`/`CLAUDE.md`/
+   `.github/copilot-instructions.md`/`.cursorrules` generated and committed
+   into all 16 product repos, kept fresh via a CI workflow that opened a
+   review PR on every merge. This worked, but meant maintaining GitHub
+   Actions automation across 16 repos for something VS Code/Copilot and
+   Claude Code already solve natively via user-level global instructions.
+   Replaced by the current design — nothing is committed into any product
+   repo at all.

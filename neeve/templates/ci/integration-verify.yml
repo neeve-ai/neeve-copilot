@@ -1,0 +1,34 @@
+# integration-verify — deterministic proof of end-to-end functionality on
+# every PR build (Design Loop stage 8's acceptance contract; see
+# neeve-copilot's neeve/README.md, Pillar 2).
+#
+# Copied into a product repo's .github/workflows/ by neeve-copilot's
+# init-repo.sh (--with-ci). EDIT THE TWO RUN STEPS to this repo's real
+# commands — the right values should come from this repo's own OKF book,
+# CI workflow, or Makefile. This is a template, not a drop-in: a template that runs the
+# wrong command green is worse than no template.
+name: integration-verify
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # -- EDIT: environment setup for this repo's stack ------------------
+      # e.g.  - uses: actions/setup-python@v5
+      #         with: { python-version: "3.12" }
+      #       - run: make dev-up          # or docker compose up -d ...
+
+      - name: Run integration tests
+        run: |
+          echo "::error::EDIT ME — replace with this repo's real integration/system test command"
+          echo "  (see this repo's OKF book, CI workflow, or Makefile)"
+          exit 1
+        # e.g.  make test-integration
+        #       pytest tests/integration -v
+        #       npm run test:e2e

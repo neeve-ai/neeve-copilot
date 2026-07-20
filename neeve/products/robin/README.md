@@ -1,172 +1,186 @@
 # Neeve Engineering Skills
 
-Skills that work identically across every agent on the team.
+This is how every AI coding assistant at Neeve — Claude Code, GitHub Copilot,
+Cursor, Codex, Antigravity — gets taught the same house rules, the same spec
+format, and the same review bar. Set it up once, and it works the same way
+no matter which tool you or your teammates use, in every repo, with nothing
+ever committed into a product repo.
+
+This covers the `to-spec → implement-spec → code-review` half of Neeve's
+pipeline. For the bigger picture — PRD → prototype → ERD work items → spec —
+and what's still ahead, see the
+[top-level README's north-star pipeline](../../../README.md#the-north-star-pipeline).
+
+---
+
+## The Short Version
+
+AI assistants can be taught to behave a certain way in a few different ways.
+Think of it like onboarding a new engineer:
+
+| # | What it's called | What it actually is | Where Neeve uses it |
+|---|---|---|---|
+| 1 | **House rules** | The onboarding doc every new hire reads on day one — always in the back of their mind | Culture/ethos, engineering principles, quality gates, the "state consequence and gaps" discipline, what Robin is and how its repos fit together. Installed once, globally, on your machine — not a file in any repo |
+| 2 | **Skills** | A manual the assistant only opens when the task calls for it | How to write a Neeve spec, how to review code, how to work with our design system, how to work with our building-automation stack |
+| 3 | **The unified agent** | A specialist invoked by name, not a manual you have to open | `neeve` — ask this one first (setup + Design Loop routing across every skill) — see `neeve/agent/` |
+
+**One-line summary:** house rules set the mindset everywhere, all the time;
+skills give the deep how-to and only load when relevant; the unified `neeve`
+agent is the specialist you ask for by name, in whichever tool you're using,
+and routes to the right skill for the Design Loop stage you're in. None of
+them can stop bad code from shipping — each product repo's own CI still does
+that job, unrelated to this repo.
+
+**Why no per-repo instructions files or CI sync here anymore:** an earlier
+version of this system rendered `AGENTS.md`/`CLAUDE.md`/etc. into every
+product repo and kept them in sync via CI. That meant committing generated
+content into 16 separate repos and running GitHub Actions to keep it fresh —
+real infrastructure to build and maintain for a problem that VS Code/Copilot
+and Claude Code already solve natively: both support **user-level global
+instructions** that apply to every workspace on your machine automatically.
+So the shared content lives once, here, and installs straight to that
+global location — no repo ever needs a file for it.
+
+---
+
+## The Skills
+
+Ten skills covering the full Design Loop (see `neeve/README.md` for the
+architecture). Eight are product-agnostic and live in `neeve/skills/`;
+two are Robin-specific and live here in `skills/`:
 
 | Skill | What it does |
 |-------|-------------|
-| `repo-intel` | Full codebase scan → CONTEXT.md, README gaps, ADR stubs, spec stubs |
-| `repo-ask` | Targeted question-driven code trace — clarifies intent, code is always source of truth |
-| `to-spec` | Turns a feature, bug, or ADR into a Neeve-style spec with handoff for `implement-spec` |
-| `implement-spec` | Implements a spec task: context-first, reuse-first, typed contracts, behaviour tests |
-| `code-review` | SMART production review: ADR/spec alignment, contracts, correctness, security, Helm |
-| `neeve-dls` | Pixel-perfect changes to the `dls-neeve` design system and shared `@neeve/fonts` package |
+| `to-prd` | Turns a problem into an enterprise-SaaS PRD, led by a CRE-OT security/ops journey |
+| `to-erd` | Breaks a PRD into compliance-aware, dependency-ordered work items |
+| `repo-intel` | Scans a whole codebase and fills the repo's OKF book (`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) |
+| `repo-ask` | Answers "how does X work" by tracing the actual code, not guessing |
+| `to-spec` | Turns a feature idea or bug into a proper Neeve-style spec (including the Design/architecture lock), ready to hand off |
+| `implement-spec` | Builds a spec's task: reuse what exists, write typed code, write real tests |
+| `code-review` | A thorough pre-merge review: does it match the spec, is it correct, is it secure |
+| `neeve-dls` (Robin) | Makes UI changes match our design system exactly, down to the pixel |
+| `ot-building-automation` (Robin) | Domain grounding for Niagara/BQL/WebCTRL work |
+| `debug-trace` | Exhaustive grounding, invoked by the others when a step needs it |
 
-### Skill chain
+They're meant to be used in Design Loop order:
 
 ```
-repo-ask / repo-intel     ← understand the codebase first
+to-prd → (neeve-dls prototype) → to-erd
         ↓
-     to-spec              ← turn the problem into an approved spec
+repo-ask / repo-intel   ← get to know the code first
         ↓
-  implement-spec          ← build it; all 7 quality gates must pass
+     to-spec            ← agree what you're building, in writing
         ↓
-   code-review            ← final quality checkpoint; loops back if findings require changes
+  implement-spec         ← build it — all 7 quality checks must pass
+        ↓
+   code-review           ← final check before it ships
+        ↓
+   Merge → CI Pass       ← loops back to the next feature's PRD
 ```
 
-`neeve-dls` sits alongside `implement-spec` for any UI/DLS surface; always followed by `code-review`.
+If the work touches UI, `neeve-dls` runs alongside `implement-spec`, and
+`code-review` still happens after. A small bug fix starts at `to-spec`,
+not `to-prd`.
 
-### Quality gates (enforced by `implement-spec` and `code-review`)
-
-Every implementation must pass all 7 gates before it is done:
-linter (zero warnings) · strict type checker (zero errors) · unit tests (≥95% coverage) ·
-integration tests (primary flow) · scale/N+1 check · security (inputs, auth, secrets, deps) ·
-code review (no 🔴/🟠 unresolved).
+**The 7 checks every change must pass:** no linter warnings, no type errors,
+tests cover at least 95% of the code, the main flow has an integration test,
+no obvious N+1/scale problem, a security pass (inputs, auth, secrets,
+dependencies), and a clean code review.
 
 ---
 
-## Supported Agents
+## Works Everywhere
 
-The SKILL.md format is an open standard. One set of files, every agent.
-
-| Agent | Works? | Notes |
-|-------|--------|-------|
-| Claude Code (terminal) | ✅ | Primary surface |
-| VS Code — Claude extension | ✅ | Same skills as terminal |
-| VS Code — GitHub Copilot | ✅ | Agent mode required |
-| Cursor | ✅ | Chat panel |
-| Antigravity | ✅ | |
-| Codex CLI | ✅ | Uses `$skill-name` instead of `/skill-name` |
+| Tool | Works? | Note |
+|-------|--------|------|
+| Claude Code (terminal) | ✅ | The main one this is built around |
+| VS Code + Claude extension | ✅ | Same skills as the terminal |
+| VS Code + GitHub Copilot | ✅ | Only in Copilot's "agent mode" |
+| Cursor | ✅ | Skills in the chat panel; house rules need one manual paste (see below) |
+| Antigravity 2.0 | ✅ | Real skill auto-triggering (semantic match on description) confirmed against Antigravity's own docs, not assumed |
+| Codex CLI | ✅ | Type `$skill-name` instead of `/skill-name` |
 
 ---
 
-## Setup
-
-### Fastest path (recommended)
-
-From the root of the `neeve-copilot` repo checkout:
+## Getting Set Up
 
 ```bash
-bash sync_skills.sh
+git clone git@github.com:neeve-ai/neeve-copilot.git ~/Projects/src/neeve/neeve-copilot
+bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh
 ```
 
-This pulls the latest from the repo and installs all skills for every agent on your machine.
-Run it any time to pick up changes. See the root `README.md` for the one-liner alias.
+That's it. This one command:
+1. Installs all 10 skills (both skills roots) into every detected tool's global skill directory.
+2. Renders the house-rules content from `context/base.md` and installs it
+   into each tool's global instructions location (merging into
+   `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` without touching any other
+   personal content already there; writing a standalone file for Copilot).
 
-### Manual install
-
-If you need to install without pulling (e.g. offline, or from a specific state):
-
-### What you need
-
-```
-neeve-skills/
-  install.sh       ← this installer
-  AGENTS.md        ← commit to every repo (read by Copilot, Codex, Antigravity)
-  README.md        ← this file
-  skills-src/      ← canonical skill sources when working from a repo checkout
-```
-
-If you do not want a full checkout, download the latest GitHub release bundle. It includes
-`install.sh`, `AGENTS.md`, `README.md`, and prebuilt skill zip assets.
-
-`install.sh` resolves skill archives in this order:
-
-1. bundled `zips/` next to the installer
-2. local `dist/zips/` built from `skills-src`
-3. a fresh rebuild from `skills-src` into `dist/zips/`
-
-### Step 1 — Run the installer
-
-**Auto-detect what's installed on your machine:**
+Bookmark or alias it — re-running it any time picks up the latest from this
+repo and refreshes both skills and house rules:
 ```bash
-bash install.sh
+alias sync-skills='bash ~/Projects/src/neeve/neeve-copilot/sync_skills.sh'
 ```
 
-**Specific agents:**
-```bash
-bash install.sh --claude-code --codex --cursor
-```
+**Cursor** stores its global rules in Settings, not a plain file, so this
+can't be fully automated. The installer prints a one-time manual step:
+open Cursor → Command Palette → "Rules: User Rules" → paste the content it
+shows you. Do this once; re-run the installer and re-paste only when
+`context/base.md` changes materially.
 
-**All agents at once:**
-```bash
-bash install.sh --all
-```
-
-**Global install + project-scoped (for team sharing via git):**
-```bash
-bash install.sh --all --project /path/to/robin-ai
-```
-
-### Step 2 — Add AGENTS.md to your repos
+### Choosing specific tools
 
 ```bash
-cp AGENTS.md /path/to/robin-ai/AGENTS.md
-git add AGENTS.md
-git commit -m "chore: add agent instructions"
-```
-
-This file is read as always-on context by Copilot, Codex, and Antigravity.
-Claude Code reads `CLAUDE.md` — see per-agent notes below.
-
-### Step 3 — Commit project-scoped skills (optional but recommended)
-
-If you ran `--project`, commit what was installed so every team member gets
-skills automatically on `git clone`:
-
-```bash
-cd /path/to/robin-ai
-git add .claude/skills/ .github/skills/ .agents/skills/ .cursor/skills/
-git commit -m "chore: add Neeve engineering skills"
+bash install.sh                              # auto-detect installed agents
+bash install.sh --all                        # every supported agent
+bash install.sh --claude-code --cursor       # only specific agents
 ```
 
 ---
 
-## Where skills install
+## Where Things Get Installed
 
-| Agent | Global (personal, all projects) | Project-scoped (repo, shared) |
+| Tool | Skills (global) | House rules (global) |
 |-------|--------------------------------|-------------------------------|
-| Claude Code | `~/.claude/skills/` | `.claude/skills/` |
-| GitHub Copilot | `~/.copilot/skills/` | `.github/skills/` |
-| Cursor | `~/.cursor/skills/` | `.cursor/skills/` |
-| Codex CLI | `~/.codex/skills/` | `.agents/skills/` |
-| Antigravity | `~/.gemini/antigravity/skills/` | `.agents/skills/` |
+| Claude Code | `~/.claude/skills/` | `~/.claude/CLAUDE.md` (merged block) |
+| GitHub Copilot | `~/.copilot/skills/` | `~/.copilot/instructions/neeve-house-rules.instructions.md` |
+| Cursor | `~/.cursor/skills/` | Settings → Rules → User Rules (manual paste) |
+| Codex CLI | `~/.codex/skills/` | `~/.codex/AGENTS.md` (merged block) |
+| Antigravity | `~/.gemini/config/skills/` | `~/.gemini/AGENTS.md` (merged block; cross-tool — Antigravity-only overrides live in `~/.gemini/GEMINI.md`, untouched by this installer) |
 
-**Global** = installed once per machine, available in all projects.
-**Project-scoped** = committed to git, shared automatically on clone.
+Nothing above is ever written into a product repo. If you see `AGENTS.md`,
+`.github/copilot-instructions.md`, or `.cursorrules` show up as uncommitted
+files in a product repo, that's a leftover from an earlier design — safe to
+delete.
 
-Recommended: install globally on each machine + commit project-scoped for new joiners.
+**One deliberate exception:** the per-repo **OKF book**
+(`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) and its `.githooks/pre-commit`
+freshness hook ARE committed into each product repo — set up once per repo by
+`neeve/init-repo.sh`, filled by the `repo-intel` skill. Repo-level knowledge
+only works if every clone carries it; see `neeve/README.md` Pillar 1,
+Layer 02.
 
 ---
 
-## How skills trigger
+## Turning Skills On
 
-Skills load **automatically** when the agent matches your request to a skill description.
+Skills load themselves automatically when what you ask for matches one:
 
-| What you say | Skill loaded |
+| What you say | Skill that answers |
 |-------------|-------------|
-| "map this repo", "document this project", "generate CONTEXT.md" | `repo-intel` |
-| "onboard me to this codebase", "what does this service do" | `repo-intel` |
-| "how does X work", "why does X fail", "trace X", "where is X defined" | `repo-ask` |
-| "what happens when X is called", "show me how X connects to Y" | `repo-ask` |
+| "write a PRD for X" | `to-prd` |
+| "break this PRD into work items" | `to-erd` |
+| "map this repo", "fill the OKF book" | `repo-intel` |
+| "how does X work", "why does X fail", "where is X defined" | `repo-ask` |
 | "spec this feature", "turn this bug into a work item" | `to-spec` |
-| "break this ADR into tasks", "write requirements for X" | `to-spec` |
 | "implement task 3", "build this from the spec" | `implement-spec` |
-| "write the code for this work item" | `implement-spec` |
-| "review this PR for production readiness" | `code-review` |
-| "audit these changes against the spec", "review my Helm changes" | `code-review` |
+| "review this PR", "audit these changes" | `code-review` |
 | "update this DLS component", "fix this UI to match the design" | `neeve-dls` |
+| Niagara/BQL/WebCTRL work | `ot-building-automation` |
+| "trace this thoroughly", "don't just grep this" | `debug-trace` |
 
-**Manual invoke:**
+Or call one directly:
+
 ```
 Claude Code / Copilot / Cursor / Antigravity:
   /repo-intel  /repo-ask  /to-spec  /implement-spec  /code-review  /neeve-dls
@@ -177,171 +191,290 @@ Codex CLI:
 
 ---
 
-## Always-on context per agent
+## House Rules: Always-On, Every Workspace
 
-Skills are on-demand. For always-on project context, use the right file:
+Skills only load when needed. House rules are different — the tool reads
+them on *every single request, in every repo*, so this is where the culture,
+engineering principles, quality gates, and product overview live: what makes
+a Neeve engineer's suggestions look like a Neeve engineer wrote them,
+regardless of which repo you happen to be in.
 
-| Agent | Always-on file | What to put in it |
-|-------|---------------|-------------------|
-| Claude Code | `CLAUDE.md` (root or `.claude/`) | Stack, test commands, arch constraints |
-| GitHub Copilot | `.github/copilot-instructions.md` | Same |
-| Cursor | `.cursorrules` | Same |
-| Codex · Antigravity | `AGENTS.md` | Engineering principles (included) |
-| All agents | `AGENTS.md` | Copilot, Codex, Antigravity all read this |
+**This used to be four separate files, hand-copied into every repo, and
+they quietly drifted apart.** Now it's one block of content, installed once
+per engineer, refreshed by re-running the installer — there's nothing left
+to drift, because there's only one copy.
 
-A minimal `CLAUDE.md` for each repo:
+### The pieces, in one picture
 
-```markdown
-# [Repo] — Claude Code Context
+```
+neeve-copilot/
+  neeve/products/robin/
+    context/
+      base.md              ← the shared write-up: house rules, quality bar,
+                               layer rules, skill list, product overview.
+                               Edit this — it's the only source of truth
+      fragments/           ← sections included in base.md
+        production-consequence-and-gaps.md
+        (spec-review-checklist.md, ot-domain-notes.md, dls-usage-notes.md,
+         code-review-checklist.md — repo-specific, not part of the
+         universal house-rules variant; their content lives in the skills
+         that already trigger on their own)
+      product-overview.md  ← what Robin offers + a static repo-contribution
+                               table, hand-maintained here
+    scripts/
+      context_render.py     ← renders base.md; --house-rules produces the
+                               universal-only variant (no repo-specific
+                               facts, no repo-conditional fragments)
+      merge_house_rules.py  ← idempotently merges that content into
+                               ~/.claude/CLAUDE.md / ~/.codex/AGENTS.md
+                               without touching the engineer's own content
+      test_context_render.py / test_merge_house_rules.py
+                              ← stdlib unittest coverage for both, run in CI
+  install.sh                ← installs skills + house rules, global only
+  sync_skills.sh             ← pulls latest + re-runs install.sh --all
+```
 
-## Stack
-- Python 3.11 / FastAPI / PostgreSQL / NATS JetStream
-- Deployed via robin-helm on Kubernetes
+### Changing the house rules for everyone
 
-## Repo layout
-- domain/        entities, value objects, protocols — no framework imports
-- application/   use cases, orchestration
-- infrastructure/ repositories, ORM, NATS/HTTP clients
-- api/           FastAPI routers — thin glue only
+1. Edit `context/base.md` (the universal sections — culture/ethos,
+   engineering principles, quality gates, production-consequence-and-gaps,
+   product overview).
+2. Merge that change to `neeve-copilot`'s own `main`.
+3. Every engineer picks it up next time they run `sync_skills.sh` — no repo
+   to touch, no PR to open anywhere else.
 
-## Test
-pytest -x -v
-pytest tests/unit/test_foo.py -v
-pytest --cov=app --cov-fail-under=95
+### Verifying what a fresh install would produce
 
-## Lint
-mypy app/ --strict && ruff check app/ tests/
-
-## Do not modify without discussion
-- alembic/versions/    migration files are append-only
-- app/domain/events/   event contract shared with downstream services
+```bash
+python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md
+cat /tmp/preview.md
 ```
 
 ---
 
-## Agent-specific notes
+## The Unified Agent
 
-### Claude Code + VS Code (Claude extension)
-- Skills in `~/.claude/skills/` load in every project
-- Verify: `/skills`
-- Per-project context: `CLAUDE.md` at repo root or `.claude/CLAUDE.md`
+One agent, `neeve`, invoked by name rather than a workflow you have to
+trigger. It handles setup help, plus routing every request to the right
+skill by Design Loop stage (PRD → Design → ERD → Spec → Implement → Code
+Review → Merge → CI Pass — see `neeve/README.md`). Source lives in
+[`agent/`](../../agent/README.md), `agent/neeve/AGENT.md`, rendered
+by `scripts/agents_render.py` into every tool's own native custom-agent
+mechanism where one exists, and into a Skill where it doesn't.
 
-### GitHub Copilot (VS Code agent mode)
-- Skills in `~/.copilot/skills/` load globally
-- Skills in `.github/skills/` load for the repo — commit these
-- Always-on context: `.github/copilot-instructions.md`
-- Verify: `/skills` in Copilot Chat (agent mode only)
-- Copilot reads `AGENTS.md` at repo root automatically
+This replaces an earlier eight-agent model (`neeve-guide`, `to-prd`,
+`to-erd`, `repo-guide`, plus four specialist reviewers) — see
+[`agent/README.md`](../../agent/README.md#what-changed-and-why) for why
+that duplicated content already in the skills and gave Copilot users an
+eight-item picker instead of one router. `neeve` deliberately stays a
+lightweight **router** (classify the ask, point at one skill), not a
+heavier **orchestrator** that spawns and coordinates subagents itself —
+Anthropic's own published research puts that heavier pattern at roughly 15×
+the token cost of a single-agent exchange and calls coding tasks a weak fit
+for it.
+
+**Installed by the same `sync_skills.sh`/`install.sh` you already run** —
+no separate step, and re-running it prunes any of the eight retired agent
+files a prior install left behind. **Invocation differs by tool, on
+purpose, not by accident** (researched directly, not assumed — see
+[`agent/README.md`](../../agent/README.md) for the full matrix):
+
+| Tool | Where it lands | How you invoke it |
+|---|---|---|
+| Claude Code | `~/.claude/agents/neeve.md` | auto-triggers on phrasing, or `@agent-neeve` |
+| GitHub Copilot (VS Code) | user-profile agents folder, `neeve.agent.md` | pick from the agent picker (not auto-triggered by default) — skills still auto-trigger independently |
+| Codex CLI | `~/.codex/agents/neeve.toml` | `/agent` — explicit only, does not auto-trigger |
+| Cursor / Antigravity | installed as a Skill instead (no native agent concept in either tool) | auto-triggers on phrasing, same as any other skill |
+
+## Keeping It Fresh: The SessionStart Hook
+
+the repo-level OKF book (`.help/introduction.md` / `.help/index.md` / `.help/appendix.md`) is
+the canonical per-repo source in principle — but every engineer has
+their own
+local clone of `neeve-copilot`, and it's only as current as their last
+`sync_skills.sh` run. Two engineers asking the same question on the same
+day can get different answers purely because one of them hasn't synced in
+three weeks. That's a different failure mode than "someone forgot to ask" —
+it's "everyone asked, and got different answers."
+
+### How it works
+
+Installing for Claude Code (`install.sh --claude-code` or `--all`) adds one
+more thing: a global `SessionStart` hook in `~/.claude/settings.json` that
+runs `hooks/refresh-context.sh` at the start of every Claude Code
+session, anywhere on the machine. It:
+
+1. Pulls `neeve-copilot` and compares the commit hash before/after.
+2. **Only if something actually changed**, re-runs `sync_skills.sh` (which
+   reinstalls skills, agents, and house rules) — a normal day with no
+   upstream changes is a fast, silent no-op, not extra latency every time.
+3. Appends one line to a local, per-engineer log
+   (`~/.claude/neeve-copilot-sync.log`) on **every** run, whether or not
+   anything changed: timestamp, user (`git config user.email`, falling back
+   to `whoami`), branch, before/after commit hash, and whether it updated.
+
+No other tool has a confirmed equivalent today (Copilot/Cursor/Codex/
+Antigravity's global hook mechanisms are either unconfirmed or explicit-only
+— see the invocation table above) — this is Claude-Code-only, stated
+plainly rather than implied to work everywhere.
+
+### What you gain
+
+- **Nobody has to remember to sync.** The strongest lever available for
+  the "everyone asked, got different answers" problem — it removes
+  reliance on individual habit entirely, for the tool where it's possible.
+- **A real, local audit trail.** `cat ~/.claude/neeve-copilot-sync.log`
+  answers "what commit is this machine actually on, and when did it last
+  check" with a fact, not a guess — useful the moment a `repo-ask`/
+  `repo-intel` answer looks stale and you want to know whether that's this
+  machine's fault.
+
+### Why it's defensible
+
+- **Never blocks a session.** A failed pull (offline, no network, a local
+  change blocking a fast-forward) is caught and skipped silently — the
+  hook never prevents Claude Code from starting.
+- **Never forces anything.** It's a plain `git pull`, not a reset or a
+  force-push — if a local change would conflict, the pull simply fails and
+  is logged as `pulled=false`, nothing is overwritten.
+- **The log never leaves the machine.** `merge_session_hook.py` writes
+  `~/.claude/neeve-copilot-sync.log` locally only — this script never
+  pushes, uploads, or aggregates it anywhere. Centralizing that log across
+  engineers would be a separate, bigger decision (real reporting/telemetry
+  infrastructure), not something this hook does on its own.
+- **Every other setting survives untouched.** `merge_session_hook.py` is
+  idempotent JSON surgery (covered by 5 unit tests in
+  `test_merge_session_hook.py`) — it finds or creates exactly one managed
+  hook entry and leaves every other key and every other hook in
+  `~/.claude/settings.json` exactly as it found them, the same discipline
+  `merge_house_rules.py` already applies to `CLAUDE.md`.
+
+### Why it's scalable
+
+There's no per-engineer configuration and no central server — it's the same
+`git pull` + hash comparison for one engineer or a thousand. Adding an
+engineer doesn't add load anywhere; there's nothing to provision. The same
+property that makes `sync_skills.sh` itself scale (pull a public repo,
+reinstall locally) applies here unchanged.
+
+### Verified against a real repo, not just a simulation
+
+Before trusting this, it was proven end to end against `robin-kb-service`
+(a real product repo, over a real network round-trip — not a throwaway
+local bare repo):
+
+1. Pushed a real commit to a disposable branch (`test/refresh-context-verify`).
+2. Reset a second clone back to the commit *before* that push.
+3. Ran `refresh-context.sh` against that second clone and confirmed it:
+   - pulled the real new commit (`3e510a6` → `b17a61c`),
+   - logged `pulled=true updated=true` with the correct before/after hashes,
+   - and a second run against a now-current clone correctly logged
+     `updated=false` — the no-op case, verified, not assumed.
+
+## Notes Per Tool
+
+### Claude Code (terminal or VS Code extension)
+- Skills load from `~/.claude/skills/` in every project
+- Check they're there: type `/skills`
+- House rules: `~/.claude/CLAUDE.md` (global, every project)
+
+### GitHub Copilot (VS Code, agent mode)
+- Personal skills load from `~/.copilot/skills/`
+- Check they're there: `/skills` in Copilot Chat (only works in agent mode)
+- House rules: `~/.copilot/instructions/neeve-house-rules.instructions.md`
+  (`applyTo: "**"`, so it always applies)
 
 ### Cursor
-- Skills in `~/.cursor/skills/` load globally
-- Skills in `.cursor/skills/` load per-project
-- Always-on context: `.cursorrules` at repo root
-- Verify: `/skills` in Cursor Chat
+- Personal skills load from `~/.cursor/skills/`
+- Check they're there: `/skills` in Cursor Chat
+- House rules: Settings → Rules → User Rules — one-time manual paste, the
+  installer shows you the content to paste
 
 ### Codex CLI
-- Skills in `~/.codex/skills/` or `~/.agents/skills/` load globally
-- Skills in `.agents/skills/` load per-project
-- Codex reads `AGENTS.md` at repo root automatically
-- Verify: `$skills`
-- Invoke: `$code-review`, `$to-spec`, `$implement-spec`
+- Personal skills load from `~/.codex/skills/`
+- Check they're there: `$skills`
+- Call one directly: `$code-review`, `$to-spec`, `$implement-spec`
+- House rules: `~/.codex/AGENTS.md` (global; Codex also layers in any
+  repo-local `AGENTS.md` on top automatically, root-to-leaf, if one exists)
 
 ### Antigravity (Google)
-- Skills in `~/.gemini/antigravity/skills/` load globally
-- Skills in `.agents/skills/` load per-project (shared with Codex)
-- Antigravity reads `AGENTS.md` at repo root automatically
-- Verify: `@skills`
+- Personal skills load from `~/.gemini/config/skills/` — Antigravity 2.0
+  semantic-matches your prompt against each skill's `description`, same
+  auto-trigger model as Claude Code
+- Check they're there: `@skills`
+- House rules: `~/.gemini/AGENTS.md` (global, cross-tool — shared with any
+  other tool that reads `AGENTS.md`). Antigravity-only overrides live in
+  `~/.gemini/GEMINI.md`, which takes precedence over `AGENTS.md` but is
+  never written by this installer.
 
 ---
 
-## Troubleshooting
+## If Something's Not Working
 
-**Skill not showing up after install:**
-Restart the agent / start a new session. Skills are loaded at session start.
+**A skill doesn't show up after installing:** restart the tool or start a
+new session — skills only load when a session starts.
 
-**Wrong nesting after manual unzip:**
-The correct path is `~/.claude/skills/code-review/SKILL.md`, not
-`~/.claude/skills/code-review/code-review/SKILL.md`. The installer handles
-this — if you unzipped manually, check the depth with:
+**Nesting looks wrong after a manual unzip:** the correct layout is
+`~/.claude/skills/code-review/SKILL.md`, not a doubled-up
+`.../code-review/code-review/SKILL.md`. The installer avoids this
+automatically — if you unzipped by hand, check with:
 ```bash
 ls ~/.claude/skills/code-review/
-# Should show: SKILL.md  agents/  references/
+# should show: SKILL.md  agents/  references/
 ```
 
-**Copilot not picking up `.github/skills/`:**
-Ensure you are in **agent mode** (not inline chat or quick fix). Copilot agent
-mode is where skill discovery runs.
+**House rules aren't showing up in Copilot:** you need to be in **agent
+mode**, not inline chat or quick-fix mode.
 
-**Antigravity path missing:**
+**Antigravity says the skills folder is missing:**
 ```bash
 mkdir -p ~/.gemini/antigravity/skills
 ```
-Then re-run the installer.
+then run the installer again.
 
-**Update skills:**
-Re-run the installer — it replaces old versions, safe to run any time:
+**Want the latest version:** just re-run the installer — it's safe to run
+any time, it replaces old skill copies and refreshes the house-rules block
+in place:
 ```bash
 bash install.sh --all
 ```
 
 ---
 
-## Maintainer Workflow (skills-src → release zips)
+## For People Maintaining This Repo
 
-This repo keeps editable skill sources in:
+There are two source trees you edit here, each with its own local check:
 
-`neeve/products/robin/skills-src/`
+| You edit | It produces | Command to check it locally |
+|---|---|---|
+| `skills/` | Downloadable `.zip` files for each skill | `scripts/skills_sync.sh check` |
+| `context/` | The house-rules content installed globally | `scripts/context_render.py --house-rules <path>` (preview) |
 
-Generated archives are written to:
+`scripts/test_context_render.py` and `scripts/test_merge_house_rules.py`
+(stdlib `unittest`, no extra dependency) cover the rendering/merging logic
+and run in this repo's own CI, along with `neeve/scripts/check_org_sync.py`
+(keeps the `neeve` agent's routing table consistent with what skills
+actually ship, and `security.md`'s headings consistent with what cites them).
 
-`neeve/products/robin/dist/zips/`
-
-Any top-level folder in `skills-src/` is treated as a skill package and must contain `SKILL.md`.
-
-### Source of truth
-
-`skills-src` is canonical. Edit files there, then rebuild zips locally when needed.
-
-### Sync commands
-
+**Editing a skill:**
 ```bash
-# Pull latest + reinstall all skills for every agent (recommended daily driver)
-bash sync_skills.sh                          # from repo root
-
-# Verify every skill packages cleanly into a release zip
-neeve/products/robin/scripts/skills_sync.sh check
-
-# Build zips from skills-src into neeve/products/robin/dist/zips/
-neeve/products/robin/scripts/skills_sync.sh pack
+code neeve/skills/to-spec/SKILL.md   # make your edit
+bash sync_skills.sh                                       # reinstall everywhere, to test it
+git add neeve/skills/
+git commit -m "skills: describe your change"
 ```
 
-### CI enforcement
+**Editing the house rules:**
+```bash
+code neeve/context/base.md                          # make your edit
+python3 neeve/scripts/context_render.py --house-rules /tmp/preview.md
+cat /tmp/preview.md                                       # check it before installing
+bash sync_skills.sh                                       # installs it on your own machine
+git add neeve/context/ neeve/products/robin/context/
+git commit -m "house-rules: describe your change"
+```
 
-Validation CI runs `skills_sync.sh check` on every push and pull request.
-If a skill cannot be packaged into a valid release archive, CI fails and merge is blocked.
-
-### GitHub Releases
-
-Release archives are generated by GitHub Actions, not stored in git.
-
-Push to `main`:
-
-- updates the moving prerelease tagged `robin-skills-latest`
-- refreshes the downloadable zip assets on that prerelease
-- reruns packaging and installer smoke checks before publishing
-
-Push a tag that matches `robin-skills-v*`:
-
-- creates or updates a versioned GitHub Release
-- publishes the same downloadable zip assets on that versioned release
-- reruns packaging and installer smoke checks before publishing
-
-Both release paths build:
-
-- `repo-intel.zip`
-- `repo-ask.zip`
-- `code-review.zip`
-- `to-spec.zip`
-- `implement-spec.zip`
-- `neeve-dls.zip`
-- `robin-skills-bundle.zip` containing `install.sh`, `AGENTS.md`, `README.md`, and all skill zips
+**How releases work:** GitHub Actions builds the skill `.zip` files — they
+aren't stored in this repo directly.
+- Push to `main` → updates the always-current "latest" release
+- Push a tag like `robin-skills-v1.2.0` → creates a proper versioned release

@@ -1,0 +1,487 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* DLS color variables - Start */
+
+    --white0: #ffffff00;
+    --white10: #ffffff10;
+    --white30: #ffffff30;
+    --white60: #ffffff60;
+    --white100: #ffffff;
+
+    --black0: #00000000;
+    --black10: #00000010;
+    --black30: #00000030;
+    --black60: #00000060;
+    --black100: #000000;
+
+    --gray50: #f6f6f6;
+    --gray100: #e7e7e7;
+    --gray200: #d1d1d1;
+    --gray300: #b0b0b0;
+    --gray400: #888888;
+    --gray500: #6d6d6d;
+    --gray600: #5d5d5d;
+    --gray700: #4f4f4f;
+    --gray800: #454545;
+    --gray900: #3d3d3d;
+    --gray950: #171717;
+
+    --green50: #ecfdf6;
+    --green100: #d1fae8;
+    --green200: #a7f3d5;
+    --green300: #6de8bf;
+    --green400: #33d4a3;
+    --green500: #0fba8b;
+    --green600: #049772;
+    --green700: #03795e;
+    --green800: #05604c;
+    --green900: #065545;
+    --green950: #022c25;
+
+    --red50: #fef2f2;
+    --red100: #fee2e2;
+    --red200: #fdcbcb;
+    --red300: #fba6a6;
+    --red400: #f67373;
+    --red500: #ec4747;
+    --red600: #cc2424;
+    --red700: #b71e1e;
+    --red800: #971d1d;
+    --red900: #7d1f1f;
+    --red950: #440b0b;
+
+    --orange50: #fff7ed;
+    --orange100: #ffedd4;
+    --orange200: #ffd6a8;
+    --orange300: #ffb971;
+    --orange400: #ff9038;
+    --orange500: #fe7920;
+    --orange600: #ef5407;
+    --orange700: #c63d08;
+    --orange800: #9d320f;
+    --orange900: #7e2b10;
+    --orange950: #441206;
+
+    --lime50: #effee7;
+    --lime100: #dafccb;
+    --lime200: #b7f99d;
+    --lime300: #89f363;
+    --lime400: #61e734;
+    --lime500: #40cd15;
+    --lime600: #2c9f0c;
+    --lime700: #257c0f;
+    --lime800: #216212;
+    --lime900: #1f5314;
+    --lime950: #0b2e05;
+
+    --amber50: #fef9ee;
+    --amber100: #fdf1d7;
+    --amber200: #fae0ae;
+    --amber300: #f5c16a;
+    --amber400: #f1a746;
+    --amber500: #ee8d21;
+    --amber600: #df7317;
+    --amber700: #b95815;
+    --amber800: #934519;
+    --amber900: #773b17;
+    --amber950: #401c0a;
+
+    --blue50: #eff9fc;
+    --blue100: #d6f0f7;
+    --blue200: #b2e1ef;
+    --blue300: #68c2de;
+    --blue400: #41abcf;
+    --blue500: #268fb4;
+    --blue600: #227398;
+    --blue700: #225e7c;
+    --blue800: #244e66;
+    --blue900: #224357;
+    --blue950: #112a3b;
+
+    --text-primary: #171717;
+    --text-secondary: #5d5d5d;
+    --text-tertiary: #888888;
+    --text-contrast: #ffffff;
+
+    --background-primary: #ffffff;
+    --background-secondary: #f6f6f6;
+    --background-tertiary: #e7e7e7;
+
+    --border-primary: #0000001a;
+    --border-secondary: #0000004d;
+
+    --neutral-primary: #171717;
+    --neutral-secondary: #5d5d5d;
+    --neutral-tertiary: #b0b0b0;
+    --neutral-quarternary: #e7e7e7;
+    --neutral-contrast: #f6f6f6;
+
+    --brand-primary: #225e7c;
+    --brand-secondary: #268fb4;
+    --brand-tertiary: #68c2de;
+    --brand-quarternary: #d6f0f7;
+    --brand-contrast: #eff9fc;
+
+    --neeve-primary: #065545;
+    --neeve-secondary: #012a22;
+    --neeve-tertiary: #2f8a77;
+    --neeve-contrast: #ffffff;
+
+    --sara-primary: #f5c16a;
+    --sara-secondary: #fae0ae;
+    --sara-tertiary: #fef9ee;
+    --sara-contrast: #773b17;
+
+    --custom-primary: #e7e7e7;
+    --custom-secondary: #f6f6f6;
+    --custom-tertiary: #ffffff;
+    --custom-contrast: #171717;
+
+    --success-primary: #11aa8b;
+    --success-secondary: #9ad6c5;
+    --success-tertiary: #dff5ed;
+    --success-quarternary: #f2fffb;
+
+    --warning-primary: #c63d08;
+    --warning-secondary: #ff9038;
+    --warning-tertiary: #ffd6a8;
+    --warning-quarternary: #fff7ed;
+
+    --danger-primary: #b71e1e;
+    --danger-secondary: #f67373;
+    --danger-tertiary: #fdcbcb;
+    --danger-quarternary: #fef2f2;
+
+    --inactive-primary: #4f4f4f;
+    --inactive-secondary: #888888;
+    --inactive-tertiary: #d1d1d1;
+    --inactive-quarternary: #f6f6f6;
+
+    --box-shadow-10: #b0b0b01a;
+    --box-shadow-20: #b0b0b033;
+    --box-shadow-30: #b0b0b04d;
+    --box-shadow-40: #b0b0b066;
+    --box-shadow-50: #b0b0b080;
+
+    /* DLS Color variables - End */
+
+    /* DONOT USE Default Colors - Start */
+    --background: --white;
+    --foreground: #09090b;
+    --card: --white;
+    --card-foreground: #09090b;
+    --popover: --white;
+    --popover-foreground: #09090b;
+    --primary: #335768;
+    --primary-foreground: --white;
+    --secondary: --white;
+    --secondary-foreground: --brand500;
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    --accent: #f4f4f5;
+    --accent-foreground: #18181b;
+    --destructive: #dc2626;
+    --destructive-foreground: #fafafa;
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: --brand500; /* on focus */
+    --radius: 0.6rem;
+    /* Default Colors - End  */
+  }
+
+  .dark {
+    /* Default Colors - Start */
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #09090b;
+    --card-foreground: #fafafa;
+    --popover: #09090b;
+    --popover-foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #18181b;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #fef2f2;
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #d4d4d8;
+    /* Default Colors - End  */
+  }
+}
+
+@layer base {
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--gray300);
+    border-radius: 1rem 2rem 2rem 1rem;
+    background-clip: content-box;
+    border-right: 5px solid transparent;
+  }
+
+  /* Typography */
+  .dls-page-title {
+    font-family: "Source Serif 4" !important;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 120%;
+    letter-spacing: -0.125rem;
+  }
+
+  .dls-page-heading {
+    font-family: "Source Serif 4";
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 120%;
+    letter-spacing: -0.0625rem;
+  }
+
+  .dls-section-heading {
+    font-family: "Source Serif 4";
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 120%;
+    letter-spacing: -0.03125rem;
+  }
+
+  .dls-callout-strong {
+    font-family: "Source Serif 4";
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 120%;
+    letter-spacing: -0.03125rem;
+  }
+
+  .dls-callout {
+    font-family: "Source Serif 4";
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%;
+    letter-spacing: -0.03125rem;
+  }
+
+  .dls-body-strong {
+    font-family: "Source Sans 3";
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 140%;
+  }
+
+  .dls-body {
+    font-family: "Source Sans 3";
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%;
+  }
+
+  .dls-code-strong {
+    font-family: "Source Code Pro";
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 100%;
+  }
+
+  .dls-code {
+    font-family: "Source Code Pro";
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 100%;
+  }
+
+  .dls-body-small-strong {
+    font-family: "Source Sans 3";
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 140%;
+  }
+
+  .dls-body-small {
+    font-family: "Source Sans 3";
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%;
+  }
+
+  .dls-caption-strong {
+    font-family: "Source Sans 3";
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 140%;
+  }
+
+  .dls-caption {
+    font-family: "Source Sans 3";
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%;
+  }
+
+  .dls-eyebrow {
+    font-family: "Source Sans 3";
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 120%;
+    letter-spacing: 0.125rem;
+    text-transform: uppercase;
+  }
+
+  @screen lg {
+    .dls-page-title {
+      font-family: "Source Serif 4" !important;
+      font-size: 3rem;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 120%;
+      letter-spacing: -0.125rem;
+    }
+    .dls-page-heading {
+      font-family: "Source Serif 4";
+      font-size: 2rem;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 120%;
+      letter-spacing: -0.0625rem;
+    }
+    .dls-section-heading {
+      font-family: "Source Serif 4";
+      font-size: 1.5rem;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 120%;
+      letter-spacing: -0.03125rem;
+    }
+    .dls-callout-strong {
+      font-family: "Source Serif 4";
+      font-size: 1.25rem;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 120%;
+      letter-spacing: -0.03125rem;
+    }
+    .dls-callout {
+      font-family: "Source Serif 4";
+      font-size: 1.25rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 120%;
+      letter-spacing: -0.03125rem;
+    }
+    .dls-body-strong {
+      font-family: "Source Sans 3";
+      font-size: 1rem;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 140%;
+    }
+    .dls-body {
+      font-family: "Source Sans 3";
+      font-size: 1rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 140%;
+    }
+    .dls-code-strong {
+      font-family: "Source Code Pro";
+      font-size: 0.875rem;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 100%;
+    }
+    .dls-code {
+      font-family: "Source Code Pro";
+      font-size: 0.875rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 100%;
+    }
+    .dls-body-small-strong {
+      font-family: "Source Sans 3";
+      font-size: 0.875rem;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 140%;
+    }
+    .dls-body-small {
+      font-family: "Source Sans 3";
+      font-size: 0.875rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 140%;
+    }
+    .dls-caption-strong {
+      font-family: "Source Sans 3";
+      font-size: 0.75rem;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 140%;
+    }
+    .dls-caption {
+      font-family: "Source Sans 3";
+      font-size: 0.75rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 140%;
+    }
+    .dls-eyebrow {
+      font-family: "Source Sans 3";
+      font-size: 0.75rem;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 120%;
+      letter-spacing: 0.125rem;
+      text-transform: uppercase;
+    }
+  }
+}
+
+/* Icon Size Classes */
+.dls-icon-xs {
+  @apply dls-h-3 dls-w-3 dls-p-0.5;
+}
+
+.dls-icon-sm {
+  @apply dls-h-4 dls-w-4 dls-p-1;
+}
+
+.dls-icon-md {
+  @apply dls-h-8 dls-w-8 dls-p-2;
+}
+
+.dls-icon-lg {
+  @apply dls-h-16 dls-w-16 dls-p-4;
+}
+
+/* Hide default eye icon for password */
+input[type="password"]::-ms-reveal, /* Edge */
+input[type="password"]::-ms-clear,  /* Edge clear icon */
+input[type="password"]::-webkit-clear-button, /* Safari clear icon */
+input[type="password"]::-webkit-textfield-decoration-container {
+  /* Safari */
+  display: none;
+}

@@ -16,8 +16,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# Python bytecode cache
+__pycache__/
+*.pyc
+
 # Generated skill archives
-neeve/products/robin/dist/
+neeve/dist/
 
 # Agent IDE/Editor
 .idea/

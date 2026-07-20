@@ -76,10 +76,29 @@ touch," or tracing a bug in unfamiliar code:
 - Quick, specific question → `repo-ask`.
 - Full unfamiliar-repo scan / need a written map → `repo-intel`.
 - Both are read against the repo's committed OKF book
-  (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`) and
+  (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`, plus the
+  working-memory pair `.help/memory.md`/`.help/lessons.md`) and
   `context/product-overview.md` for product-level orientation — always
   cite the repo's actual docs or code, never invent a convention that isn't
   actually present somewhere citable.
+
+## Incident & Decision Capture (Any Stage)
+
+For a postmortem, a sprint/weekly retrospective, or capturing an
+architecture decision at the moment it's made — none of which own a single
+Design-Loop stage — route to `rca-retro-adr`. Its three modes (RCA, Retro,
+ADR) write to the repo's own `.help/reports/{rca,retros}/` and to
+`docs/adr/ADR-NNNN-<slug>.md` (the same ADR home `repo-intel`'s
+retrospective stubbing already uses — never a second one). This is also
+where `engineering-principles.md`'s "Blameless postmortems, mechanism not
+memory" principle and its "Working Memory & Decision Capture" section
+become operational.
+
+Separately, and not tied to any skill invocation: any skill, mid-task,
+appends a real user correction to the current repo's `.help/lessons.md`, or
+a durable operational quirk/current-state fact to `.help/memory.md` — per
+the same `engineering-principles.md` section — without waiting for a full
+`repo-intel` pass or an explicit request to do so.
 
 ## Respecting Developer-Local Overrides (Layer 01)
 

@@ -20,14 +20,20 @@
 #                                fill from the repo itself
 #        .help/index.md        — table of contents: functional area → location
 #        .help/appendix.md     — public symbols: purpose, dependencies, impact
+#        .help/memory.md        — bounded (~2,500 char) working-memory digest:
+#                                current-state flags, quirks, conventions
+#        .help/lessons.md       — corrections log (mistake → rule)
 #      The scaffolds are honest skeletons full of TODO(repo-intel) markers —
 #      the narrative content comes from running the repo-intel skill next,
 #      never from this script guessing.
-#   2. Installs .githooks/pre-commit (the deterministic context-sync check,
+#   2. Scaffolds .help/reports/rca/ and .help/reports/retros/ (empty,
+#      committed dirs via .gitkeep) — durable posterity for the
+#      rca-retro-adr skill's RCA and Retro modes.
+#   3. Installs .githooks/pre-commit (the deterministic context-sync check,
 #      warn-only by default) and sets `git config core.hooksPath .githooks`.
-#   3. Adds `.help/` to .dockerignore if the file exists and doesn't already
+#   4. Adds `.help/` to .dockerignore if the file exists and doesn't already
 #      exclude it — the book is for agents, not the image build context.
-#   4. With --with-ci: copies context-sync-check.yml (the CI backstop for
+#   5. With --with-ci: copies context-sync-check.yml (the CI backstop for
 #      --no-verify) and integration-verify.yml (EDIT-ME template) into
 #      .github/workflows/.
 #
@@ -155,13 +161,61 @@ APPENDIX
   scaffolded="${scaffolded} .help/appendix.md"
 fi
 
+if [[ ! -f .help/memory.md ]]; then
+  cat > .help/memory.md <<'MEMORY'
+# Memory (for agents)
+
+> OKF book, 4 of 5. A deliberately bounded (~2,500 char) digest of durable
+> *working* facts: current-state flags, operational quirks, and conventions
+> learned during work. Not code reference — that's appendix.md. Consolidate,
+> don't hoard: drop stale facts so every character earns its place. Updated
+> directly by any skill mid-task (see engineering-principles.md's
+> fact-routing rule), and consolidated/pruned during a full repo-intel pass.
+
+TODO(repo-intel): nothing recorded yet — leave empty until a real
+current-state fact, quirk, or convention is learned during work.
+MEMORY
+  scaffolded="${scaffolded} .help/memory.md"
+fi
+
+if [[ ! -f .help/lessons.md ]]; then
+  cat > .help/lessons.md <<'LESSONS'
+# Lessons (for agents)
+
+> OKF book, 5 of 5. A corrections log (mistake → rule), read at the start of
+> any nontrivial task in this repo. Appended directly by any skill mid-task
+> when a user correction happens (see engineering-principles.md's
+> fact-routing rule), and consolidated/deduped during a full repo-intel pass.
+
+TODO(repo-intel): no corrections recorded yet.
+LESSONS
+  scaffolded="${scaffolded} .help/lessons.md"
+fi
+
 if [[ -n "${scaffolded}" ]]; then
   ok "Scaffolded:${scaffolded}"
 else
-  ok "OKF book already present (.help/introduction.md / .help/index.md / .help/appendix.md) — left untouched"
+  ok "OKF book already present (.help/introduction.md / .help/index.md / .help/appendix.md / .help/memory.md / .help/lessons.md) — left untouched"
 fi
 
-# ── 2. Install the committed pre-commit hook ─────────────────────────────────
+# ── 1b. Scaffold report dirs for the rca-retro-adr skill ────────────────────
+mkdir -p .help/reports/rca .help/reports/retros
+report_scaffolded=""
+if [[ ! -f .help/reports/rca/.gitkeep ]]; then
+  touch .help/reports/rca/.gitkeep
+  report_scaffolded="${report_scaffolded} .help/reports/rca/"
+fi
+if [[ ! -f .help/reports/retros/.gitkeep ]]; then
+  touch .help/reports/retros/.gitkeep
+  report_scaffolded="${report_scaffolded} .help/reports/retros/"
+fi
+if [[ -n "${report_scaffolded}" ]]; then
+  ok "Scaffolded:${report_scaffolded}"
+else
+  ok "Report dirs already present (.help/reports/rca/ / .help/reports/retros/) — left untouched"
+fi
+
+# ── 3. Install the committed pre-commit hook ─────────────────────────────────
 mkdir -p .githooks
 if [[ -f .githooks/pre-commit ]] && ! cmp -s "${HOOK_TEMPLATE}" .githooks/pre-commit; then
   warn ".githooks/pre-commit exists and differs from the template — left untouched"
@@ -177,7 +231,7 @@ ok "git config core.hooksPath .githooks"
 # Stamp the manifest hash so the very first commit doesn't warn spuriously.
 python3 .githooks/pre-commit --stamp >/dev/null && ok "Stamped .help/introduction.md manifest-hash"
 
-# ── 3. Keep the book out of the image build context ──────────────────────────
+# ── 4. Keep the book out of the image build context ──────────────────────────
 if [[ -f .dockerignore ]]; then
   if grep -qxF ".help" .dockerignore || grep -qxF ".help/" .dockerignore; then
     ok ".dockerignore already excludes .help/"
@@ -189,7 +243,7 @@ else
   warn "No .dockerignore in this repo — skipped (add one + \".help/\" if this repo builds a Docker image)"
 fi
 
-# ── 4. Optional CI templates ─────────────────────────────────────────────────
+# ── 5. Optional CI templates ─────────────────────────────────────────────────
 if $WITH_CI; then
   mkdir -p .github/workflows
   for tmpl in context-sync-check.yml integration-verify.yml; do

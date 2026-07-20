@@ -16,7 +16,7 @@ This skill scans a project and writes structured knowledge that makes the codeba
 any LLM or human arriving cold. The output is derived from the actual code — no invented
 patterns, no guessed decisions.
 
-The primary deliverable is the **OKF book** — three committed files at the repo root,
+The primary deliverable is the **OKF book** — five committed files at the repo root,
 following the book analogy for maintaining context efficiently (Layer 02 of the 4-Layer
 Context stack, see neeve-copilot's `neeve/README.md`):
 
@@ -25,12 +25,21 @@ Context stack, see neeve-copilot's `neeve/README.md`):
 | `introduction.md` | Contextual README *for agents*: stack & versions, how this repo wires into the product (NATS/HTTP/MCP, OpenAPI contract if a backend), make targets, docker/local-dev, deploy path. Small — always read first. | A book's introduction |
 | `index.md` | Functional areas mapped to where they live ("Auth → `src/auth/**`, entrypoint `src/auth/middleware.ts`, see `appendix.md#AuthService`") so an agent jumps straight to the right place instead of grepping cold. | Table of contents |
 | `appendix.md` | Every public method/class with its **purpose**, **dependencies** (calls / called by), and **impact if changed** (blast radius). The expensive, highest-value-when-correct file. | The appendix |
+| `memory.md` | A deliberately **bounded** (~2,500 char) digest of durable *working* facts: current-state flags, operational quirks, and conventions learned during work — not code reference. Consolidate, don't hoard; never duplicates `introduction.md` or `appendix.md`. | A running marginal note |
+| `lessons.md` | A corrections log (mistake → rule), read at the start of any nontrivial task in this repo. | An errata sheet |
 
 The scaffolds (with `TODO(repo-intel)` markers) are created by neeve-copilot's
 `neeve/init-repo.sh`, which also installs the `.githooks/pre-commit` context-sync hook.
 This skill fills and refreshes them from a real scan. If the book files don't exist yet
 and init-repo.sh hasn't been run, tell the user to run it first (it also wires the
-freshness hook) — or create the three files directly if they decline.
+freshness hook) — or create the five files directly if they decline.
+
+`memory.md` and `lessons.md` are the two files in this book that also get updated
+**outside** a full `repo-intel` run — see `neeve/engineering-principles.md`'s fact-routing
+rule: any skill, mid-task, appends a real correction to `lessons.md` or a durable
+operational quirk to `memory.md` directly, without invoking `repo-intel`. A full
+`repo-intel` pass is still the place to consolidate/prune `memory.md` when it's grown
+past its budget, and to catch corrections that were never written down.
 
 **Freshness contract:** the committed pre-commit hook deterministically flags drift
 (manifest-hash on `introduction.md`, structural diff on `index.md`, public-symbol diff on
@@ -73,6 +82,10 @@ Before scanning, confirm with the user:
 1. The root directory to scan (default: current working directory).
 2. Whether to write files or only report findings (default: write).
 3. Whether to include ADR stubs and spec stubs or only the OKF book (default: all).
+4. Whether this is a full scan (fills all five book files) or a
+   `memory.md`/`lessons.md`-only consolidation pass (default: full scan; the
+   consolidation-only pass is for when those two files alone have drifted or grown past
+   budget between full scans).
 
 ### Phase 1 — Stack and Entry Point Discovery
 
@@ -199,7 +212,7 @@ Write only what is grounded in Phase 1–5 findings. Do not invent sections.
 
 #### 6a — The OKF book (`introduction.md`, `index.md`, `appendix.md`)
 
-Fill (or refresh) the three book files at the project root. `introduction.md`,
+Fill (or refresh) the three code-reference book files at the project root. `introduction.md`,
 `index.md`, and `appendix.md` follow the table formats the init-repo.sh
 scaffolds establish and the content rules below — there is no separate
 template file; the scaffold plus these rules is the structural guide.
@@ -232,6 +245,22 @@ Rules (all three files):
 - If this repo predates the book and has a legacy `CONTEXT.md`, migrate its
   still-accurate content into the three files and delete it — two competing knowledge
   anchors is exactly the drift this structure exists to prevent.
+
+#### 6a-2 — `memory.md` and `lessons.md`
+
+These two files are working-memory, not code reference — do not fold their content into
+`appendix.md` or vice versa.
+
+- `memory.md` — consolidate durable current-state facts learned during Phases 1–5 and
+  during any prior session's work (mid-task corrections routed here per
+  `engineering-principles.md`'s fact-routing rule land here between full scans too).
+  Keep it within its ~2,500 char budget: drop anything stale, merge duplicates, keep only
+  what's still true and still useful. If it's empty, leave the scaffold's honest
+  placeholder rather than inventing content.
+- `lessons.md` — consolidate the corrections log: dedupe repeated lessons, remove any
+  that a later code change has made moot, keep the rest as terse mistake → rule pairs.
+  Never delete a lesson just because it's inconvenient — only because it's actually
+  stale.
 
 #### 6b — README gaps
 
@@ -292,6 +321,8 @@ After writing all outputs, emit a compact report:
 | introduction.md written/refreshed | ✅ / ❌ | |
 | index.md written/refreshed | ✅ / ❌ | |
 | appendix.md written/refreshed (TODO(purpose) count after: N) | ✅ / ⚠️ / ❌ | |
+| memory.md consolidated (within budget: ✅/⚠️) | ✅ / ⚠️ / ❌ | |
+| lessons.md consolidated | ✅ / ❌ | |
 | manifest-hash re-stamped + hook --all exits clean | ✅ / ❌ | |
 | README gaps patched | ✅ / ❌ / N/A | |
 | ADR stubs written | ✅ / ❌ / N/A | |

@@ -39,23 +39,24 @@ managed: [`HOW-TO-USE.md`](HOW-TO-USE.md).
 
 ## What's Installed
 
-Nine engineering skills that work across every agent, covering the full
+Ten engineering skills that work across every agent, covering the full
 Design Loop (see `neeve/README.md`):
 
 | Skill | Trigger phrase | What it does |
 |-------|---------------|-------------|
 | `to-prd` | "write a PRD for..." | Problem → enterprise-SaaS PRD, led by a CRE-OT security/ops journey |
 | `to-erd` | "break this PRD into work items" | PRD → compliance-aware, dependency-ordered work-item breakdown |
-| `repo-intel` | "map this repo", "document this project" | Full codebase scan → CONTEXT.md, README gaps, ADR stubs |
+| `repo-intel` | "map this repo", "document this project" | Full codebase scan → the 5-file OKF book (`introduction.md`/`index.md`/`appendix.md`/`memory.md`/`lessons.md`), README gaps, ADR stubs |
 | `repo-ask` | "how does X work", "why does X fail", "trace X" | Targeted code trace — always clarifies intent first |
 | `to-spec` | "spec this", "write a work item" | Turns a problem into a production-grade Neeve spec, including the Design/architecture lock |
 | `implement-spec` | "implement task N", "build this from the spec" | Implements a spec with tests, types, and quality gates |
 | `code-review` | "review this PR", "review these changes" | Production code review: correctness, security, contracts |
 | `neeve-dls` | "update this component", "fix this DLS issue" | Pixel-perfect DLS changes with localhost visual verification |
 | `ot-building-automation` | Niagara/BQL/WebCTRL work | Domain grounding for building-automation repos |
+| `rca-retro-adr` | "do an RCA for...", "run a retro", "capture an ADR" | Root cause analysis, sprint retrospective, and decision-time ADR capture — written to the repo's own `.help/reports/` and `docs/adr/` |
 
 Plus `debug-trace` — not a typical first move, and deliberately not in the
-table above. It's invoked *by* the other nine (and by the `neeve` agent) at
+table above. It's invoked *by* the other ten (and by the `neeve` agent) at
 the specific step that needs exhaustive call-chain tracing to a
 persistence/cache boundary, or real (researched, version-grounded) certainty
 about an external library/tool rather than a training-data guess about it.
@@ -117,7 +118,7 @@ Antigravity) get taught how Neeve works. In short:
   installer refreshes it. Nothing is ever written into a product repo.
   Sourced from `neeve/foundation.md` and `neeve/engineering-principles.md`.
 - **Skills** are the deep how-to, loaded only when a task calls for them —
-  all nine of them, bundled behind the agent below, still directly
+  all ten of them, bundled behind the agent below, still directly
   invocable on their own.
 - **One unified agent, `neeve`**, routes across every skill by Design Loop
   stage and handles setup/onboarding — source at

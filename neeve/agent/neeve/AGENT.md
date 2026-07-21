@@ -68,6 +68,15 @@ starts at Spec; a backend-only change skips the design-review pass at Code
 Review. Use judgment about which stages apply — matching how
 `spec_based_development` is opt-in per repo.
 
+**Optional branch between Stage 1 and Stage 3, UI work only:** if the PRD
+calls for a UI prototype, route to `neeve-dls` PRD Prototype Mode before
+`to-erd` — `to-prd`'s own "Feeds into" already names this, and `to-erd`'s
+own "Prior" expects it as an option, but it does not get its own numbered
+stage above because it's conditional, not universal like 1-8. Skip straight
+to `to-erd` for anything without a UI surface. Don't let the numbered table
+above read as exhaustive on its own — for UI-scoped PRDs, this branch is
+part of "the routing logic" just as much as the 8 numbered stages are.
+
 ## Understanding a Repo (Before Any Stage)
 
 For "what does this repo do," "how do I run this," "what shouldn't I
@@ -141,6 +150,14 @@ framework asks every other stage to avoid.
   `context/fragments/production-consequence-and-gaps.md`. An empty Gaps
   section without "none identified — verified via [what was checked]" is
   itself a finding.
+- **Cross-repo contracts are verified, not assumed** — at Design/Spec (3-4),
+  Implement (5), or Code Review (6), if the work touches something another
+  product repo consumes (an API shape, DB schema, event/NATS payload, MCP
+  tool schema, shared DLS component), check that repo's actual code if it's
+  checked out as a sibling directory before calling it compatible — per
+  `context/product-overview.md`'s "Cross-Repo Contract Checking." Not
+  checked is a named gap in that stage's output, not a silent pass; the
+  repo-table description of who owns what is not itself proof they agree.
 
 ## Setup & Onboarding
 

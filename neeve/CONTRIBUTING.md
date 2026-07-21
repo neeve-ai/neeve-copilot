@@ -58,8 +58,14 @@ with its own trigger phrases and its own multi-step workflow — not when
 it's a checklist that could hang off an existing skill.
 
 1. **Pick the root.** Product-agnostic (applies to any Neeve repo) →
-   `neeve/skills/<name>/`. Specific to one product's stack (like `neeve-dls`
-   or `ot-building-automation` are to Robin) → `neeve/products/<product>/skills/<name>/`.
+   `neeve/skills/<name>/`. Specific to one product's stack (like
+   `ot-building-automation` is to Robin's Niagara/WebCTRL work) →
+   `neeve/products/<product>/skills/<name>/`. `neeve-dls` lives under
+   `neeve/skills/` despite being design-system work, because its own scope
+   already spans more than one consuming product (Robin's `robin-web`/`robin`
+   plus `one-portal`) — a skill nested under `products/<product>/` should
+   genuinely be single-product, not a convenient default for anything
+   UI-shaped.
 2. **Write `SKILL.md`** with the standard frontmatter (`name`,
    `description: >` with concrete trigger phrases, no `tools:` field —
    that's agent-only). Model the body on an existing skill of similar shape

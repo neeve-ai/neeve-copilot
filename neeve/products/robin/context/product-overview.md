@@ -28,6 +28,35 @@ by design, because its actions sit upstream of real building equipment.
 | `robin` | The Robin Chrome extension itself — the AI co-pilot surface an end user (facilities/security-ops staff) actually installs and uses inside their existing OT web apps. |
 | `wstunnel-reverse-proxy` | WebSocket tunnel reverse proxy — exposes MCP servers sitting behind NAT (e.g. an OT-side Niagara connection) back to robin-ai. |
 
+### Cross-Repo Contract Checking
+
+The table above states each repo's role in producer/consumer terms — `robin-ai`
+owns the primary schema and API contract, `dls-neeve` is the single source of
+truth for design tokens consumed by `robin-web`/`robin`, `niagara-robin-agent`
+exposes MCP tools `robin-ai` calls, and so on. That table is a map of *who
+should agree with whom* — it is not proof that they currently do. Any skill
+(`to-spec`, `implement-spec`, `code-review`, `debug-trace`) whose work changes
+or depends on something crossing one of these boundaries — an API response
+shape, a DB schema/migration another service reads, an event/NATS payload, an
+MCP tool schema, a shared DLS component's props — must check the actual
+consumer repo's code, not assume compatibility from this table's description
+or from memory of how the contract "should" look:
+
+- If the consumer repo is checked out as a sibling directory (the normal
+  layout — all Robin repos live side by side under one parent), grep/read its
+  actual client code, schema, or generated types for the field/shape/event in
+  question before declaring the change safe or complete.
+- If the consumer repo is not checked out locally, say so explicitly as a gap
+  rather than silently assuming it matches — "not verified: `robin-web`'s
+  client for this endpoint was not checked, confirm before merging" is a
+  correct and sufficient answer; a confident claim with no consumer-repo
+  citation is not.
+- This is stricter than same-repo contract checking (already covered by each
+  skill's own OpenAPI/schema/test checks) precisely because a cross-repo
+  drift compiles and passes tests in *both* repos individually — it only
+  breaks at runtime, in production, between two services that were never
+  checked together.
+
 ### How to run Robin locally
 
 Two paths, not mutually exclusive:

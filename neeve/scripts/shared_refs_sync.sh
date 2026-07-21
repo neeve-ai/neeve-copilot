@@ -27,7 +27,7 @@ DESTINATIONS=(
   "skills/repo-ask/references/quality-gates.md"
   "skills/repo-intel/references/quality-gates.md"
   "skills/to-spec/references/quality-gates.md"
-  "products/robin/skills/neeve-dls/references/quality-gates.md"
+  "skills/neeve-dls/references/quality-gates.md"
 )
 
 HEADER="<!-- GENERATED from neeve/${CANONICAL} — edit the canonical file and run neeve/scripts/shared_refs_sync.sh sync -->"

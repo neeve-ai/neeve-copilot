@@ -2,9 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Two skill roots: org-level (product-agnostic SDLC skills) and per-product
-# (e.g. robin's neeve-dls / ot-building-automation). Skill names must be
-# unique across roots — discover_skills fails loudly on a collision.
+# Two skill roots: org-level (product-agnostic SDLC skills, plus anything
+# spanning more than one product like neeve-dls) and per-product (e.g.
+# robin's ot-building-automation). Skill names must be unique across roots —
+# discover_skills fails loudly on a collision.
 SRC_ROOTS=("${ROOT_DIR}/skills")
 for product_dir in "${ROOT_DIR}"/products/*/; do
   [[ -d "${product_dir}skills" ]] && SRC_ROOTS+=("${product_dir}skills")

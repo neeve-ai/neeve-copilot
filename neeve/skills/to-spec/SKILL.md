@@ -263,7 +263,12 @@ Read the best available sources before inventing structure:
 Extract:
 
 - existing reusable components
-- existing contracts and owned interfaces
+- existing contracts and owned interfaces — if one is consumed by another
+  product repo (per `context/product-overview.md`'s repo table), check that
+  repo's actual code if checked out as a sibling directory rather than
+  assuming the spec's proposed shape is compatible with what it currently
+  expects; note it as an open question in the spec if the sibling repo
+  can't be checked
 - hard constraints
 - deployment/runtime assumptions
 - blockers and downstream dependents

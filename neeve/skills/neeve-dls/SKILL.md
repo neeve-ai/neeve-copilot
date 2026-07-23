@@ -235,9 +235,18 @@ pass/fail for the whole thing — a partial prototype should show exactly
 which scenarios are covered and which aren't (this is the same gap-analysis
 discipline every other agent/skill in this system applies, not new).
 
-**Handoff:** once sign-off passes, the prototype (plus the PRD) is ready for
-`to-erd`. State the `feature-slug` and the `proto/<feature-slug>` branch
-name as the handoff.
+**Write back to the PRD system of record.** A prototype almost always
+teaches something that changes the PRD — a journey that doesn't work as
+written, a scenario that needs splitting, a scope trim. Record those back
+into the PRD per `neeve/references/prd-system-of-record.md`: append a **Change
+& Decision Log** row (Phase = Design, with the *why*), advance the PRD
+`Status:` to `in-design`, and commit the PRD change (`prd(<feature-slug>):
+Design — <what changed>`). The prototype is disposable; the PRD is the record
+of what the prototype taught.
+
+**Handoff:** once sign-off passes, the prototype (plus the updated PRD) is
+ready for `to-erd`. State the `feature-slug` and the `proto/<feature-slug>`
+branch name as the handoff.
 
 ## Mode: Product Consumption (one-portal)
 

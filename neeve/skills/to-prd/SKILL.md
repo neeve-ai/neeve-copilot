@@ -119,6 +119,19 @@ checklist itself into this file; point at it.
 whether this goes to `neeve-dls` prototype mode next or straight to
 `to-erd`, and the `feature-slug` to carry forward.
 
+**Phase 4 — Establish the PRD as system of record (mandatory).** Per
+`neeve/references/prd-system-of-record.md`: the PRD you just wrote is now the
+feature's **single source of truth** — one evolving git-versioned document
+every later phase reads from and writes back to, not a throwaway kickoff doc.
+Before finishing:
+- Seed the **Change & Decision Log** (below) with its first row (initial PRD,
+  the "why now" from Phase 0) and set `Status: draft`.
+- **Commit it.** `git add <path> && git commit -m "prd(<feature-slug>): PRD —
+  initial draft"`. A PRD that isn't committed isn't the system of record yet;
+  git is its version-control, collaborator, and audit substrate. If the
+  planning repo isn't available to commit into, say so as a gap rather than
+  leaving the PRD uncommitted and silent.
+
 ## Output Template
 
 Write to `robin-adr/prds/<feature-slug>.md`:
@@ -127,8 +140,26 @@ Write to `robin-adr/prds/<feature-slug>.md`:
 # PRD: <Feature Name>
 
 **Feature slug:** `<feature-slug>`
-**Status:** draft | reviewed | approved
+**Status:** draft → reviewed → approved → in-design → in-erd → in-spec → in-implementation → shipped
+_(current: **draft**; advance as the feature moves through the Design Loop — see the Decision Log)_
 **Prototype expected:** yes → neeve-dls prototype mode | no → straight to to-erd
+
+## Change & Decision Log
+
+Append-only — every later phase (Design/ERD/Spec/Implementation/Review) that
+changes scope, a requirement, an assumption, or a decision adds a row here in
+the same commit as the change, per `neeve/references/prd-system-of-record.md`.
+Never edit or delete a prior row; corrections are new rows.
+
+Each row's **Commit/PR** cell holds the git short SHA of the commit that made
+the change (e.g. `abc1234`) so anyone can jump to it with `git show abc1234`.
+A row can't hold its own commit's hash, so append the row with `pending`,
+commit, then backfill the real SHA — see `prd-system-of-record.md`
+§ "Populating the commit SHA."
+
+| Date | Phase | Author | Change | Why | Commit/PR |
+|------|-------|--------|--------|-----|-----------|
+| <YYYY-MM-DD> | PRD | <@author> | Initial PRD | <why now, from Phase 0> | <short SHA> |
 
 ## 1. Problem & Opportunity
 
@@ -209,6 +240,7 @@ for one customer without turning it off for all of them?
 | File | When to load |
 |---|---|
 | `neeve/references/pm-lens.md` | Always, for the Phase 2 self-check — never duplicate its checklist text into a PRD, reference it |
+| `neeve/references/prd-system-of-record.md` | Always, for Phase 4 — the PRD-as-SoR contract (Status lifecycle, Decision Log, write-back rule, commit discipline) |
 | `context/fragments/production-consequence-and-gaps.md` | Always, for Section 9 |
 | `neeve/foundation.md`, `context/base.md` § Why This Matters | For Section 8's zero-trust framing |
 | `code-review/references/security.md` | When Section 8 needs deeper security-framework grounding than a PM-level pass covers |

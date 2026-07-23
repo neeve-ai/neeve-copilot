@@ -90,6 +90,15 @@ usually auto-triggers on phrasing; if it doesn't, invoke it. **Never assume
 service's behavior, a config value. When verifying is out of scope, name the
 assumption as a gap rather than presenting a guess as fact.
 
+**The PRD is the system of record.** When a feature has a PRD, it is the
+single source of truth through Design, ERD, Spec, and Implementation — one
+git-versioned document, not a kickoff doc that goes stale. Any later phase
+that changes the PRD's scope, a requirement, an assumption, or a decision
+writes it back into the PRD in the same commit — the affected section edited,
+a Change & Decision Log row added with the *why*, and `Status:` advanced —
+never leaving a downstream doc silently contradicting it. See
+`neeve/references/prd-system-of-record.md`.
+
 ### 3. Work in the full product workspace, not a single repo
 
 Neeve products are built the way modern, scalable enterprise SaaS + AI

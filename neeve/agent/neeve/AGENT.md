@@ -51,7 +51,7 @@ it is that document's SDLC stages made operational.
 
 | # | Stage | Route to | Acceptance Contract |
 |---|---|---|---|
-| 1 | PRD | `to-prd` skill | Clear objectives & named user persona defined (`neeve/foundation.md`'s personas, not a generic "user") |
+| 1 | PRD | `to-prd` skill | Clear objectives & named user persona defined (`neeve/foundation.md`'s personas, not a generic "user"); PRD committed as the feature's **system of record** with a seeded Change & Decision Log and `Status: draft` (`neeve/references/prd-system-of-record.md`) |
 | 2 | Design (Architecture) | `to-spec` skill, Phase 3.5 | Component & data-flow diagram locked before spec prose begins |
 | 3 | ERD | `to-erd` skill | Schema/work-item structure & dependencies validated, grounded in real repo structure |
 | 4 | Spec | `to-spec` skill | SOLID design patterns explicitly mapped per Functional Requirement; 8-check spec-review rubric passed |
@@ -76,6 +76,35 @@ stage above because it's conditional, not universal like 1-8. Skip straight
 to `to-erd` for anything without a UI surface. Don't let the numbered table
 above read as exhaustive on its own — for UI-scoped PRDs, this branch is
 part of "the routing logic" just as much as the 8 numbered stages are.
+
+## The PRD as System of Record (enforced across every stage)
+
+Once a feature has a PRD, that PRD is its **single source of truth** — one
+evolving, git-versioned document, not a kickoff artifact that goes stale the
+moment ERD/Spec begins. This is the canonical contract in
+`neeve/references/prd-system-of-record.md`; enforce it, don't restate it.
+
+Two checkable conditions gate every post-PRD stage (Design 2, ERD 3, Spec 4,
+and any Implement/Review change that alters intent) — treat them as part of
+that stage's Acceptance Contract:
+
+- **Currency check before the stage starts.** The PRD's `Status:` reflects
+  reality, its open questions are resolved or explicitly deferred, and nothing
+  downstream already contradicts it. A stale PRD is reconciled first (itself a
+  logged, committed decision) — never worked around.
+- **Write-back before the stage ends.** If the stage changed anything the PRD
+  asserts — scope, a requirement, an assumption, a decision — the change goes
+  **back into the PRD in the same commit**: the affected section edited, a
+  **Change & Decision Log** row appended (date · phase · author · change ·
+  *why* · commit), and `Status:` advanced (`in-design`/`in-erd`/`in-spec`/
+  `in-implementation`/`shipped`). Git is the version-control, collaborator,
+  and audit substrate; the log carries the *why* a diff can't. A downstream
+  doc (ERD, spec, code) that silently diverges from the PRD is a drift
+  finding, not an acceptable shortcut.
+
+Do not advance to the next stage until both hold. If the planning repo isn't
+available to commit the PRD into, that is a named gap that blocks the SoR
+guarantee — surface it, don't proceed as if the record were being kept.
 
 ## Understanding a Repo (Before Any Stage)
 
@@ -150,6 +179,12 @@ framework asks every other stage to avoid.
   `context/fragments/production-consequence-and-gaps.md`. An empty Gaps
   section without "none identified — verified via [what was checked]" is
   itself a finding.
+- **The PRD stays the system of record, not a stale kickoff doc** — any stage
+  that changes a feature's scope, a requirement, an assumption, or a decision
+  writes it back into the governing PRD (Decision Log row + `Status:` bump +
+  same-commit) per `neeve/references/prd-system-of-record.md`. A downstream
+  doc silently contradicting the PRD is a drift finding; an uncommitted PRD is
+  a named gap in the SoR guarantee, not a detail to gloss over.
 - **Cross-repo contracts are verified, not assumed** — at Design/Spec (3-4),
   Implement (5), or Code Review (6), if the work touches something another
   product repo consumes (an API shape, DB schema, event/NATS payload, MCP
@@ -224,5 +259,6 @@ config directory as a separate observation.
 | `neeve/foundation.md` | Always, for identity/persona framing |
 | `neeve/engineering-principles.md` | Always, for the SDLC principles behind the routing table |
 | `neeve/references/pm-lens.md`, `neeve/references/design-review.md` | When the current stage is PM/design-shaped |
+| `neeve/references/prd-system-of-record.md` | Whenever a feature has a PRD — the SoR currency check and write-back gate that every post-PRD stage must satisfy |
 | `neeve/products/robin/README.md` | Always, for setup — the authoritative "Day 1 Setup," "Where Things Get Installed," "If Something's Not Working" |
 | `context/base.md`'s "Skills Available" table | To keep this routing table honest if it drifts from what's actually installed |

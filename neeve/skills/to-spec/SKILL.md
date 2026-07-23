@@ -250,6 +250,10 @@ Do not write the full spec until this phase is done.
 Read the best available sources before inventing structure:
 
 - reachable examples in `specs/` first when the style decision is in doubt
+- **the governing PRD, if this spec descends from one** (via an ERD work
+  item) — it is the feature's system of record, not just background. Verify
+  it's current per `neeve/references/prd-system-of-record.md` (Status, open
+  questions, nothing already contradicting it); reconcile it first if stale.
 - ADRs or design docs
 - existing repo docs / README / contracts
 - current code structure and reusable components
@@ -367,6 +371,15 @@ pre-existing state, re-raise vs. swallow). A FR with fewer than the applicable p
 This phase is mandatory before writing the Implementation Handoff block.
 
 Run all 8 checks from Rule 8 on the draft spec and emit a compact self-review **in your response** (not in the spec file):
+
+**Write back to the PRD system of record (if this spec descends from a PRD).**
+If speccing changed anything the governing PRD asserts — a requirement's
+shape, an assumption, scope, a deferred decision — record it back into the
+PRD per `neeve/references/prd-system-of-record.md`: append a **Change &
+Decision Log** row (Phase = Spec, with the *why*), advance the PRD `Status:`
+to `in-spec`, and commit the PRD change atomically
+(`prd(<feature-slug>): Spec — <what changed>`). The spec never silently
+overrides the PRD; the PRD stays the source of truth.
 
 ```
 ## Spec Self-Review (pre-handoff)
@@ -833,6 +846,7 @@ Load on demand:
 | `references/security-checklist.md` | Always when writing security-sensitive specs |
 | `references/quality-gates.md` | When writing Definition of Done and Required Tests — ensures all 7 gates are specced |
 | `neeve/references/pm-lens.md` | For any customer-facing spec — named persona/outcome, enterprise requirements, staged rollout, scope discipline |
+| `neeve/references/prd-system-of-record.md` | When the spec descends from a PRD — Phase 1 currency check and Phase 6 write-back |
 
 ---
 

@@ -5,12 +5,26 @@ one key we own is touched, every other key already in the file (permissions,
 hooks, MCP servers, personal overrides) is preserved untouched.
 
 Deliberately generic over which settings.json (global, project, or local) —
-the caller decides scope; this script never guesses it. It exists because
-this project's own `.claude/settings.local.json` is used for the
-default-agent setting specifically so it is machine-local and never
-committed (see init-repo.sh), unlike every other file this system writes.
+the caller decides scope; this script never guesses it. Two call sites use
+it with different force semantics:
 
-Usage: merge_default_agent.py <settings.json path> <agent-name>
+- init-repo.sh, per repo, force mode (the default): `.claude/settings.local.json`
+  is this project's OWN dedicated file for this one purpose, and re-running
+  init-repo.sh is an explicit, deliberate per-repo action each time — so it
+  always sets `agent` to the current value, the same way the OKF book's
+  other per-repo steps are safe to re-run and converge to the current state.
+- install.sh, globally, `--only-if-unset` mode: `~/.claude/settings.json` is
+  a general-purpose file an engineer may have already customized — including
+  possibly to something other than neeve, or deliberately to nothing. A
+  routine `sync_skills.sh` run must never silently override a decision an
+  engineer already made, any more than merge_house_rules.py overrides
+  content outside its markers. `--only-if-unset` sets the default exactly
+  once, the first time the key doesn't exist yet, and never touches it again
+  after that — the same "developer-local overrides win" principle
+  `agent/neeve/AGENT.md`'s own "Respecting Developer-Local Overrides"
+  section already states for every other layer.
+
+Usage: merge_default_agent.py <settings.json path> <agent-name> [--only-if-unset]
 """
 from __future__ import annotations
 
@@ -19,14 +33,27 @@ import sys
 from pathlib import Path
 
 
-def merge(settings_path: Path, agent_name: str) -> bool:
-    """Returns True if the file changed, False if it already matched."""
+def merge(settings_path: Path, agent_name: str, only_if_unset: bool = False) -> bool:
+    """Returns True if the file changed, False if left as-is.
+
+    only_if_unset=False (default): force-set `agent` to agent_name, the same
+    way every other key this system manages converges to the current source
+    of truth on each run.
+
+    only_if_unset=True: set `agent` only if the key is completely absent from
+    the file. If it's already present — to agent_name, to something else, or
+    to an explicit empty/null the engineer set to opt out — leave it exactly
+    as-is. This is a one-time default, not an enforced value.
+    """
     if settings_path.is_file() and settings_path.stat().st_size > 0:
         data = json.loads(settings_path.read_text())
     else:
         data = {}
 
-    if data.get("agent") == agent_name:
+    if only_if_unset:
+        if "agent" in data:
+            return False
+    elif data.get("agent") == agent_name:
         return False
 
     data["agent"] = agent_name
@@ -36,13 +63,19 @@ def merge(settings_path: Path, agent_name: str) -> bool:
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("Usage: merge_default_agent.py <settings.json path> <agent-name>", file=sys.stderr)
+    args = [a for a in sys.argv[1:] if a != "--only-if-unset"]
+    only_if_unset = "--only-if-unset" in sys.argv[1:]
+    if len(args) != 2:
+        print(
+            "Usage: merge_default_agent.py <settings.json path> <agent-name> [--only-if-unset]",
+            file=sys.stderr,
+        )
         return 1
-    settings_path = Path(sys.argv[1]).expanduser().resolve()
-    agent_name = sys.argv[2]
-    changed = merge(settings_path, agent_name)
-    print(f"{'Wrote' if changed else 'Already set'}: {settings_path} (agent={agent_name})")
+    settings_path = Path(args[0]).expanduser().resolve()
+    agent_name = args[1]
+    changed = merge(settings_path, agent_name, only_if_unset=only_if_unset)
+    mode = "only-if-unset" if only_if_unset else "force"
+    print(f"{'Wrote' if changed else 'Already set (left as-is)'}: {settings_path} (agent={agent_name}, mode={mode})")
     return 0
 
 

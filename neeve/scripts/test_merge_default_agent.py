@@ -60,5 +60,74 @@ class MergeDefaultAgentTests(unittest.TestCase):
             self.assertEqual(json.loads(sibling.read_text()), {})
 
 
+class OnlyIfUnsetModeTests(unittest.TestCase):
+    """The mode install.sh uses globally: set the default exactly once, and
+    never touch a value an engineer has already set — including if they set
+    it to neeve themselves, to a different agent, or explicitly cleared it."""
+
+    def test_sets_on_fresh_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            changed = mda.merge(target, "neeve", only_if_unset=True)
+            self.assertTrue(changed)
+            self.assertEqual(json.loads(target.read_text())["agent"], "neeve")
+
+    def test_does_not_override_a_different_existing_agent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": "code-reviewer"}))
+            changed = mda.merge(target, "neeve", only_if_unset=True)
+            self.assertFalse(changed)
+            self.assertEqual(json.loads(target.read_text())["agent"], "code-reviewer")
+
+    def test_does_not_touch_an_explicit_null_opt_out(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": None}))
+            changed = mda.merge(target, "neeve", only_if_unset=True)
+            self.assertFalse(changed)
+            self.assertIsNone(json.loads(target.read_text())["agent"])
+
+    def test_second_sync_run_is_a_pure_no_op_once_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            self.assertTrue(mda.merge(target, "neeve", only_if_unset=True))
+            # Simulate the engineer then deliberately switching agents...
+            data = json.loads(target.read_text())
+            data["agent"] = "their-own-custom-agent"
+            target.write_text(json.dumps(data))
+            # ...a later sync_skills.sh run must not stomp that back to neeve.
+            changed = mda.merge(target, "neeve", only_if_unset=True)
+            self.assertFalse(changed)
+            self.assertEqual(json.loads(target.read_text())["agent"], "their-own-custom-agent")
+
+    def test_preserves_unrelated_settings_when_setting_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"model": "sonnet", "hooks": {"SessionStart": []}}))
+            mda.merge(target, "neeve", only_if_unset=True)
+            data = json.loads(target.read_text())
+            self.assertEqual(data["agent"], "neeve")
+            self.assertEqual(data["model"], "sonnet")
+            self.assertEqual(data["hooks"], {"SessionStart": []})
+
+
+class CliOnlyIfUnsetFlagTests(unittest.TestCase):
+    def test_flag_parsing_extracts_only_if_unset_and_two_positional_args(self) -> None:
+        import subprocess
+        import sys as _sys
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": "existing"}))
+            result = subprocess.run(
+                [_sys.executable, str(Path(__file__).parent / "merge_default_agent.py"),
+                 str(target), "neeve", "--only-if-unset"],
+                capture_output=True, text=True, check=True,
+            )
+            self.assertIn("left as-is", result.stdout)
+            self.assertEqual(json.loads(target.read_text())["agent"], "existing")
+
+
 if __name__ == "__main__":
     unittest.main()

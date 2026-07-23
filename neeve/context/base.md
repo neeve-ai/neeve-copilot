@@ -289,13 +289,22 @@ not `to-prd`.
 One unified agent, `neeve`, routes across all of the above by Design Loop
 stage and handles setup/onboarding — see its own `AGENT.md` for the full
 routing table. Invocation differs by tool (researched directly against each
-tool's mechanism, not assumed): Claude Code auto-triggers it or `/agent`;
-Copilot (VS Code) surfaces it in the agent picker (skills still auto-trigger
-independently there); Codex gets a native agent; Cursor/Antigravity get the
-same content as a skill fallback (which auto-triggers, unlike Copilot's
-picker). On Claude Code specifically, this agent is often redundant with
-its own auto-routing to the skills directly — the skills are the reliable
-surface across every tool; the agent is the routing/setup layer on top.
+tool's mechanism, not assumed): **Claude Code sets it as the session's
+default agent** — `~/.claude/settings.json`'s `agent` key, installed once by
+`install.sh`/`sync_skills.sh` the first time that key is unset, never
+overriding an engineer's own later choice of a different agent (or none) —
+so `neeve`'s system prompt and routing discipline are active from message
+one in every new session, not only when auto-trigger happens to match; a
+teammate who prefers a different default can always override it, and this
+is Claude-Code-only (init-repo.sh separately sets the same default per repo
+via `.claude/settings.local.json`, machine-local, never committed). Copilot
+(VS Code) surfaces it in the agent picker (skills still auto-trigger
+independently there) — no default-agent mechanism confirmed there. Codex
+gets a native agent, explicit `/agent` invocation only — same, no default
+mechanism confirmed. Cursor/Antigravity get the same content as a skill
+fallback (which auto-triggers, unlike Copilot's picker) — Cursor has no
+named-agent concept at all, Antigravity's `agents.md` persona layer is
+already covered by these house rules themselves.
 
 ## Prompt Files (slash commands)
 

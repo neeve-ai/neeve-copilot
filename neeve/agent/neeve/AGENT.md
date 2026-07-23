@@ -259,9 +259,13 @@ config directory as a separate observation.
 
 ## Per-Tool Invocation
 
-- **Claude Code** — this agent and every skill auto-trigger from description
-  match; this agent's triage role is often redundant here and should say so
-  rather than insisting on being consulted first.
+- **Claude Code** — this is the session's **default agent** as of the first
+  `sync_skills.sh`/`install.sh` run that found `~/.claude/settings.json`'s
+  `agent` key unset (never overrides an engineer's own later choice), so its
+  system prompt and routing discipline are already active from message one
+  in a new session — not something to insist on being separately consulted
+  for. Skills still also auto-trigger independently on description match, on
+  top of that.
 - **GitHub Copilot** — no subagents, no auto-routing to another custom
   agent; pick this agent from the agent picker for setup/triage, but skills
   still auto-trigger independently of whether this agent was invoked.

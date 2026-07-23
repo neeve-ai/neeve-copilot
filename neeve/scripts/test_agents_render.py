@@ -99,6 +99,16 @@ class RenderTargetTests(unittest.TestCase):
         self.assertIn("tools:\n  - codebase\n  - editFiles", out)
         self.assertIn("## Workflow", out)
 
+    def test_body_only_render_has_no_frontmatter(self) -> None:
+        out = ar.render_body_only(self.agent)
+        self.assertFalse(out.startswith("---"))
+        self.assertNotIn("name:", out)
+        self.assertNotIn("description:", out)
+        self.assertNotIn("tools:", out)
+        self.assertIn("# Sample Agent", out)
+        self.assertIn("## Workflow", out)
+        self.assertIn("1. Do the thing.", out)
+
     def test_codex_render_is_valid_toml(self) -> None:
         out = ar.render_codex(self.agent)
         self.assertIn('name = "sample-agent"', out)

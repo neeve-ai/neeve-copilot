@@ -258,6 +258,15 @@ def render_skill_fallback(agent: AgentSource) -> str:
     return "\n".join(fm) + "\n\n" + agent.body.rstrip() + "\n"
 
 
+def render_body_only(agent: AgentSource) -> str:
+    """Just the AGENT.md body, no frontmatter at all — for merging into a
+    file that isn't a discrete agent definition, like a repo's
+    `.github/copilot-instructions.md` (auto-loaded by GitHub Copilot; no
+    picker/agent-selection concept there, so `name`/`description`/`tools`
+    frontmatter would be meaningless noise, not metadata anything reads)."""
+    return agent.body.rstrip() + "\n"
+
+
 def cmd_write(agent_name: str, renderer, out_path: Path, is_skill_fallback: bool = False) -> int:
     agent = load_agent(agent_name)
     content = renderer(agent)
@@ -277,6 +286,7 @@ def main() -> int:
     mode.add_argument("--copilot", metavar="OUTPUT_FILE")
     mode.add_argument("--codex", metavar="OUTPUT_FILE")
     mode.add_argument("--skill-fallback", metavar="OUTPUT_DIR", help="Writes OUTPUT_DIR/<name>/SKILL.md")
+    mode.add_argument("--body-only", metavar="OUTPUT_FILE", help="Raw AGENT.md body, no frontmatter")
     args = parser.parse_args()
 
     if args.claude:
@@ -285,6 +295,8 @@ def main() -> int:
         return cmd_write(args.name, render_copilot, Path(args.copilot).expanduser().resolve())
     if args.codex:
         return cmd_write(args.name, render_codex, Path(args.codex).expanduser().resolve())
+    if args.body_only:
+        return cmd_write(args.name, render_body_only, Path(args.body_only).expanduser().resolve())
     return cmd_write(
         args.name,
         render_skill_fallback,

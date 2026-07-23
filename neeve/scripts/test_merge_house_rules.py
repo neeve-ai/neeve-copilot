@@ -92,5 +92,69 @@ class MergeHouseRulesTests(unittest.TestCase):
             self.assertEqual(mhr.merge(target, "house rules v2"), 0)
 
 
+class CustomLabelTests(unittest.TestCase):
+    """The repo-level Copilot-instructions call site: a different label, no
+    legacy-stripping behavior (legacy_header=None — that label never had a
+    pre-marker era to clean up after)."""
+
+    LABEL = "NEEVE ROUTING GUIDE"
+
+    def test_fresh_file_uses_custom_label_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "copilot-instructions.md"
+            mhr.merge(target, "routing table content", label=self.LABEL, legacy_header=None)
+            text = target.read_text()
+            self.assertIn(f"BEGIN {self.LABEL}", text)
+            self.assertIn(f"END {self.LABEL}", text)
+            self.assertIn("routing table content", text)
+
+    def test_preserves_a_teams_existing_repo_instructions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "copilot-instructions.md"
+            target.write_text("# This repo's own Copilot conventions\n- use 2-space indent\n")
+            mhr.merge(target, "routing table content", label=self.LABEL, legacy_header=None)
+            text = target.read_text()
+            self.assertIn("use 2-space indent", text)
+            self.assertIn("routing table content", text)
+
+    def test_rerun_updates_only_its_own_labeled_block(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "copilot-instructions.md"
+            target.write_text("# Team conventions\n- stay off main\n")
+            mhr.merge(target, "routing v1", label=self.LABEL, legacy_header=None)
+            mhr.merge(target, "routing v2", label=self.LABEL, legacy_header=None)
+            text = target.read_text()
+            self.assertIn("stay off main", text)
+            self.assertNotIn("routing v1", text)
+            self.assertIn("routing v2", text)
+            self.assertEqual(text.count(f"BEGIN {self.LABEL}"), 1)
+
+    def test_default_label_house_rules_content_never_mistaken_for_custom_label(self) -> None:
+        # Regression guard: a file that already has a default-label
+        # (house-rules) block must not have a custom-label merge collide
+        # with it — they're two independent managed blocks, coexisting.
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "combined.md"
+            mhr.merge(target, "house rules content")  # default label
+            mhr.merge(target, "routing content", label=self.LABEL, legacy_header=None)
+            text = target.read_text()
+            self.assertIn("house rules content", text)
+            self.assertIn("routing content", text)
+            self.assertEqual(text.count(mhr.BEGIN), 1)
+            self.assertEqual(text.count(f"BEGIN {self.LABEL}"), 1)
+
+    def test_legacy_header_none_does_not_touch_unrelated_house_rules_legacy_text(self) -> None:
+        # If a file happens to contain the OLD house-rules legacy title for
+        # some unrelated reason, a custom-label (legacy_header=None) merge
+        # must not go looking for it and strip content it doesn't own.
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "copilot-instructions.md"
+            target.write_text(f"{mhr.LEGACY_HEADER}\n\nsome unrelated content\n")
+            removed = mhr.merge(target, "routing content", label=self.LABEL, legacy_header=None)
+            self.assertEqual(removed, 0)
+            text = target.read_text()
+            self.assertIn("some unrelated content", text)
+
+
 if __name__ == "__main__":
     unittest.main()

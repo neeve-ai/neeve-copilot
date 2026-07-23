@@ -70,7 +70,7 @@ neeve/
 ├── hooks/            # SessionStart freshness hook
 ├── templates/            # per-repo hook + CI templates (Layer 02 tooling)
 ├── install.sh            # global install (skills, house rules, agent, hook)
-├── init-repo.sh          # per-repo init (OKF book scaffold + pre-commit hook)
+├── init-repo.sh          # per (engineer, repo) init — OKF book scaffold, pre-commit hook, default agent
 ├── scripts/              # render/sync/merge + tests
 └── products/robin/       # product-specific: product overview,
                           #   OT/DLS fragments, neeve-dls + ot-building-automation skills
@@ -85,7 +85,13 @@ A second product would add `products/<name>/` with its own `context/` and
 # Once per machine (and any time, to refresh):
 bash sync_skills.sh
 
-# Once per cloned product repo:
+# Once per (engineer, cloned product repo) pair — every engineer, every
+# clone, EVEN IF a teammate already ran this and committed the repo's
+# .help/ book. It's designed to be re-run safely on an already-initialized
+# repo: steps that write committed content (.help/, .githooks/) no-op if
+# already present, but `git config core.hooksPath` and the Claude Code
+# default-agent setting are per-machine and never travel via `git clone` —
+# re-running is how you pick those up, not a sign you missed a step:
 bash <neeve-copilot>/neeve/init-repo.sh        # then run the repo-intel skill
 ```
 

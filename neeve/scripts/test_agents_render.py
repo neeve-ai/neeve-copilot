@@ -201,6 +201,21 @@ class ToolTranslationTests(unittest.TestCase):
                 self.assertIn(tool, ar.CLAUDE_TOOL_MAP, f"{name}: unmapped tool {tool!r}")
                 self.assertIn(tool, ar.COPILOT_TOOL_MAP, f"{name}: unmapped tool {tool!r}")
 
+    def test_every_real_agent_source_has_a_nonempty_tools_list(self) -> None:
+        """Regression guard for a second, subtler bug found in production:
+        _parse_frontmatter's tools: list-collector stops at the first line
+        that doesn't start with "- " — a comment placed INSIDE the tools:
+        block (a natural thing to write, since this hand-rolled parser
+        supports no comment syntax at all) silently truncates the list to
+        empty before it ever reaches a real item. An empty list passes the
+        "every tool is a mapped name" check above vacuously, so that test
+        alone would not have caught this — every real agent must resolve to
+        at least one tool, or something upstream silently ate the list."""
+        for name in ar.discover_agents():
+            agent = ar.load_agent(name)
+            self.assertTrue(agent.tools, f"{name}: tools list parsed as empty — check for a comment "
+                             "line inside the tools: block in its AGENT.md frontmatter")
+
 
 class DiscoverAgentsTests(unittest.TestCase):
     def test_discovers_only_dirs_with_agent_md(self) -> None:

@@ -90,13 +90,40 @@ usually auto-triggers on phrasing; if it doesn't, invoke it. **Never assume
 service's behavior, a config value. When verifying is out of scope, name the
 assumption as a gap rather than presenting a guess as fact.
 
-**The PRD is the system of record.** When a feature has a PRD, it is the
-single source of truth through Design, ERD, Spec, and Implementation — one
-git-versioned document, not a kickoff doc that goes stale. Any later phase
-that changes the PRD's scope, a requirement, an assumption, or a decision
-writes it back into the PRD in the same commit — the affected section edited,
-a Change & Decision Log row added with the *why*, and `Status:` advanced —
-never leaving a downstream doc silently contradicting it. See
+**Right-size the process — and ask when it's genuinely ambiguous.** The
+Design Loop is the default for customer-facing features and anything that
+touches a production system, not a toll booth every task must pass through.
+An internal tool, a one-off script, a minor bugfix, or small
+maintenance/refactor work can reasonably skip PRD/ERD (and sometimes a full
+spec) — that is expected, not a violation. Two things follow from that:
+
+- **Don't manufacture process for something that doesn't need it.** Forcing a
+  PRD, an ERD, or a heavyweight spec onto a five-line internal script is
+  scope bleed applied to process itself — the same failure mode Engineering
+  Principles calls out for code.
+- **When the size/blast-radius of the task is genuinely unclear, ask —
+  don't silently assume either way.** "This looks like an internal
+  script/quick fix — want the full Design Loop, or should I just implement
+  it directly?" costs one question; guessing wrong costs either an
+  unreviewed change to something that mattered, or bureaucracy on something
+  that didn't. Default to asking when a request could plausibly be either.
+- **A lighter path taken deliberately is not a gap to retroactively enforce
+  against.** If a task started without a PRD because it was reasonably
+  judged out of scope for one, later stages must not backfill a PRD/Decision
+  Log requirement onto it just because the Design Loop machinery exists —
+  that would be enforcing process downstream onto a decision that was made,
+  not missed. The System-of-Record rule below only ever applies once a PRD
+  actually exists for the feature.
+
+**The PRD is the system of record — scoped to features that have one.** When
+a feature has a PRD, it is the single source of truth through Design, ERD,
+Spec, and Implementation — one git-versioned document, not a kickoff doc
+that goes stale. Any later phase that changes the PRD's scope, a
+requirement, an assumption, or a decision writes it back into the PRD in the
+same commit — the affected section edited, a Change & Decision Log row added
+with the *why*, and `Status:` advanced — never leaving a downstream doc
+silently contradicting it. This does not apply, and must never be invoked
+retroactively, on work that never had a PRD in the first place. See
 `neeve/references/prd-system-of-record.md`.
 
 ### 3. Work in the full product workspace, not a single repo

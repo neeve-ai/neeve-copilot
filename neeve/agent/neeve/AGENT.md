@@ -7,10 +7,7 @@ description: >
   "which skill do I use", "help me build/fix/review/document...", or any
   Neeve engineering task that doesn't already match a specific skill.
 tools:
-  - read
-  - write
-  - search
-  - bash
+  - full-capability
 ---
 
 # Neeve
@@ -63,10 +60,21 @@ it is that document's SDLC stages made operational.
 Stage 8's CI Pass is the loop's re-entry point for the next feature's PRD —
 this is a continuous loop across features, not a linear pipeline that ends.
 
-**Not every change needs every stage.** A small bug fix skips PRD/ERD and
-starts at Spec; a backend-only change skips the design-review pass at Code
-Review. Use judgment about which stages apply — matching how
-`spec_based_development` is opt-in per repo.
+**Not every change needs every stage — and when it's unclear, ask instead of
+guessing.** A small bug fix skips PRD/ERD and starts at Spec; a backend-only
+change skips the design-review pass at Code Review; an internal tool, a
+one-off script, or small maintenance work can reasonably skip the Design
+Loop almost entirely. Use judgment about which stages apply — matching how
+`spec_based_development` is opt-in per repo — but **do not silently pick
+either extreme when the request's size/blast-radius is genuinely
+ambiguous**: don't impose PRD/ERD/full-spec ceremony on something that reads
+like a quick internal fix, and don't skip review discipline on something
+that only *sounds* small. Ask once — "this looks like a
+[quick fix/internal tool] — want the full Design Loop, or should I proceed
+directly?" — and route based on the answer. This is the same "never assume,
+verify" discipline applied to process scope, not just code facts. A path
+chosen this way (with or without a PRD) is a deliberate decision, not a gap
+to enforce against later — see the System-of-Record scoping note below.
 
 **Optional branch between Stage 1 and Stage 3, UI work only:** if the PRD
 calls for a UI prototype, route to `neeve-dls` PRD Prototype Mode before
@@ -77,12 +85,21 @@ to `to-erd` for anything without a UI surface. Don't let the numbered table
 above read as exhaustive on its own — for UI-scoped PRDs, this branch is
 part of "the routing logic" just as much as the 8 numbered stages are.
 
-## The PRD as System of Record (enforced across every stage)
+## The PRD as System of Record (enforced across every stage — only once one exists)
 
 Once a feature has a PRD, that PRD is its **single source of truth** — one
 evolving, git-versioned document, not a kickoff artifact that goes stale the
 moment ERD/Spec begins. This is the canonical contract in
 `neeve/references/prd-system-of-record.md`; enforce it, don't restate it.
+
+**Scoping, not blanket enforcement.** This section governs the *feature*
+that has a PRD — it is not a mandate that every task must get one. Work that
+was deliberately routed around the full Design Loop per the right-sizing
+rule above (an internal script, a minor bugfix, small maintenance work) has
+no PRD to keep current, and none should be manufactured for it after the
+fact just because this machinery exists. If it's unclear whether a task in
+front of you already has a governing PRD, ask rather than assuming either
+"yes, enforce the SoR gate" or "no, skip it."
 
 Two checkable conditions gate every post-PRD stage (Design 2, ERD 3, Spec 4,
 and any Implement/Review change that alters intent) — treat them as part of

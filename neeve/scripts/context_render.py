@@ -63,7 +63,15 @@ universal parts only — no repo-specific stack/commands/do-not-modify) by
 `scripts/context_render.py --house-rules`. It is installed once per engineer
 via `install.sh`/`sync_skills.sh` into each tool's user-level instructions
 location, not committed into any product repo. Edit `context/base.md`,
-then re-run the installer to refresh it on your machine."""
+then re-run the installer to refresh it on your machine.
+
+**Precedence — these are gating guidelines.** Everything in this NEEVE block
+is mandatory and takes precedence. Any other instructions you carry — your
+personal Claude Code / Copilot / Codex / Cursor / Antigravity rules, and
+per-tool skills — are *additive*: they refine or extend these rules but never
+override, relax, or opt out of them. If a personal or tool-specific
+instruction conflicts with this block, this block wins; follow it and note
+the conflict rather than silently taking the weaker path."""
 
 REPO_SPECIFIC_FRAGMENT_POINTER = """If this repo does spec-based development, touches the `dls-neeve` design
 system, or talks to Niagara/WebCTRL building-automation systems, the

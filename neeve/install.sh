@@ -284,12 +284,35 @@ if [[ -f "${RENDER_SCRIPT}" ]]; then
     fi
 
     if $DO_CURSOR; then
-      warn "Cursor stores global rules in Settings > Rules > User Rules (not a plain file on disk),"
-      warn "so this can't be written automatically. One-time manual step:"
-      warn "  1. Open Cursor → Cmd/Ctrl+Shift+P → \"Rules: User Rules\""
-      warn "  2. Paste the contents of: ${HOUSE_RULES_TMP}"
-      warn "  (that temp file is deleted when this script exits — copy it now if needed:"
-      warn "   cat ${HOUSE_RULES_TMP} | pbcopy    # macOS clipboard)"
+      # Cursor's GLOBAL User Rules are not a reliably writable plain file:
+      # its own community forum confirms they live in an internal state DB
+      # (state.vscdb) / cloud, and a third-party-blogged ~/.cursor/rules/*.mdc
+      # global path is contested and unverified against Cursor's own docs. So
+      # we do NOT auto-write it (writing to an unverified path silently does
+      # nothing). Instead: persist the rules to a stable file the engineer can
+      # re-open anytime, and auto-copy them to the clipboard so the one manual
+      # paste is a single Cmd+V.
+      CURSOR_RULES_FILE="${HOME}/.cursor/neeve-house-rules.md"
+      mkdir -p "${HOME}/.cursor"
+      cp "${HOUSE_RULES_TMP}" "${CURSOR_RULES_FILE}"
+      COPIED=false
+      if command -v pbcopy &>/dev/null; then
+        pbcopy < "${CURSOR_RULES_FILE}" && COPIED=true
+      elif command -v wl-copy &>/dev/null; then
+        wl-copy < "${CURSOR_RULES_FILE}" && COPIED=true
+      elif command -v xclip &>/dev/null; then
+        xclip -selection clipboard < "${CURSOR_RULES_FILE}" && COPIED=true
+      fi
+      ok "Cursor  →  saved rules to ${CURSOR_RULES_FILE}"
+      if $COPIED; then
+        ok "Cursor  →  rules copied to clipboard — one-time paste: Cmd/Ctrl+Shift+P → \"Rules: Configure User Rules\" → Cmd/Ctrl+V"
+      else
+        warn "Cursor  →  couldn't auto-copy (no pbcopy/wl-copy/xclip). One-time paste:"
+        warn "  Cmd/Ctrl+Shift+P → \"Rules: Configure User Rules\" → paste ${CURSOR_RULES_FILE}"
+      fi
+      warn "Cursor  →  GAP: no verified on-disk global-rules path, so this step stays manual."
+      warn "           If your Cursor version DOES read ~/.cursor/rules/*.mdc for GLOBAL rules,"
+      warn "           test it and tell the team — we can then auto-write it like the other tools."
     fi
   else
     err "context_render.py --house-rules failed — skipping house-rules install"

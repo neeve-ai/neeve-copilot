@@ -38,6 +38,100 @@ Full reasoning for these defaults, what Neeve is and who it serves:
 Design/Spec/Implementation/Review, each stage's principles stated
 explicitly): `neeve/engineering-principles.md`.
 
+---
+
+## Always On: The Process and The Map
+
+These rules are not skill-specific and do not wait for a skill to trigger.
+They apply to *every* turn in *any* Neeve product repo — a one-line question,
+a quick edit, a full feature — so that the process is inherited automatically
+and no engineer (or non-engineer) has to remember to invoke it. All are
+cheap; skipping them is the expensive path.
+
+### 1. Read the repo's map before grepping cold — always
+
+Most Neeve product repos carry a committed **OKF book** under `.help/`:
+`.help/introduction.md` (what/why), `.help/index.md` (functional area →
+file globs → entry points), `.help/appendix.md` (symbol-level detail), and
+the working-memory pair `.help/memory.md` / `.help/lessons.md`. It exists
+precisely so an agent does not start every task with a blind repo-wide grep.
+
+Before answering a "how/why/where" question, or editing code, in a repo that
+has `.help/`:
+
+1. **Read `.help/index.md` first** to jump straight to the files that matter,
+   and check `.help/appendix.md` for the symbols you are about to touch.
+2. **Trust, but verify freshness.** `.help/introduction.md`'s frontmatter
+   records `book-verified-commit` — the SHA the book was last confirmed
+   accurate at. If the repo ships the context-sync hook, run
+   `python3 .githooks/pre-commit --all` (a full audit whose findings include
+   drift since that checkpoint), or directly eyeball `git log
+   <book-verified-commit>..HEAD -- <files you care about>`. If the specific
+   files you are relying on have **not** changed since that commit, treat the
+   book as an authoritative map. If they **have** changed (or there is no
+   `book-verified-commit` yet), **downgrade the book to a hint**: read the
+   actual code as the source of truth, and note the drift so it can be
+   re-mapped with `repo-intel`.
+3. **The book is a map, never proof.** Code is always the source of truth;
+   the book only tells you where to look faster. Never cite the book for a
+   fact you could not also confirm in the code.
+
+If a repo has **no** `.help/` book yet, say so and offer to run `repo-intel`
+to create one — don't silently fall back to cold grepping as if that were
+the only option.
+
+### 2. Follow the Design Loop — don't jump straight to code
+
+For anything beyond a trivial one-line fix, the expected path is `to-spec` →
+human review of the spec → `implement-spec` → `code-review`, never straight
+to implementation (see Engineering Principles below). The right skill
+usually auto-triggers on phrasing; if it doesn't, invoke it. **Never assume
+— verify:** an existing helper, a contract's real shape, a downstream
+service's behavior, a config value. When verifying is out of scope, name the
+assumption as a gap rather than presenting a guess as fact.
+
+### 3. Work in the full product workspace, not a single repo
+
+Neeve products are built the way modern, scalable enterprise SaaS + AI
+products are: many independently-deployed services and shared libraries that
+only hold together through the seams *between* them. Those seams are not just
+data contracts (API shapes, DB schemas/migrations, event/NATS payloads, MCP
+tool schemas, shared DLS components) — they are the full set of cross-cutting
+concerns that decide whether a distributed product actually works in
+production:
+
+- **Identity & tenancy** — authN/authZ, session/token flow, and the
+  multi-tenant isolation boundary that must be enforced consistently across
+  every service, not per-repo.
+- **AI/LLM contracts** — prompt/tool/eval definitions, model and context
+  boundaries, guardrails, and the advisory-vs-actuating line (Robin is
+  supervisory by design) — held to the same rigor as an API contract.
+- **Operational surface** — observability (logs/metrics/traces), feature
+  flags and config, rate limits/quotas, idempotency, and the
+  deploy/Helm/Kubernetes topology that ties services together.
+- **Reliability & rollout** — versioning and backward compatibility of shared
+  libraries and contracts, migration ordering, and the rollback/kill-switch
+  story for anything customer-facing.
+
+A change is only "done" when its effect across these seams is verified in the
+*actual consumer's code*, not assumed. The intended setup is therefore a
+single **workspace** with all of a product's repos checked out side by side,
+so those facts can be read directly. Do not hardcode a workspace path —
+discover it by searching up from the current directory for the sibling repos.
+
+At the start of cross-repo work:
+
+- **Assess which product this workspace is** — match the repos present
+  against the known-products registry (`neeve/products/*/context/
+  product-overview.md`, one entry per product, `robin` today; more as they
+  are added). Read the matched product's overview so its persona and problem
+  statement are grounded, not guessed. If the workspace matches no known
+  product, say so rather than inventing one.
+- **If a repo you need to verify against is missing from the workspace, do
+  not assume it matches** and do not clone into a guessed path. State the
+  missing repo as a gap, and ask the user to relaunch the session with the
+  full product workspace (all the desired repos) checked out together.
+
 {{PRODUCT_OVERVIEW_FRAGMENT}}
 
 {{PRODUCTION_CONSEQUENCE_FRAGMENT}}

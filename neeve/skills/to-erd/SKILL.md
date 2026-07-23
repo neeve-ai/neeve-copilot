@@ -166,6 +166,17 @@ the ERD. Do not let the ERD silently diverge from the PRD; the PRD stays the
 source of truth. If the ERD changed nothing the PRD asserts, still advance
 `Status:` to `in-erd` with a log row saying so.
 
+**Phase 7 — Write back to the PRD system of record.** If breaking the PRD
+into work items changed anything the PRD asserts — split a requirement,
+resequenced scope, surfaced a new dependency/risk, or deferred something —
+record it back into the PRD per `neeve/references/prd-system-of-record.md`:
+edit the affected PRD section, append a **Change & Decision Log** row (Phase
+= ERD, with the *why*), advance the PRD `Status:` to `in-erd`, and commit the
+PRD change atomically (`prd(<feature-slug>): ERD — <what changed>`) alongside
+the ERD. Do not let the ERD silently diverge from the PRD; the PRD stays the
+source of truth. If the ERD changed nothing the PRD asserts, still advance
+`Status:` to `in-erd` with a log row saying so.
+
 ## Output Template
 
 ```markdown

@@ -145,7 +145,15 @@ graph edge, every `Key files` entry is either a real path (confirmed in
 Phase 2) or explicitly marked `[new file]`, the ADR line reflects Core Rule
 3 honestly (cited, or "no ADR on file, PRD is source of truth"), and the
 `feature-slug` matches the PRD and (if applicable) the prototype branch
-exactly.
+exactly. Also populate **Breakdown Risks & Gaps** (Output Template) per
+`context/fragments/production-consequence-and-gaps.md`'s discipline, scoped
+to *this breakdown* rather than the feature overall: what happens if a
+dependency edge is wrong (a downstream item starts on an incomplete
+foundation), which item is the riskiest to get wrong and why, and any
+compliance-relevant surface from the PRD that didn't map cleanly onto a
+single work item's `Compliance` field. An empty section here is itself a
+finding — either name the risks or state "none identified — verified via
+[what was checked]."
 
 **Phase 7 — Write back to the PRD system of record.** If breaking the PRD
 into work items changed anything the PRD asserts — split a requirement,
@@ -238,6 +246,15 @@ Items at the same tier can run in parallel. Dependencies flow downward.
 ## Open Work (Deferred — Not in This Cycle)
 
 ...
+
+## Breakdown Risks & Gaps
+
+Per `context/fragments/production-consequence-and-gaps.md`, scoped to this
+breakdown (not the feature's own production consequence — that's the PRD's
+Section 9): which dependency edge is riskiest if it's wrong, which item is
+riskiest to get wrong and why, and any PRD compliance surface not cleanly
+mapped to a single work item's `Compliance` field. Or: "none identified —
+verified via [what was checked]."
 ```
 
 ## Reference Files

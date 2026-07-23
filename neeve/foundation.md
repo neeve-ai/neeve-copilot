@@ -93,6 +93,7 @@ decision:
 - `engineering-principles.md` — the Product/Design/Engineering charter,
   each principle traced to a named industry practice (Layer 03).
 - `references/pm-lens.md`, `references/design-review.md`,
-  `references/security.md` — specialist checklists derived from that charter.
+  `skills/code-review/references/security.md` — specialist checklists
+  derived from that charter.
 - `products/robin/product-overview.md` — Robin-specific repo table and
   local-dev instructions (product-specific detail, not company-wide).

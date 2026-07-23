@@ -3,6 +3,14 @@
 Integrated from CoSAI Project CodeGuard + OWASP ASVS.
 Load this when writing the Security section of any spec.
 
+**See also:** `code-review/references/security.md` — the deeper reference
+this checklist is a spec-time subset of. Its Pentest Mindset (adversarial
+actor-by-actor) and Escalation ("needs a decision, not just a fix") sections
+are code-review-timed by design, not duplicated here — but its Enterprise
+SaaS Multi-Tenancy and SSRF content is spec-shaping, not just review-shaping,
+so the checklist below pulls those items forward rather than leaving them to
+surface for the first time at Stage 6.
+
 ---
 
 ## Always-On Checks (every spec, every section)
@@ -89,6 +97,37 @@ Load this when writing the Security section of any spec.
 - [ ] `pip install --require-hashes` or `npm ci` in CI
 - [ ] SBOM generation noted if adding new dependencies
 - [ ] No `latest` image tags
+
+### When spec touches multi-tenant data (most features — Neeve is multi-tenant SaaS)
+- [ ] **Tenant isolation is named as its own check, distinct from IDOR.** IDOR
+      asks "does this user own this resource"; tenant isolation asks "is this
+      resource's tenant/org ID the same as the session's" — a query can pass
+      the first and still leak across tenants. State which one each access
+      check enforces, not just "authorization is scoped."
+- [ ] Tenant ID filter is a `WHERE` clause derived from the authenticated
+      session — never from a client-supplied field, never an
+      application-layer post-filter on an unscoped query
+- [ ] Rate limits on shared infrastructure are keyed by tenant/org ID, not
+      only IP or global to the service (a noisy-neighbor tenant shouldn't
+      degrade every other tenant)
+- [ ] Sensitive actions (role change, data export, credential rotation) have
+      a named audit-trail requirement — an append-only record, not a debug
+      log line
+- [ ] Service credentials for this feature are scoped to the integration/
+      tenant that needs them, not blanket access across all tenants
+
+### When spec touches outbound requests to a user/tenant-supplied URL (webhooks, integrations, fetch-by-URL, "test connection")
+- [ ] **SSRF is named explicitly**, not folded into generic "input
+      validation" — any server-side fetch of a URL that's directly or
+      indirectly attacker/tenant-supplied is an SSRF vector
+- [ ] Target is validated against a deny-list (RFC1918 ranges, link-local
+      `169.254.0.0/16` — cloud metadata endpoints — and localhost) **after**
+      DNS resolution, not just the hostname string (defends against
+      DNS-rebinding)
+- [ ] Outbound webhooks to customer endpoints are HMAC-signed so the
+      customer can verify authenticity
+- [ ] Inbound webhooks from third parties verify the provider's signature
+      before the payload is trusted
 
 ---
 

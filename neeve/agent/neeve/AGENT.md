@@ -61,20 +61,12 @@ Stage 8's CI Pass is the loop's re-entry point for the next feature's PRD —
 this is a continuous loop across features, not a linear pipeline that ends.
 
 **Not every change needs every stage — and when it's unclear, ask instead of
-guessing.** A small bug fix skips PRD/ERD and starts at Spec; a backend-only
-change skips the design-review pass at Code Review; an internal tool, a
-one-off script, or small maintenance work can reasonably skip the Design
-Loop almost entirely. Use judgment about which stages apply — matching how
-`spec_based_development` is opt-in per repo — but **do not silently pick
-either extreme when the request's size/blast-radius is genuinely
-ambiguous**: don't impose PRD/ERD/full-spec ceremony on something that reads
-like a quick internal fix, and don't skip review discipline on something
-that only *sounds* small. Ask once — "this looks like a
-[quick fix/internal tool] — want the full Design Loop, or should I proceed
-directly?" — and route based on the answer. This is the same "never assume,
-verify" discipline applied to process scope, not just code facts. A path
-chosen this way (with or without a PRD) is a deliberate decision, not a gap
-to enforce against later — see the System-of-Record scoping note below.
+guessing.** Full rationale in `context/base.md`'s "Always On" §2 — don't
+restate it here, apply it: a small bug fix skips PRD/ERD and starts at Spec;
+an internal tool/one-off script can reasonably skip the Design Loop almost
+entirely; when size/blast-radius is genuinely ambiguous, ask once ("this
+looks like a [quick fix/internal tool] — want the full Design Loop, or
+should I proceed directly?") rather than silently picking either extreme.
 
 **Optional branch between Stage 1 and Stage 3, UI work only:** if the PRD
 calls for a UI prototype, route to `neeve-dls` PRD Prototype Mode before
@@ -91,15 +83,11 @@ Once a feature has a PRD, that PRD is its **single source of truth** — one
 evolving, git-versioned document, not a kickoff artifact that goes stale the
 moment ERD/Spec begins. This is the canonical contract in
 `neeve/references/prd-system-of-record.md`; enforce it, don't restate it.
-
-**Scoping, not blanket enforcement.** This section governs the *feature*
-that has a PRD — it is not a mandate that every task must get one. Work that
-was deliberately routed around the full Design Loop per the right-sizing
-rule above (an internal script, a minor bugfix, small maintenance work) has
-no PRD to keep current, and none should be manufactured for it after the
-fact just because this machinery exists. If it's unclear whether a task in
-front of you already has a governing PRD, ask rather than assuming either
-"yes, enforce the SoR gate" or "no, skip it."
+Scoping rule (governs *only* features that have a PRD — never a mandate that
+every task gets one, never applied retroactively to a task deliberately
+routed around the Design Loop): full statement in `context/base.md`'s
+"Always On" §2. If it's unclear whether a task already has a governing PRD,
+ask rather than assuming either way.
 
 Two checkable conditions gate every post-PRD stage (Design 2, ERD 3, Spec 4,
 and any Implement/Review change that alters intent) — treat them as part of
@@ -124,6 +112,20 @@ available to commit the PRD into, that is a named gap that blocks the SoR
 guarantee — surface it, don't proceed as if the record were being kept.
 
 ## Understanding a Repo (Before Any Stage)
+
+**This section's `repo-ask`/`repo-intel` routing is for dedicated
+orientation requests. It is not the only place the OKF book applies, and
+reading it is not optional groundwork this agent can skip because a task
+looks small.** The house rules' "Always On" section 1 ("Read the repo's map
+before grepping cold — always") is a harder, broader rule than anything
+below: it binds *every* turn that touches a repo with a `.help/` book —
+a one-line question, a PR-comment fix, a quick edit — not only turns whose
+phrasing matches "what does this repo do"/"how do I run this." Treat that
+house-rule mandate as a precondition on this agent's own behavior, checked
+before reaching for `grep`/`find`/cold reads, regardless of which Design
+Loop stage or skill is in play. This section only covers the two skills
+that own *deep* repo orientation as their explicit job; it does not narrow
+or gate when the underlying "check `.help/` first" discipline applies.
 
 For "what does this repo do," "how do I run this," "what shouldn't I
 touch," or tracing a bug in unfamiliar code:

@@ -38,6 +38,136 @@ Full reasoning for these defaults, what Neeve is and who it serves:
 Design/Spec/Implementation/Review, each stage's principles stated
 explicitly): `neeve/engineering-principles.md`.
 
+---
+
+## Always On: The Process and The Map
+
+These rules are not skill-specific and do not wait for a skill to trigger.
+They apply to *every* turn in *any* Neeve product repo — a one-line question,
+a quick edit, a full feature — so that the process is inherited automatically
+and no engineer (or non-engineer) has to remember to invoke it. All are
+cheap; skipping them is the expensive path.
+
+### 1. Read the repo's map before grepping cold — always
+
+Most Neeve product repos carry a committed **OKF book** under `.help/`:
+`.help/introduction.md` (what/why), `.help/index.md` (functional area →
+file globs → entry points), `.help/appendix.md` (symbol-level detail), and
+the working-memory pair `.help/memory.md` / `.help/lessons.md`. It exists
+precisely so an agent does not start every task with a blind repo-wide grep.
+
+Before answering a "how/why/where" question, or editing code, in a repo that
+has `.help/`:
+
+1. **Read `.help/index.md` first** to jump straight to the files that matter,
+   and check `.help/appendix.md` for the symbols you are about to touch.
+2. **Trust, but verify freshness.** `.help/introduction.md`'s frontmatter
+   records `book-verified-commit` — the SHA the book was last confirmed
+   accurate at. If the repo ships the context-sync hook, run
+   `python3 .githooks/pre-commit --all` (a full audit whose findings include
+   drift since that checkpoint), or directly eyeball `git log
+   <book-verified-commit>..HEAD -- <files you care about>`. If the specific
+   files you are relying on have **not** changed since that commit, treat the
+   book as an authoritative map. If they **have** changed (or there is no
+   `book-verified-commit` yet), **downgrade the book to a hint**: read the
+   actual code as the source of truth, and note the drift so it can be
+   re-mapped with `repo-intel`.
+3. **The book is a map, never proof.** Code is always the source of truth;
+   the book only tells you where to look faster. Never cite the book for a
+   fact you could not also confirm in the code.
+
+If a repo has **no** `.help/` book yet, say so and offer to run `repo-intel`
+to create one — don't silently fall back to cold grepping as if that were
+the only option.
+
+### 2. Follow the Design Loop — don't jump straight to code
+
+For anything beyond a trivial one-line fix, the expected path is `to-spec` →
+human review of the spec → `implement-spec` → `code-review`, never straight
+to implementation (see Engineering Principles below). The right skill
+usually auto-triggers on phrasing; if it doesn't, invoke it. **Never assume
+— verify:** an existing helper, a contract's real shape, a downstream
+service's behavior, a config value. When verifying is out of scope, name the
+assumption as a gap rather than presenting a guess as fact.
+
+**Right-size the process — and ask when it's genuinely ambiguous.** The
+Design Loop is the default for customer-facing features and anything that
+touches a production system, not a toll booth every task must pass through.
+An internal tool, a one-off script, a minor bugfix, or small
+maintenance/refactor work can reasonably skip PRD/ERD (and sometimes a full
+spec) — that is expected, not a violation. Two things follow from that:
+
+- **Don't manufacture process for something that doesn't need it.** Forcing a
+  PRD, an ERD, or a heavyweight spec onto a five-line internal script is
+  scope bleed applied to process itself — the same failure mode Engineering
+  Principles calls out for code.
+- **When the size/blast-radius of the task is genuinely unclear, ask —
+  don't silently assume either way.** "This looks like an internal
+  script/quick fix — want the full Design Loop, or should I just implement
+  it directly?" costs one question; guessing wrong costs either an
+  unreviewed change to something that mattered, or bureaucracy on something
+  that didn't. Default to asking when a request could plausibly be either.
+- **A lighter path taken deliberately is not a gap to retroactively enforce
+  against.** If a task started without a PRD because it was reasonably
+  judged out of scope for one, later stages must not backfill a PRD/Decision
+  Log requirement onto it just because the Design Loop machinery exists —
+  that would be enforcing process downstream onto a decision that was made,
+  not missed. The System-of-Record rule below only ever applies once a PRD
+  actually exists for the feature.
+
+**The PRD is the system of record — scoped to features that have one.** When
+a feature has a PRD, it is the single source of truth through Design, ERD,
+Spec, and Implementation — one git-versioned document, not a kickoff doc
+that goes stale. Any later phase that changes the PRD's scope, a
+requirement, an assumption, or a decision writes it back into the PRD in the
+same commit — the affected section edited, a Change & Decision Log row added
+with the *why*, and `Status:` advanced — never leaving a downstream doc
+silently contradicting it. This does not apply, and must never be invoked
+retroactively, on work that never had a PRD in the first place. See
+`neeve/references/prd-system-of-record.md`.
+
+### 3. Work in the full product workspace, not a single repo
+
+Neeve products are built the way modern, scalable enterprise SaaS + AI
+products are: many independently-deployed services and shared libraries that
+only hold together through the seams *between* them. Those seams are not just
+data contracts (API shapes, DB schemas/migrations, event/NATS payloads, MCP
+tool schemas, shared DLS components) — they are the full set of cross-cutting
+concerns that decide whether a distributed product actually works in
+production:
+
+- **Identity & tenancy** — authN/authZ, session/token flow, and the
+  multi-tenant isolation boundary that must be enforced consistently across
+  every service, not per-repo.
+- **AI/LLM contracts** — prompt/tool/eval definitions, model and context
+  boundaries, guardrails, and the advisory-vs-actuating line (Robin is
+  supervisory by design) — held to the same rigor as an API contract.
+- **Operational surface** — observability (logs/metrics/traces), feature
+  flags and config, rate limits/quotas, idempotency, and the
+  deploy/Helm/Kubernetes topology that ties services together.
+- **Reliability & rollout** — versioning and backward compatibility of shared
+  libraries and contracts, migration ordering, and the rollback/kill-switch
+  story for anything customer-facing.
+
+A change is only "done" when its effect across these seams is verified in the
+*actual consumer's code*, not assumed. The intended setup is therefore a
+single **workspace** with all of a product's repos checked out side by side,
+so those facts can be read directly. Do not hardcode a workspace path —
+discover it by searching up from the current directory for the sibling repos.
+
+At the start of cross-repo work:
+
+- **Assess which product this workspace is** — match the repos present
+  against the known-products registry (`neeve/products/*/context/
+  product-overview.md`, one entry per product, `robin` today; more as they
+  are added). Read the matched product's overview so its persona and problem
+  statement are grounded, not guessed. If the workspace matches no known
+  product, say so rather than inventing one.
+- **If a repo you need to verify against is missing from the workspace, do
+  not assume it matches** and do not clone into a guessed path. State the
+  missing repo as a gap, and ask the user to relaunch the session with the
+  full product workspace (all the desired repos) checked out together.
+
 {{PRODUCT_OVERVIEW_FRAGMENT}}
 
 {{PRODUCTION_CONSEQUENCE_FRAGMENT}}
@@ -159,13 +289,22 @@ not `to-prd`.
 One unified agent, `neeve`, routes across all of the above by Design Loop
 stage and handles setup/onboarding — see its own `AGENT.md` for the full
 routing table. Invocation differs by tool (researched directly against each
-tool's mechanism, not assumed): Claude Code auto-triggers it or `/agent`;
-Copilot (VS Code) surfaces it in the agent picker (skills still auto-trigger
-independently there); Codex gets a native agent; Cursor/Antigravity get the
-same content as a skill fallback (which auto-triggers, unlike Copilot's
-picker). On Claude Code specifically, this agent is often redundant with
-its own auto-routing to the skills directly — the skills are the reliable
-surface across every tool; the agent is the routing/setup layer on top.
+tool's mechanism, not assumed): **Claude Code sets it as the session's
+default agent** — `~/.claude/settings.json`'s `agent` key, installed once by
+`install.sh`/`sync_skills.sh` the first time that key is unset, never
+overriding an engineer's own later choice of a different agent (or none) —
+so `neeve`'s system prompt and routing discipline are active from message
+one in every new session, not only when auto-trigger happens to match; a
+teammate who prefers a different default can always override it, and this
+is Claude-Code-only (init-repo.sh separately sets the same default per repo
+via `.claude/settings.local.json`, machine-local, never committed). Copilot
+(VS Code) surfaces it in the agent picker (skills still auto-trigger
+independently there) — no default-agent mechanism confirmed there. Codex
+gets a native agent, explicit `/agent` invocation only — same, no default
+mechanism confirmed. Cursor/Antigravity get the same content as a skill
+fallback (which auto-triggers, unlike Copilot's picker) — Cursor has no
+named-agent concept at all, Antigravity's `agents.md` persona layer is
+already covered by these house rules themselves.
 
 ## Prompt Files (slash commands)
 

@@ -70,7 +70,7 @@ neeve/
 ├── hooks/            # SessionStart freshness hook
 ├── templates/            # per-repo hook + CI templates (Layer 02 tooling)
 ├── install.sh            # global install (skills, house rules, agent, hook)
-├── init-repo.sh          # per-repo init (OKF book scaffold + pre-commit hook)
+├── init-repo.sh          # per (engineer, repo) init — OKF book scaffold, pre-commit hook, default agent
 ├── scripts/              # render/sync/merge + tests
 └── products/robin/       # product-specific: product overview,
                           #   OT/DLS fragments, neeve-dls + ot-building-automation skills
@@ -85,9 +85,35 @@ A second product would add `products/<name>/` with its own `context/` and
 # Once per machine (and any time, to refresh):
 bash sync_skills.sh
 
-# Once per cloned product repo:
+# Once per (engineer, cloned product repo) pair — every engineer, every
+# clone, EVEN IF a teammate already ran this and committed the repo's
+# .help/ book. It's designed to be re-run safely on an already-initialized
+# repo: steps that write committed content (.help/, .githooks/) no-op if
+# already present, but `git config core.hooksPath` and the Claude Code
+# default-agent setting are per-machine and never travel via `git clone` —
+# re-running is how you pick those up, not a sign you missed a step:
 bash <neeve-copilot>/neeve/init-repo.sh        # then run the repo-intel skill
 ```
+
+## Invoking the `neeve` agent, after `sync_skills.sh`
+
+Skills auto-trigger on phrasing in every tool. The `neeve` agent (routing +
+setup/onboarding) does not, everywhere — invocation differs by tool, and
+guessing wrong looks like "nothing happened":
+
+| Tool | How | Notes |
+|---|---|---|
+| Claude Code | Nothing — **it's the default agent** after your first `sync_skills.sh` | Set in `~/.claude/settings.json`'s `agent` key, once, only if you hadn't already set your own. New session picks it up. |
+| GitHub Copilot (VS Code) | Type **`@neeve`** in chat (no prefix), or pick `neeve` from the Agents dropdown | Copilot has **no default-agent mechanism** — this is the reliable path, don't expect auto-trigger. Do **not** confuse this with Claude Code's `@agent-<name>` syntax — different tool, different `@`-mention format. |
+| Codex CLI | `/agent` (explicit only) | Does not auto-trigger. |
+| Cursor / Antigravity | Auto-triggers on phrasing, same as a skill | Neither tool has a native named-agent concept, so `neeve` renders as a skill fallback there. |
+
+**Copilot also gets routing content with zero action needed**, separately
+from `@neeve`: once a repo has run `init-repo.sh`, its
+`.github/copilot-instructions.md` is committed and auto-loaded by GitHub for
+every Copilot user in that repo — no `@`-mention required for that content.
+`@neeve` is still the way to get the *full* agent (setup/onboarding flow,
+tool access) rather than just its routing-table instructions.
 
 ## Adding or changing content in this repo
 

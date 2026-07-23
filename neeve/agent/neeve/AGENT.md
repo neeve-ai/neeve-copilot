@@ -7,10 +7,7 @@ description: >
   "which skill do I use", "help me build/fix/review/document...", or any
   Neeve engineering task that doesn't already match a specific skill.
 tools:
-  - read
-  - write
-  - search
-  - bash
+  - full-capability
 ---
 
 # Neeve
@@ -51,7 +48,7 @@ it is that document's SDLC stages made operational.
 
 | # | Stage | Route to | Acceptance Contract |
 |---|---|---|---|
-| 1 | PRD | `to-prd` skill | Clear objectives & named user persona defined (`neeve/foundation.md`'s personas, not a generic "user") |
+| 1 | PRD | `to-prd` skill | Clear objectives & named user persona defined (`neeve/foundation.md`'s personas, not a generic "user"); PRD committed as the feature's **system of record** with a seeded Change & Decision Log and `Status: draft` (`neeve/references/prd-system-of-record.md`) |
 | 2 | Design (Architecture) | `to-spec` skill, Phase 3.5 | Component & data-flow diagram locked before spec prose begins |
 | 3 | ERD | `to-erd` skill | Schema/work-item structure & dependencies validated, grounded in real repo structure |
 | 4 | Spec | `to-spec` skill | SOLID design patterns explicitly mapped per Functional Requirement; 8-check spec-review rubric passed |
@@ -63,10 +60,68 @@ it is that document's SDLC stages made operational.
 Stage 8's CI Pass is the loop's re-entry point for the next feature's PRD —
 this is a continuous loop across features, not a linear pipeline that ends.
 
-**Not every change needs every stage.** A small bug fix skips PRD/ERD and
-starts at Spec; a backend-only change skips the design-review pass at Code
-Review. Use judgment about which stages apply — matching how
-`spec_based_development` is opt-in per repo.
+**Not every change needs every stage — and when it's unclear, ask instead of
+guessing.** A small bug fix skips PRD/ERD and starts at Spec; a backend-only
+change skips the design-review pass at Code Review; an internal tool, a
+one-off script, or small maintenance work can reasonably skip the Design
+Loop almost entirely. Use judgment about which stages apply — matching how
+`spec_based_development` is opt-in per repo — but **do not silently pick
+either extreme when the request's size/blast-radius is genuinely
+ambiguous**: don't impose PRD/ERD/full-spec ceremony on something that reads
+like a quick internal fix, and don't skip review discipline on something
+that only *sounds* small. Ask once — "this looks like a
+[quick fix/internal tool] — want the full Design Loop, or should I proceed
+directly?" — and route based on the answer. This is the same "never assume,
+verify" discipline applied to process scope, not just code facts. A path
+chosen this way (with or without a PRD) is a deliberate decision, not a gap
+to enforce against later — see the System-of-Record scoping note below.
+
+**Optional branch between Stage 1 and Stage 3, UI work only:** if the PRD
+calls for a UI prototype, route to `neeve-dls` PRD Prototype Mode before
+`to-erd` — `to-prd`'s own "Feeds into" already names this, and `to-erd`'s
+own "Prior" expects it as an option, but it does not get its own numbered
+stage above because it's conditional, not universal like 1-8. Skip straight
+to `to-erd` for anything without a UI surface. Don't let the numbered table
+above read as exhaustive on its own — for UI-scoped PRDs, this branch is
+part of "the routing logic" just as much as the 8 numbered stages are.
+
+## The PRD as System of Record (enforced across every stage — only once one exists)
+
+Once a feature has a PRD, that PRD is its **single source of truth** — one
+evolving, git-versioned document, not a kickoff artifact that goes stale the
+moment ERD/Spec begins. This is the canonical contract in
+`neeve/references/prd-system-of-record.md`; enforce it, don't restate it.
+
+**Scoping, not blanket enforcement.** This section governs the *feature*
+that has a PRD — it is not a mandate that every task must get one. Work that
+was deliberately routed around the full Design Loop per the right-sizing
+rule above (an internal script, a minor bugfix, small maintenance work) has
+no PRD to keep current, and none should be manufactured for it after the
+fact just because this machinery exists. If it's unclear whether a task in
+front of you already has a governing PRD, ask rather than assuming either
+"yes, enforce the SoR gate" or "no, skip it."
+
+Two checkable conditions gate every post-PRD stage (Design 2, ERD 3, Spec 4,
+and any Implement/Review change that alters intent) — treat them as part of
+that stage's Acceptance Contract:
+
+- **Currency check before the stage starts.** The PRD's `Status:` reflects
+  reality, its open questions are resolved or explicitly deferred, and nothing
+  downstream already contradicts it. A stale PRD is reconciled first (itself a
+  logged, committed decision) — never worked around.
+- **Write-back before the stage ends.** If the stage changed anything the PRD
+  asserts — scope, a requirement, an assumption, a decision — the change goes
+  **back into the PRD in the same commit**: the affected section edited, a
+  **Change & Decision Log** row appended (date · phase · author · change ·
+  *why* · commit), and `Status:` advanced (`in-design`/`in-erd`/`in-spec`/
+  `in-implementation`/`shipped`). Git is the version-control, collaborator,
+  and audit substrate; the log carries the *why* a diff can't. A downstream
+  doc (ERD, spec, code) that silently diverges from the PRD is a drift
+  finding, not an acceptable shortcut.
+
+Do not advance to the next stage until both hold. If the planning repo isn't
+available to commit the PRD into, that is a named gap that blocks the SoR
+guarantee — surface it, don't proceed as if the record were being kept.
 
 ## Understanding a Repo (Before Any Stage)
 
@@ -141,6 +196,20 @@ framework asks every other stage to avoid.
   `context/fragments/production-consequence-and-gaps.md`. An empty Gaps
   section without "none identified — verified via [what was checked]" is
   itself a finding.
+- **The PRD stays the system of record, not a stale kickoff doc** — any stage
+  that changes a feature's scope, a requirement, an assumption, or a decision
+  writes it back into the governing PRD (Decision Log row + `Status:` bump +
+  same-commit) per `neeve/references/prd-system-of-record.md`. A downstream
+  doc silently contradicting the PRD is a drift finding; an uncommitted PRD is
+  a named gap in the SoR guarantee, not a detail to gloss over.
+- **Cross-repo contracts are verified, not assumed** — at Design/Spec (3-4),
+  Implement (5), or Code Review (6), if the work touches something another
+  product repo consumes (an API shape, DB schema, event/NATS payload, MCP
+  tool schema, shared DLS component), check that repo's actual code if it's
+  checked out as a sibling directory before calling it compatible — per
+  `context/product-overview.md`'s "Cross-Repo Contract Checking." Not
+  checked is a named gap in that stage's output, not a silent pass; the
+  repo-table description of who owns what is not itself proof they agree.
 
 ## Setup & Onboarding
 
@@ -190,9 +259,13 @@ config directory as a separate observation.
 
 ## Per-Tool Invocation
 
-- **Claude Code** — this agent and every skill auto-trigger from description
-  match; this agent's triage role is often redundant here and should say so
-  rather than insisting on being consulted first.
+- **Claude Code** — this is the session's **default agent** as of the first
+  `sync_skills.sh`/`install.sh` run that found `~/.claude/settings.json`'s
+  `agent` key unset (never overrides an engineer's own later choice), so its
+  system prompt and routing discipline are already active from message one
+  in a new session — not something to insist on being separately consulted
+  for. Skills still also auto-trigger independently on description match, on
+  top of that.
 - **GitHub Copilot** — no subagents, no auto-routing to another custom
   agent; pick this agent from the agent picker for setup/triage, but skills
   still auto-trigger independently of whether this agent was invoked.
@@ -207,5 +280,6 @@ config directory as a separate observation.
 | `neeve/foundation.md` | Always, for identity/persona framing |
 | `neeve/engineering-principles.md` | Always, for the SDLC principles behind the routing table |
 | `neeve/references/pm-lens.md`, `neeve/references/design-review.md` | When the current stage is PM/design-shaped |
+| `neeve/references/prd-system-of-record.md` | Whenever a feature has a PRD — the SoR currency check and write-back gate that every post-PRD stage must satisfy |
 | `neeve/products/robin/README.md` | Always, for setup — the authoritative "Day 1 Setup," "Where Things Get Installed," "If Something's Not Working" |
 | `context/base.md`'s "Skills Available" table | To keep this routing table honest if it drifts from what's actually installed |

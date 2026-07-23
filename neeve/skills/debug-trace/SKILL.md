@@ -104,9 +104,15 @@ persistence/cache boundary, a specific external service, or "as far as
 first-party code goes." Unlike `repo-ask`, do not scope this down to the
 minimum — scope it to the full boundary the situation actually requires.
 
-If this repo has a committed OKF book, note its guarded surfaces and stack
-up front — the same mandatory check every
-pipeline skill now performs, not optional here either.
+If this repo has a committed OKF book, read `index.md` first to locate the
+entry point/module before mapping the call graph cold, note its guarded
+surfaces and stack up front, and check `appendix.md` for any symbol already
+documented on the path — the same mandatory check every pipeline skill now
+performs, not optional here either. The book is a map, not proof: this
+skill's whole purpose is grounding claims in real, current behavior, so
+verify anything the book states against the actual code before trusting it
+in the trace — an exhaustive trace that cites a stale book entry as fact is
+a worse outcome than one that grepped cold and got it right.
 
 ### Phase 1 — Exhaustive Call-Chain Mapping
 

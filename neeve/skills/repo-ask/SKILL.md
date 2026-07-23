@@ -79,6 +79,19 @@ thought to check separately.
 
 ### Phase 1 — Choose a Search Strategy
 
+**Check for a map before grepping cold.** If this repo has a committed OKF
+book (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`), read
+`index.md` first — it maps functional areas to file globs and entry points
+specifically so a question doesn't start with a blind repo-wide grep.
+`appendix.md` may already have the symbol's purpose/dependencies/impact
+recorded. This does not relax the code-as-truth rule: the book is a map to
+where to look, not proof of what the code does — still verify anything the
+book claims against the actual file before citing it as the answer, since
+the book can drift stale between `repo-intel` refreshes. If the book is
+missing, stale-looking (a symbol it describes no longer matches the file),
+or doesn't cover the area in question, fall through to grep/find below
+exactly as before — do not block the search on the book being incomplete.
+
 Before reading any file, decide the minimum search path that can answer the question.
 Pick the strategy that reads the fewest files while covering the highest-signal locations.
 
@@ -191,6 +204,8 @@ Never ask more than two clarifying questions at once.
 ## Search Discipline
 
 ### Do
+- If `.help/index.md` exists, check it before the first `grep` — it exists
+  precisely to skip the "grep the whole repo cold" step.
 - `grep -rn "symbol_name" src/` before opening any file.
 - Read function signatures before function bodies.
 - Follow the import chain to find the actual implementation, not the re-export.

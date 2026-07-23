@@ -171,10 +171,14 @@ Check the strongest local style sources that apply:
 - contract docs
 - Helm/deployment docs
 - **this repo's committed OKF book (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`), if
-  present** — its guarded surfaces (call out explicitly before touching
-  anything on them), plus its documented test/lint commands if they exist. This
-  check is mandatory here, not left to whether someone thought to check
-  separately.
+  present** — read `index.md` first to jump straight to the module/files the
+  spec touches instead of grepping the repo cold; check `appendix.md` for
+  the symbols involved before editing them; note guarded surfaces (call out
+  explicitly before touching anything on them) and documented test/lint
+  commands if they exist. This check is mandatory here, not left to whether
+  someone thought to check separately — but the book is a map, not proof:
+  verify anything it claims against the actual file before relying on it,
+  since it can drift stale between `repo-intel` refreshes.
 - **this repo's actual CI workflow** (`.github/workflows/*.yml` or
   equivalent) — every repo has some CI, and CI is the real gate, not the
   yaml's documented commands or this skill's own judgment. Read what CI
@@ -216,7 +220,11 @@ Before editing, identify:
 - dependencies
 - data stores / cache keys touched
 - events/messages produced or consumed
-- contracts or schemas involved
+- contracts or schemas involved — if any of these are consumed by another
+  product repo (per `context/product-overview.md`'s repo table), check that
+  repo's actual code if it's checked out as a sibling directory before
+  assuming the change is compatible; name it as an unverified gap if the
+  sibling repo isn't available to check, don't assume
 - deployment/config surfaces affected
 
 If the change spans more than one hop, summarize the flow before coding.

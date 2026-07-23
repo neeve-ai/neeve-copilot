@@ -106,9 +106,15 @@ can start from it without re-deriving scope from the PRD itself.
 
 ## Workflow
 
-**Phase 0 — Load inputs.** Read the source PRD (and prototype, if any).
-Confirm the `feature-slug` matches exactly. Confirm the write location
-(Producer Contract).
+**Phase 0 — Load inputs and confirm the PRD is current.** Read the source
+PRD (and prototype, if any). Confirm the `feature-slug` matches exactly.
+Confirm the write location (Producer Contract). Per
+`neeve/references/prd-system-of-record.md`, the PRD is the feature's system
+of record — before deriving work items, run the decision-state check: is its
+`Status:` accurate, are its open questions resolved or explicitly deferred,
+does anything already contradict it? If it's stale, reconcile the PRD first
+(a logged, committed decision) rather than deriving an ERD from a doc you
+know is wrong.
 
 **Phase 1 — Resolve the ADR, without blocking on it.** Per Core Rule 3 —
 cite if one exists, note its absence and proceed if not.
@@ -140,6 +146,17 @@ Phase 2) or explicitly marked `[new file]`, the ADR line reflects Core Rule
 3 honestly (cited, or "no ADR on file, PRD is source of truth"), and the
 `feature-slug` matches the PRD and (if applicable) the prototype branch
 exactly.
+
+**Phase 7 — Write back to the PRD system of record.** If breaking the PRD
+into work items changed anything the PRD asserts — split a requirement,
+resequenced scope, surfaced a new dependency/risk, or deferred something —
+record it back into the PRD per `neeve/references/prd-system-of-record.md`:
+edit the affected PRD section, append a **Change & Decision Log** row (Phase
+= ERD, with the *why*), advance the PRD `Status:` to `in-erd`, and commit the
+PRD change atomically (`prd(<feature-slug>): ERD — <what changed>`) alongside
+the ERD. Do not let the ERD silently diverge from the PRD; the PRD stays the
+source of truth. If the ERD changed nothing the PRD asserts, still advance
+`Status:` to `in-erd` with a log row saying so.
 
 ## Output Template
 
@@ -229,7 +246,8 @@ Items at the same tier can run in parallel. Dependencies flow downward.
 |---|---|
 | An existing work-item breakdown from this org, if one exists | For structural precedent — same shape, don't reinvent it per feature |
 | This org's ADR source (if any) | For citation (Core Rule 3), never as a blocker |
-| The source PRD from `to-prd` | Always |
+| The source PRD from `to-prd` | Always — it is the system of record, not just an input; Phase 0 verifies it's current, Phase 7 writes ERD-phase decisions back to it |
+| `neeve/references/prd-system-of-record.md` | Always, for Phase 0's decision-state check and Phase 7's write-back/commit discipline |
 | Existing `repo-ask`/`repo-intel` output for the Source-of-Truth repos | Always, before Phase 2, if available — don't re-scan from scratch |
 | `code-review/references/security.md` | When populating `Compliance` fields needs deeper security-framework grounding than the PRD's own Security & Compliance section provides |
 | `to-spec/references/security-checklist.md` | To confirm the `Compliance` field is additive to, not a replacement for, `to-spec`'s own OWASP-ASVS pass |

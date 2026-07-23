@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 # =============================================================================
-# neeve/init-repo.sh — one-time setup after cloning a Neeve product repo.
+# neeve/init-repo.sh — setup after cloning a Neeve product repo.
 #
-# Run FROM INSIDE the freshly-cloned product repo (or pass its path):
+# Run FROM INSIDE the freshly-cloned product repo (or pass its path). Safe
+# and expected to be re-run by EVERY engineer who clones this repo, even
+# after a teammate already committed its .help/ book — steps 1-2 no-op on
+# content that already exists, but step 3's `git config core.hooksPath` and
+# step 6's default-agent setting are per-machine and can't travel via `git
+# clone`, so re-running is how a second (or fifth) engineer picks them up:
 #
 #   cd ~/Projects/src/neeve/robin-ai
 #   bash ~/Projects/src/neeve/neeve-copilot/neeve/init-repo.sh
 #
-# What it does (all committed into the product repo — this is the deliberate
+# What it does (steps 1-5 committed into the product repo — the deliberate
 # exception to "nothing per-repo": the OKF book and its freshness hook only
-# work if every clone gets them):
+# work if every clone gets them. Step 6 is the opposite — machine-local,
+# never committed; see its own note below):
 #
 #   1. Scaffolds the OKF book under .help/ at the repo root, if missing
 #      (a dot-directory so it reads as tooling/metadata, and so a repo's
@@ -36,6 +42,21 @@
 #   5. With --with-ci: copies context-sync-check.yml (the CI backstop for
 #      --no-verify) and integration-verify.yml (EDIT-ME template) into
 #      .github/workflows/.
+#   6. On Claude Code only: sets `.claude/settings.local.json`'s `agent` key
+#      to `neeve`, so every Claude Code session opened in this repo starts
+#      as the neeve agent by default — NOT the "commit into the repo"
+#      exception steps 1-5 are. settings.local.json is machine-local and
+#      never committed (Claude Code's own convention); this script adds it
+#      to .gitignore explicitly since it — not Claude Code — creates the
+#      file. Skip with --no-default-agent.
+#   7. Merges neeve's routing-table content into .github/copilot-instructions.md
+#      — back to the "committed into the repo" side (GitHub auto-loads this
+#      file for every Copilot user in the repo, no picker/mention needed;
+#      Copilot has no default-agent mechanism the way Claude Code does, so
+#      this is the closest real equivalent). Uses the same BEGIN/END-marked
+#      merge as the global house-rules files: a team's own existing
+#      instructions in that file are preserved untouched, only the one
+#      labeled block is managed. Skip with --no-copilot-instructions.
 #
 # Nothing here calls a model. Next step after this script: open the repo in
 # your AI tool and run the repo-intel skill to fill the book from real code.
@@ -45,17 +66,25 @@ set -euo pipefail
 COPILOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # neeve/
 HOOK_TEMPLATE="${COPILOT_DIR}/templates/hooks/pre-commit-context-sync"
 CI_TEMPLATES_DIR="${COPILOT_DIR}/templates/ci"
+MERGE_DEFAULT_AGENT_SCRIPT="${COPILOT_DIR}/scripts/merge_default_agent.py"
+MERGE_HOUSE_RULES_SCRIPT="${COPILOT_DIR}/scripts/merge_house_rules.py"
+AGENTS_RENDER_SCRIPT="${COPILOT_DIR}/scripts/agents_render.py"
+COPILOT_INSTRUCTIONS_LABEL="NEEVE ROUTING GUIDE"
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 ok()   { echo -e "  ${GREEN}✓${NC} $*"; }
 warn() { echo -e "  ${YELLOW}!${NC} $*"; }
 err()  { echo -e "  ${RED}✗${NC} $*" >&2; }
 
 WITH_CI=false
+DEFAULT_AGENT=true
+COPILOT_INSTRUCTIONS=true
 TARGET="."
 for arg in "$@"; do
   case "$arg" in
     --with-ci) WITH_CI=true ;;
-    -h|--help) sed -n '2,30p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --no-default-agent) DEFAULT_AGENT=false ;;
+    --no-copilot-instructions) COPILOT_INSTRUCTIONS=false ;;
+    -h|--help) sed -n '2,62p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) TARGET="$arg" ;;
   esac
 done
@@ -258,12 +287,83 @@ if $WITH_CI; then
   warn "you set this repo's real integration test command."
 fi
 
+# ── 6. Claude Code default agent (machine-local, NEVER committed) ────────────
+# Every other step above is committed so a teammate's clone inherits it for
+# free. This one is the opposite by design: Claude Code's own docs make the
+# "run as this agent by default" mechanism project-scoped
+# (.claude/settings.local.json), and that file is meant to stay
+# machine-local — so each engineer runs this step themselves (this script is
+# meant to be re-run safely on a repo someone else already initialized; see
+# step 3's unconditional `git config core.hooksPath` for the same pattern).
+# Harmless to write even for engineers on other tools — they simply never
+# read .claude/.
+if $DEFAULT_AGENT; then
+  if [[ -f "${MERGE_DEFAULT_AGENT_SCRIPT}" ]]; then
+    python3 "${MERGE_DEFAULT_AGENT_SCRIPT}" ".claude/settings.local.json" "neeve" >/dev/null
+    ok "Claude Code default agent: .claude/settings.local.json (agent=neeve, not committed)"
+  else
+    warn "scripts/merge_default_agent.py not found — skipped default-agent setup"
+  fi
+  if [[ -f .gitignore ]]; then
+    if grep -qxF ".claude/settings.local.json" .gitignore; then
+      ok ".gitignore already excludes .claude/settings.local.json"
+    else
+      printf '\n# Machine-local Claude Code settings (default agent) — never commit\n.claude/settings.local.json\n' >> .gitignore
+      ok "Added .claude/settings.local.json to .gitignore"
+    fi
+  else
+    warn "No .gitignore in this repo — add one with \".claude/settings.local.json\" so it's never committed"
+  fi
+else
+  warn "Skipped Claude Code default-agent setup (--no-default-agent)"
+fi
+
+# ── 7. GitHub Copilot repo instructions (committed — the closest real ───────
+#      equivalent Copilot has, since it has no default-agent mechanism at all)
+# GitHub auto-loads .github/copilot-instructions.md for every Copilot user in
+# this repo — no picker, no @-mention, no per-engineer action once it's
+# committed once. Uses the same BEGIN/END-marked merge as the global
+# CLAUDE.md/AGENTS.md house-rules files: a team's own existing content in
+# that file (if any) is preserved untouched; only the one labeled block
+# converges to neeve's current routing-table content on each re-run. The
+# global gating rules already reach every Copilot user via
+# ~/.copilot/instructions/ — this file carries the ADDITIONAL routing-table/
+# escalation-rules detail that's otherwise picker-only, not a redundant copy.
+if $COPILOT_INSTRUCTIONS; then
+  if [[ -f "${AGENTS_RENDER_SCRIPT}" && -f "${MERGE_HOUSE_RULES_SCRIPT}" ]]; then
+    NEEVE_BODY_TMP="$(mktemp)"
+    trap 'rm -f "${NEEVE_BODY_TMP}"' EXIT
+    if python3 "${AGENTS_RENDER_SCRIPT}" neeve --body-only "${NEEVE_BODY_TMP}" >/dev/null 2>&1; then
+      python3 "${MERGE_HOUSE_RULES_SCRIPT}" ".github/copilot-instructions.md" "${NEEVE_BODY_TMP}" \
+        "${COPILOT_INSTRUCTIONS_LABEL}" >/dev/null
+      ok "GitHub Copilot: .github/copilot-instructions.md (neeve routing guide merged, committed)"
+    else
+      warn "Could not render neeve's AGENT.md body — skipped Copilot repo instructions"
+    fi
+  else
+    warn "scripts/agents_render.py or merge_house_rules.py not found — skipped Copilot repo instructions"
+  fi
+else
+  warn "Skipped GitHub Copilot repo instructions (--no-copilot-instructions)"
+fi
+
 # ── Next steps ────────────────────────────────────────────────────────────────
 echo ""
 echo "Done. Commit the result on a branch and open a PR:"
 echo "  git checkout -b chore/okf-book-init"
-echo "  git add .help/ .githooks/ .dockerignore${WITH_CI:+ .github/workflows/}"
+GIT_ADD_LIST=".help/ .githooks/ .dockerignore .gitignore"
+$COPILOT_INSTRUCTIONS && GIT_ADD_LIST="${GIT_ADD_LIST} .github/copilot-instructions.md"
+$WITH_CI && GIT_ADD_LIST="${GIT_ADD_LIST} .github/workflows/"
+echo "  git add ${GIT_ADD_LIST}"
 echo "  git commit -m 'chore: init OKF book + context-sync hook (neeve-copilot init-repo.sh)'"
+echo ""
+echo "(.claude/settings.local.json is deliberately NOT in that list — it's your"
+echo " own machine-local default-agent setting, gitignored on purpose. Every"
+echo " teammate re-runs this script once to get their own copy — that's expected,"
+echo " not a sign they missed something; steps 1-5 no-op safely on their re-run."
+echo " .github/copilot-instructions.md IS in that list, though — unlike the"
+echo " Claude Code setting, it's committed, so once one engineer merges it every"
+echo " other Copilot user in this repo gets it for free via git, no action needed.)"
 echo ""
 echo "Then fill the book from real code: open this repo in your AI tool and run"
 echo "the repo-intel skill (\"map this repo\") — it replaces every TODO(repo-intel)"

@@ -74,9 +74,14 @@ Before reviewing, gather enough context to understand the change in-system.
    - `README*`, `docs/`, `AGENTS.md`, `CLAUDE.md`, release/testing guides
    - Helm chart docs and values when runtime behavior is affected
     - this repo's committed OKF book (`.help/introduction.md`, `.help/index.md`, `.help/appendix.md`), if
-      present — its guarded or `do not modify` guidance; a diff touching anything on it
+      present — read `index.md` first to jump to the changed area's module/files
+      and `appendix.md` for the specific symbols in the diff, instead of
+      grepping the repo cold to rebuild context the book already has; also its
+      guarded or `do not modify` guidance — a diff touching anything on it
      without a called-out reason is a finding here, not something to wave
-     through because the reviewer happens to trust the author
+     through because the reviewer happens to trust the author. Treat the book
+     as a map, not proof — verify its claims against the actual diff/file
+     before citing it, since it can drift stale between `repo-intel` refreshes
    - this repo's actual CI workflow (`.github/workflows/*.yml` or
      equivalent) — every repo has some CI; know what it actually gates
      (lint, type-check, tests, security/SCA scans) so Gate 4 below checks
@@ -163,7 +168,12 @@ Focus on the failure modes that matter in Neeve systems:
 - outbox/event ordering mistakes
 - transaction boundaries that leak partial state
 - tenant isolation gaps (`organization_id`, ownership, scoping)
-- contract drift between producer and consumer
+- contract drift between producer and consumer — if the diff changes
+  something another product repo consumes (API shape, DB schema, event
+  payload, MCP tool schema, shared DLS component), check that sibling
+  repo's actual code if checked out locally rather than assuming
+  compatibility; see `context/product-overview.md`'s "Cross-Repo Contract
+  Checking" section. Not checked = a named gap in the review, not a pass.
 - cache invalidation or stale-data hazards
 - migration safety and backward compatibility gaps
 - additive code that increases branches, wrappers, or helpers without advancing the owned change

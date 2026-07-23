@@ -22,23 +22,55 @@ not a throwaway prototype. Confirm which mode applies before doing anything:
 
 ## Start Here
 
-**Before any edits**, confirm with the user where the repos live (or should be cloned). Ask:
+**Before any edits**, locate the repos on *this* machine by searching — do
+not assume a fixed path (there is no default like `~/Projects/src/neeve/`;
+that is one engineer's layout, not a guarantee). The expected setup is a
+single **product workspace** with all of that product's repos checked out
+side by side, so agents can read across them for the full picture instead of
+guessing at a contract. The design system (`dls-neeve` + `fonts`) is shared —
+whichever product's workspace you are in that consumes DLS will have them as
+siblings.
 
-> "Where should I find (or clone) `dls-neeve` and `fonts`? Default is `~/Projects/src/neeve/`. Press Enter to confirm or provide a different path."
+Discover the workspace root by walking up from the current directory:
 
-Once the directory is confirmed (call it `$BASE`):
+```bash
+# $BASE = the workspace root holding the design-system repos as siblings.
+find_base() {
+  local dir; dir="$(pwd)"
+  while [ "$dir" != "/" ]; do
+    if [ -d "$dir/dls-neeve/.git" ] && [ -d "$dir/fonts/.git" ]; then
+      echo "$dir"; return 0
+    fi
+    dir="$(dirname "$dir")"
+  done
+  return 1
+}
+BASE="$(find_base)" || true
+```
 
-1. Pull the latest from Bitbucket:
-   ```bash
-   git -C $BASE/dls-neeve pull origin master 2>/dev/null || git -C $BASE/dls-neeve pull origin main
-   git -C $BASE/fonts pull origin master 2>/dev/null || git -C $BASE/fonts pull origin main
-   ```
+Assess which product this workspace belongs to before proceeding: match the
+sibling repos present against the known-products registry
+(`neeve/products/*/context/product-overview.md`) and read that product's
+overview so the persona and problem statement are grounded, not assumed. If
+the workspace matches no known product, say so rather than guessing.
 
-2. If either repo is missing, clone it:
-   ```bash
-   git clone git@bitbucket.org:iotium/dls-neeve.git $BASE/dls-neeve
-   git clone git@bitbucket.org:iotium/fonts.git $BASE/fonts
-   ```
+If `find_base` finds nothing, **do not clone into a guessed path and do not
+invent a location** — the design-system repos missing from the workspace
+usually means the session was started without them. Stop and ask the user to
+relaunch with the full product workspace:
+
+> "I can't see `dls-neeve` and `fonts` as sibling repos from here. This skill
+> needs them (and ideally the rest of the product's repos) checked out
+> together in one workspace so I can read across them without assuming.
+> Please start the session from a workspace that has them, or tell me the
+> workspace root that does."
+
+Once `$BASE` is known, pull the latest before editing:
+
+```bash
+git -C "$BASE/dls-neeve" pull origin master 2>/dev/null || git -C "$BASE/dls-neeve" pull origin main
+git -C "$BASE/fonts" pull origin master 2>/dev/null || git -C "$BASE/fonts" pull origin main
+```
 
 Then read [`references/repo-map.md`](references/repo-map.md) — substituting `$BASE` for all repo paths listed there — to choose the correct files for:
 
@@ -203,9 +235,18 @@ pass/fail for the whole thing — a partial prototype should show exactly
 which scenarios are covered and which aren't (this is the same gap-analysis
 discipline every other agent/skill in this system applies, not new).
 
-**Handoff:** once sign-off passes, the prototype (plus the PRD) is ready for
-`to-erd`. State the `feature-slug` and the `proto/<feature-slug>` branch
-name as the handoff.
+**Write back to the PRD system of record.** A prototype almost always
+teaches something that changes the PRD — a journey that doesn't work as
+written, a scenario that needs splitting, a scope trim. Record those back
+into the PRD per `neeve/references/prd-system-of-record.md`: append a **Change
+& Decision Log** row (Phase = Design, with the *why*), advance the PRD
+`Status:` to `in-design`, and commit the PRD change (`prd(<feature-slug>):
+Design — <what changed>`). The prototype is disposable; the PRD is the record
+of what the prototype taught.
+
+**Handoff:** once sign-off passes, the prototype (plus the updated PRD) is
+ready for `to-erd`. State the `feature-slug` and the `proto/<feature-slug>`
+branch name as the handoff.
 
 ## Mode: Product Consumption (one-portal)
 

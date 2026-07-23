@@ -137,6 +137,28 @@ COPILOT_TOOL_MAP: dict[str, list[str]] = {
     "bash": ["runCommands"],
 }
 
+# `full-capability`: a deliberate escape hatch, not a fifth entry in the
+# ordinary semantic vocabulary above. It exists for an agent meant to run as
+# a Claude Code session's *default* agent (`.claude/settings.json`'s `agent`
+# key) — that use case needs the same tool pool a normal Claude Code session
+# has (Agent/Task, WebSearch, WebFetch, TodoWrite, Artifact, ...), not the
+# narrow read/write/search/bash allowlist meant for a scoped, single-purpose
+# subagent. Claude Code's own docs confirm that OMITTING the `tools` field
+# entirely (not listing every tool by name) is what grants that — a hand-
+# maintained enumeration would silently drift stale as Claude Code adds
+# tools. render_claude special-cases this marker to omit the tools block.
+# Copilot has no equivalent "session default" mechanism to justify the same
+# breadth, and VS Code's own docs do not confirm what an omitted `tools`
+# field defaults to for a custom agent — so for Copilot this marker
+# translates to the same explicit, already-verified tool set the ordinary
+# semantic names produce, not an unconfirmed "omit and hope." Registered
+# with an empty Claude mapping only so the "every semantic tool is in both
+# maps" regression test still holds; render_claude never reaches that lookup
+# for this marker because it special-cases it first.
+FULL_CAPABILITY = "full-capability"
+CLAUDE_TOOL_MAP[FULL_CAPABILITY] = []
+COPILOT_TOOL_MAP[FULL_CAPABILITY] = ["codebase", "editFiles", "search", "runCommands"]
+
 
 def _translate_tools(tools: list[str], tool_map: dict[str, list[str]]) -> list[str]:
     translated: list[str] = []
@@ -165,7 +187,13 @@ def render_claude(agent: AgentSource) -> str:
         "description: >",
         f"  {agent.description}",
     ]
-    tools_block = _tools_yaml_block(_translate_tools(agent.tools, CLAUDE_TOOL_MAP))
+    if FULL_CAPABILITY in agent.tools:
+        # Omit the tools block entirely: Claude Code's own docs confirm this
+        # inherits every tool available to subagents, which is what an agent
+        # meant to run as the session default (not a scoped subagent) needs.
+        tools_block = ""
+    else:
+        tools_block = _tools_yaml_block(_translate_tools(agent.tools, CLAUDE_TOOL_MAP))
     fm.append(tools_block.rstrip("\n") if tools_block else None)
     fm = [line for line in fm if line is not None]
     fm.append("---")
@@ -230,6 +258,15 @@ def render_skill_fallback(agent: AgentSource) -> str:
     return "\n".join(fm) + "\n\n" + agent.body.rstrip() + "\n"
 
 
+def render_body_only(agent: AgentSource) -> str:
+    """Just the AGENT.md body, no frontmatter at all — for merging into a
+    file that isn't a discrete agent definition, like a repo's
+    `.github/copilot-instructions.md` (auto-loaded by GitHub Copilot; no
+    picker/agent-selection concept there, so `name`/`description`/`tools`
+    frontmatter would be meaningless noise, not metadata anything reads)."""
+    return agent.body.rstrip() + "\n"
+
+
 def cmd_write(agent_name: str, renderer, out_path: Path, is_skill_fallback: bool = False) -> int:
     agent = load_agent(agent_name)
     content = renderer(agent)
@@ -249,6 +286,7 @@ def main() -> int:
     mode.add_argument("--copilot", metavar="OUTPUT_FILE")
     mode.add_argument("--codex", metavar="OUTPUT_FILE")
     mode.add_argument("--skill-fallback", metavar="OUTPUT_DIR", help="Writes OUTPUT_DIR/<name>/SKILL.md")
+    mode.add_argument("--body-only", metavar="OUTPUT_FILE", help="Raw AGENT.md body, no frontmatter")
     args = parser.parse_args()
 
     if args.claude:
@@ -257,6 +295,8 @@ def main() -> int:
         return cmd_write(args.name, render_copilot, Path(args.copilot).expanduser().resolve())
     if args.codex:
         return cmd_write(args.name, render_codex, Path(args.codex).expanduser().resolve())
+    if args.body_only:
+        return cmd_write(args.name, render_body_only, Path(args.body_only).expanduser().resolve())
     return cmd_write(
         args.name,
         render_skill_fallback,

@@ -7,7 +7,7 @@ Use this reference only after the skill triggers.
 - DLS repo: `$BASE/dls-neeve` (Bitbucket: `git@bitbucket.org:iotium/dls-neeve.git`)
 - Shared fonts package: `$BASE/fonts` (Bitbucket: `git@bitbucket.org:iotium/fonts.git`)
 
-`$BASE` is the directory confirmed with the user at skill start (default: `~/Projects/src/neeve/`). Always pull latest before editing — see SKILL.md Start Here section.
+`$BASE` is the product-workspace root discovered at skill start by searching up from the current directory (there is no fixed default path). Always pull latest before editing — see SKILL.md Start Here section.
 
 ## High-Value Files
 

@@ -28,6 +28,7 @@ AGENTS_RENDER_SCRIPT="${SCRIPT_DIR}/scripts/agents_render.py"
 AGENTS_SRC_DIR="${SCRIPT_DIR}/agent"
 SESSION_HOOK_MERGE_SCRIPT="${SCRIPT_DIR}/scripts/merge_session_hook.py"
 REFRESH_CONTEXT_SCRIPT="${SCRIPT_DIR}/hooks/refresh-context.sh"
+MERGE_DEFAULT_AGENT_SCRIPT="${SCRIPT_DIR}/scripts/merge_default_agent.py"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -284,12 +285,35 @@ if [[ -f "${RENDER_SCRIPT}" ]]; then
     fi
 
     if $DO_CURSOR; then
-      warn "Cursor stores global rules in Settings > Rules > User Rules (not a plain file on disk),"
-      warn "so this can't be written automatically. One-time manual step:"
-      warn "  1. Open Cursor → Cmd/Ctrl+Shift+P → \"Rules: User Rules\""
-      warn "  2. Paste the contents of: ${HOUSE_RULES_TMP}"
-      warn "  (that temp file is deleted when this script exits — copy it now if needed:"
-      warn "   cat ${HOUSE_RULES_TMP} | pbcopy    # macOS clipboard)"
+      # Cursor's GLOBAL User Rules are not a reliably writable plain file:
+      # its own community forum confirms they live in an internal state DB
+      # (state.vscdb) / cloud, and a third-party-blogged ~/.cursor/rules/*.mdc
+      # global path is contested and unverified against Cursor's own docs. So
+      # we do NOT auto-write it (writing to an unverified path silently does
+      # nothing). Instead: persist the rules to a stable file the engineer can
+      # re-open anytime, and auto-copy them to the clipboard so the one manual
+      # paste is a single Cmd+V.
+      CURSOR_RULES_FILE="${HOME}/.cursor/neeve-house-rules.md"
+      mkdir -p "${HOME}/.cursor"
+      cp "${HOUSE_RULES_TMP}" "${CURSOR_RULES_FILE}"
+      COPIED=false
+      if command -v pbcopy &>/dev/null; then
+        pbcopy < "${CURSOR_RULES_FILE}" && COPIED=true
+      elif command -v wl-copy &>/dev/null; then
+        wl-copy < "${CURSOR_RULES_FILE}" && COPIED=true
+      elif command -v xclip &>/dev/null; then
+        xclip -selection clipboard < "${CURSOR_RULES_FILE}" && COPIED=true
+      fi
+      ok "Cursor  →  saved rules to ${CURSOR_RULES_FILE}"
+      if $COPIED; then
+        ok "Cursor  →  rules copied to clipboard — one-time paste: Cmd/Ctrl+Shift+P → \"Rules: Configure User Rules\" → Cmd/Ctrl+V"
+      else
+        warn "Cursor  →  couldn't auto-copy (no pbcopy/wl-copy/xclip). One-time paste:"
+        warn "  Cmd/Ctrl+Shift+P → \"Rules: Configure User Rules\" → paste ${CURSOR_RULES_FILE}"
+      fi
+      warn "Cursor  →  GAP: no verified on-disk global-rules path, so this step stays manual."
+      warn "           If your Cursor version DOES read ~/.cursor/rules/*.mdc for GLOBAL rules,"
+      warn "           test it and tell the team — we can then auto-write it like the other tools."
     fi
   else
     err "context_render.py --house-rules failed — skipping house-rules install"
@@ -418,6 +442,27 @@ if $DO_CLAUDE && [[ -f "${SESSION_HOOK_MERGE_SCRIPT}" && -f "${REFRESH_CONTEXT_S
   fi
 fi
 
+# ── Default agent: neeve as Claude Code's global default ────────────────────
+# neeve routes every Design-Loop stage and enforces the process (right-sizing,
+# PRD-as-system-of-record, cross-repo verification) — running as the session
+# default means that's active from message one, not only when auto-trigger
+# happens to match. Set ONCE, the first time `agent` is unset in
+# ~/.claude/settings.json, via --only-if-unset: a routine sync must never
+# silently override an engineer's own later choice (switched to a different
+# agent, or deliberately unset it) — same "developer-local overrides win"
+# principle as merge_house_rules.py never touching content outside its
+# markers. Claude Code only; no equivalent default-agent mechanism confirmed
+# for Copilot/Codex/Cursor/Antigravity (see agent/README.md).
+if $DO_CLAUDE && [[ -f "${MERGE_DEFAULT_AGENT_SCRIPT}" ]]; then
+  hdr "Default agent (Claude Code, global, set once)"
+  DEFAULT_AGENT_OUT="$(python3 "${MERGE_DEFAULT_AGENT_SCRIPT}" "${HOME}/.claude/settings.json" "neeve" --only-if-unset)"
+  if [[ "${DEFAULT_AGENT_OUT}" == Wrote:* ]]; then
+    ok "Claude Code  →  ~/.claude/settings.json (agent=neeve set as default — first time only)"
+  else
+    ok "Claude Code  →  ~/.claude/settings.json (agent already set — left as your own choice, not overridden)"
+  fi
+fi
+
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
 echo "═══════════════════════════════════════════════════"
@@ -437,7 +482,14 @@ echo "  /<skill-name>   (Claude Code / Copilot / Cursor / Antigravity)"
 echo "  \$<skill-name>   (Codex)"
 echo ""
 echo "Agent (neeve — setup/onboarding + Design Loop routing) — invocation differs by tool:"
-echo "  Claude Code:      auto-triggers on phrasing, or @agent-<name>"
-echo "  Copilot (VS Code): pick from the agent picker (not auto-triggered by default)"
+echo "  Claude Code:      DEFAULT AGENT as of this run, unless you'd already set your own"
+echo "                     (~/.claude/settings.json's \"agent\" key — new session picks it up)"
+echo "  Copilot (VS Code): type  @neeve  in chat (no prefix — Copilot's own @-mention syntax,"
+echo "                     NOT Claude Code's @agent-<name>), or pick \"neeve\" from the Agents"
+echo "                     dropdown. No default-agent mechanism exists for Copilot, so this is"
+echo "                     the reliable invocation — don't rely on auto-trigger here."
+echo "                     Repo-level routing content also auto-loads with no action needed"
+echo "                     if that repo has run: bash <neeve-copilot>/neeve/init-repo.sh"
+echo "                     (writes .github/copilot-instructions.md, git-committed)."
 echo "  Codex CLI:         /agent  (explicit only, does not auto-trigger)"
 echo "  Cursor/Antigravity: same as a skill — auto-triggers on phrasing"

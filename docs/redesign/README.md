@@ -60,6 +60,7 @@ Full index with rationale in [`ARCHITECTURE.md`](ARCHITECTURE.md) §15.
 | D8 | Cross-repo intel in git with a SHA-pinned freshness contract |
 | D9 | One surface (Claude Code), three populations |
 | D10 | Workspaces self-provision via a committed `.claude/settings.json` |
+| D11 | Per-repo book directory `.help/` → **`.neeve/`**, migrated by dual-path fallback |
 
 ---
 

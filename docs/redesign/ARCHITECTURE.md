@@ -55,7 +55,7 @@ These hold everywhere. A violation is a defect, not a trade-off.
 | **03a** Process — narrative | Why the loop is shaped this way; what good looks like | git `neeve-copilot/process/narrative/` | **Pull** | Quarterly |
 | **03b** Process — executable | Gate commands, validation predicates, contracts, rule tiers | git `neeve-copilot/process/gates/` | **Pull + code-gen** | Quarterly |
 | **02½** Cross-repo intel | Contracts and flows spanning repos that no single repo owns | git `neeve-copilot/cross-repo/` | **Pull**, SHA-pinned | Medium |
-| **02** Repo context | The `.help/` OKF book | git — each product repo | **Pull** | **High** |
+| **02** Repo context | The `.neeve/` OKF book | git — each product repo | **Pull** | **High** |
 | **02** Product artifacts | PRDs, ERDs, design docs | Confluence **or** git planning repo | Query or Pull | Medium |
 | **02** Live work state | Tickets, sprint state, deploy state | Jira · AWS | **Query**, never cached | Continuous |
 | **01** Task frame | Current repo, goal, question, research | Nowhere — assembled per request | — | Per request |
@@ -144,7 +144,7 @@ graph TB
     end
 
     subgraph "Workspace clones"
-        CODE[(product repo<br/>.help/ book)]
+        CODE[(product repo<br/>.neeve/ book)]
         PLAN[(planning repo<br/>PRDs · ERDs)]
     end
 
@@ -192,9 +192,9 @@ Four things the diagram is drawn to show:
 | `agent/neeve/` | Content | The single discipline-aware router | Name never changes (§10) |
 | `surfaces/` | Mechanism | Plugin build, marker-merge, thin tool adapters | One directory per surface |
 | `tools/` | Mechanism | Render, merge, check, `init_workspace.sh` | Never calls a model (A-2) |
-| `templates/` | Scaffolds | `.help/` book, pre-commit hook, CI workflows, **workspace `.claude/settings.json`** | Installed into workspaces |
+| `templates/` | Scaffolds | `.neeve/` book, pre-commit hook, CI workflows, **workspace `.claude/settings.json`** | Installed into workspaces |
 | `evals/` | Verification | Per-skill eval cases | The measurement half of the feedback loop |
-| Aggregation job | Mechanism | Pulls `.help/` books into a searchable local set | A scheduled job, not a service (A-10) |
+| Aggregation job | Mechanism | Pulls `.neeve/` books into a searchable local set | A scheduled job, not a service (A-10) |
 | Atlassian · AWS MCP | External peer | Live state | Adopted, not built |
 
 ---
@@ -226,7 +226,7 @@ Three mechanisms, all deterministic, all model-free.
 
 | Content | Contract | Enforced by |
 |---|---|---|
-| Layer 02 book | Manifest hash + public-symbol diff against the repo's own code | Committed `pre-commit-context-sync`; warn-only until a repo opts into blocking |
+| Layer 02 book | Manifest hash + public-symbol diff against the repo's own code | Committed `pre-commit-context-sync`; warn-only until a repo opts into blocking. Resolves `.neeve/` then falls back to `.help/` during migration (D11) |
 | **Layer 02½ cross-repo intel** | Each entry records `verified-against:` repo SHAs. A scheduled check flags entries whose repos have moved past them | Same manifest-hash pattern, pointed at `cross-repo/` |
 | Framework clone | SessionStart hook pulls and reinstalls when HEAD moves | `refresh-context.sh`, scoped to the tools the engineer actually selected |
 
@@ -246,6 +246,7 @@ Deliberately frozen, because changing them breaks installed state:
 | The `BEGIN/END` marker label | Present in every user's personal instructions file; a change orphans the old block and installs a second, contradictory one |
 | `neeve.contextsync.*` git config keys | Set per developer, committed per repo; renaming silently reverts enforcement to defaults |
 | Skill directory names, once published to a marketplace | Marketplaces support a `renames` field, but only if the migration entry exists. Rename in the flatten commit or carry the migration |
+| The per-repo book directory name | Committed into ~16 product repos and referenced by each one's own hook and `.dockerignore`. **Held as a value in `framework.yaml`, not a literal**, so a future change is a config edit plus a dual-path fallback rather than a coordinated flag day (D11) |
 
 Any future rename must be a *supported operation* — a known-legacy list the merge code
 migrates forward from — not a one-way door.
@@ -255,7 +256,7 @@ migrates forward from — not a one-way door.
 ## 11. Feedback loop
 
 ```
-work happens → correction occurs → recorded in that workspace's .help/lessons.md
+work happens → correction occurs → recorded in that workspace's .neeve/lessons.md
      → scheduled job aggregates lessons across repos
           → attributed to the artifact that caused it (skill · gate · book · cross-repo entry)
                → that artifact updated
@@ -343,6 +344,7 @@ Ordered by how much they would invalidate rather than adjust.
 | **D8** | Cross-repo intel in git with a SHA-pinned freshness contract | Active |
 | **D9** | One surface (Claude Code, desktop for non-engineers), three populations | Active |
 | **D10** | Workspaces self-provision via a committed `.claude/settings.json` | Active |
+| **D11** | Per-repo book directory renamed `.help/` → **`.neeve/`**, migrated by dual-path fallback | Active — see below |
 | ~~ADR-9~~ | ~~Layers 03/04 exclusively in NotebookLM~~ | Superseded by D5 |
 | ~~ADR-1…8, 11~~ | Connector-internal decisions | Moot under D7; retained in `superseded/connector/` |
 
@@ -371,3 +373,42 @@ a file read and a git hook provide.
 browser-only by policy or by role — the connector is the only path to serving them, and this
 decision is what to reopen. Design detail is preserved in `superseded/connector/**` rather
 than rebuilt from scratch. Do not build for it speculatively.
+
+### D11 — `.help/` → `.neeve/`
+
+**Decision.** The per-repo OKF book directory is renamed `.neeve/`. The name is held as a
+value in `framework.yaml` rather than hardcoded, and migration runs through a dual-path
+fallback rather than a coordinated change across sixteen repos.
+
+**Why.** `.help/` is a *description*; `.neeve/` is a *namespace*. That matters now because the
+redesign adds per-workspace framework artifacts beyond the book — workspace settings (D10), a
+local aggregated book set, a lessons log. `.neeve/workspace.yaml` reads naturally;
+`.help/workspace.yaml` does not. It also makes the most visible artifact the framework plants
+consistent with everything else it plants — `neeve.contextsync.*` git config keys,
+`.neeve-manifest`, the `BEGIN/END NEEVE` markers — and it tells an engineer who has never
+heard of this framework what created the directory.
+
+**Cost, and where it actually falls.** The framework side is one constant
+(`HELP_DIR = REPO / ".help"` in `pre-commit-context-sync:85`) plus the paths the workspace
+initialiser writes — and that initialiser is rewritten in P7 regardless, so the marginal cost
+is near zero. Of ~110 occurrences across the repo, all but a handful are prose and error
+messages. **The real cost is in the ~16 product repos that already have `.help/` committed**,
+which the framework repo's own path rewrite does not touch.
+
+**Migration.** Hook and skills resolve `.neeve/` first, then fall back to `.help/`, for one
+release. New workspaces get `.neeve/` from day one. Existing repos migrate independently —
+`git mv`, reinstall the hook, update the ignore files — one self-contained PR each, no flag
+day, and an untouched repo keeps working indefinitely. The fallback is removed once all
+sixteen are done.
+
+A convenient property: the freshness hook is committed *into* each repo, so a repo's hook and
+its book directory were installed together and cannot drift apart. Each migration is atomic
+in one commit.
+
+**The footgun to put on the checklist.** The book lives in a dot-directory specifically so
+`.dockerignore` can exclude it. Every repo's `.dockerignore` and `.gitignore` entry changes
+with the rename, and **a missed one ships the book into a container image.**
+
+**Rejected alternative.** `.okf/`, after the Open Knowledge Format — self-describing to
+someone who knows OKF, opaque otherwise, and it names the *format* rather than the *owner*,
+which is wrong once the directory holds more than the book.

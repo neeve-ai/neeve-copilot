@@ -6,7 +6,8 @@ NotebookLM, then reversed into git (invariant A-9 added). *2026-09-02:* **claude
 out of scope, and the bespoke connector dropped entirely (D7).** With every population
 holding a git clone, the QUERY channel collapses into a file read; enforcement becomes
 uniform pre-commit/CI; and the discipline split becomes the *primary* rationale rather than
-one of five moves. Sections §6.1–§6.4, §7, and §8 are rewritten accordingly.
+one of five moves. Sections §6.1–§6.4, §7, and §8 are rewritten accordingly. The per-repo
+book directory also becomes `.neeve/` (D11).
 **Current system-level view: `ARCHITECTURE.md`.** Design detail for the service we
 decided not to build is preserved in `superseded/connector/**`.
 **Companion doc:** `implementation-plan.md` (v3) — the sequenced plan. This document is a
@@ -159,7 +160,7 @@ Success metric: *how small is the ambient block?* — not how comprehensive.
 
 Layers 03/04 (company prose, engineering principles) are largely things a strong model
 already knows or can infer, plus a small genuinely proprietary core (customers, personas,
-product topology). Layer 02 — the `.help/` book — is **100% proprietary and 100%
+product topology). Layer 02 — the per-repo book — is **100% proprietary and 100%
 unavailable to the model otherwise.** It is the thing that actually makes an agent good in
 your code.
 
@@ -265,7 +266,7 @@ two authoritative homes is a conflict, not redundancy.
  SoR: git            │                    │ SHA-pinned          │
      cross-repo/     │                    │ → read from clone   │
 ─────────────────────┼────────────────────┼─────────────────────┼─────────────────────
- 02  WORKSPACE       │ pointer to the     │ .help/ book         │ live tickets,
+ 02  WORKSPACE       │ pointer to the     │ .neeve/ book        │ live tickets,
      repo / planning │ book (~2 lines)    │ skills = playbooks  │ deploy state
      / design space  │                    │ → read from clone   │ → ATLASSIAN · AWS
  SoR: git · Conf.    │                    │                     │   (never cached)
@@ -400,7 +401,7 @@ is content read straight from a clone, which is what dropping the connector boug
     repos.yaml · sources.yaml                              → also GENERATES ambient/routing.md
 
   PRODUCT REPO  (committed there, never here)
-  .help/ book            ────────>  (none)       ────────> every population reads directly
+  .neeve/ book           ────────>  (none)       ────────> every population reads directly
     introduction · index ·           freshness hook        [SURFACED on drift]
     appendix · memory · lessons      + aggregation job ──> local searchable book set
                                      (cron, not a service) lessons → feeds Move 5
@@ -423,7 +424,7 @@ Full treatment of MCP's remaining role is §6.2; of the connector's withdrawal, 
 | `context_render.py`'s `OUTPUT_FILES` + 4 of 6 render functions | Dead; kept alive only by their own tests. |
 | ~400 of the 469 ambient lines | Move 2 — become files read on demand. |
 | Most of the 5-way skill fan-out | §6.3 — same bytes, five paths. |
-| The ~84-line product-overview block (16-repo table + K8s runbook) | Splits: narrative → `foundation/products/`; repo table → `registry/repos.yaml`; runbook → that repo's own `.help/`. |
+| The ~84-line product-overview block (16-repo table + K8s runbook) | Splits: narrative → `foundation/products/`; repo table → `registry/repos.yaml`; runbook → that repo's own book. |
 | `neeve/foundation.md`, `products/*/context/` as **rendered** house-rules sources | The *content* survives as `foundation/` (D5); what dies is its rendering into always-on context. Restructure, not extraction. |
 | `shared_refs_sync.sh`'s physical duplication | A workaround for zip self-containment that a plugin format removes. |
 | **The entire two-channel distribution problem** | §7 — an artefact of supporting a browser population. Org-library ZIPs, `PUBLISHED.yaml`, the manual-publish drift problem, and the 200-character description cap all go with it. |
@@ -541,7 +542,7 @@ This is invariant **A-10**: prefer a file in a clone, then an existing connector
 The one justification that partly survived. An engineer's question often spans repos, and
 `repo-intel` scans one. Two distinct things were conflated under "multi-repo intel":
 
-**(a) An aggregation of the per-repo books.** Each `.help/` book is authoritative for its own
+**(a) An aggregation of the per-repo books.** Each repo's book is authoritative for its own
 repo. A second copy elsewhere either drifts or must be generated — and if you're generating,
 generate into a local directory, where it is greppable, offline, and CI-readable. A scheduled
 **aggregation job**, not a service.

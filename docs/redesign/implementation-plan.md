@@ -2,7 +2,7 @@
 
 **Version 3 — 2026-09-02.** Supersedes v2. The bespoke connector is out (D7); one surface
 serves three populations (D9); cross-repo intel gets a git home with a freshness contract
-(D8); workspaces self-provision (D10).
+(D8); workspaces self-provision (D10); the per-repo book becomes `.neeve/` (D11).
 
 **Status:** Plan. No code changed.
 **Companion docs:** `ARCHITECTURE.md` (what) · `redesign-proposal.md` (why) ·
@@ -44,6 +44,7 @@ Preserved unchanged from v1/v2: **D1** (frontmatter membership), **D2** (never r
 | **O-5** | PRD/design-doc substrate: Confluence or git planning repo? | P6, and the enforcement ceiling for those artifacts | Confluence tops out at `Surfaced`; git gives `Blocked` |
 | **O-6** | Split `rca-retro-adr` into three? | P5 (it is a rename in disguise) | Judgement call |
 | **O-7** | `dist/` committed, or marketplace `git-subdir` source? | P7 layout | Test one marketplace entry |
+| **O-8** | Who drives the ~16 per-repo `.neeve/` migrations, and on what timeline? | Dropping the `.help/` fallback | Dual-path means there is no deadline — but also no forcing function, so an owner is needed or it never finishes |
 
 **O-1, O-2, and O-3 can invalidate rather than adjust.** Two of them are staffing decisions,
 which is the honest characterisation of the biggest risk in this plan: the missing pieces are
@@ -160,7 +161,7 @@ repos:
     purpose: <one line>
     owner: <team>
     products: [robin]
-    book: .help/
+    book: .neeve/          # D11 — from framework.yaml's book_dir
 ```
 
 `registry/sources.yaml` — the source-of-record map, and the input that generates
@@ -181,7 +182,7 @@ domains:
     sor: git:neeve-copilot/cross-repo/
     delivery: pull
   - domain: repo-context        # Layer 02
-    sor: git:<product-repo>/.help/
+    sor: git:<product-repo>/.neeve/
     delivery: pull
   - domain: live-work-state
     sor: jira
@@ -295,7 +296,7 @@ Two related pieces of content work.
 | `foundation.md` | `foundation/{identity,personas,customers}.md` |
 | `products/robin/context/product-overview.md` — narrative | `foundation/products/robin.md` |
 | — repo table | already `registry/repos.yaml` (P2) |
-| — local-dev/K8s runbook | Robin's own `.help/` book; it is repo context |
+| — local-dev/K8s runbook | Robin's own book; it is repo context, not org context |
 | `engineering-principles.md` §§ PRD & Scoping (L18-46) | `disciplines/product/references/` |
 | — §§ Design (L50-71) | `disciplines/design/references/` |
 | `products/robin/context/fragments/dls-usage-notes.md` | `disciplines/design/references/` |
@@ -318,7 +319,7 @@ verified-against:
 - `cross-repo/` directory with the `verified-against:` convention.
 - A **freshness check** reusing `pre-commit-context-sync`'s manifest-hash pattern, pointed at
   `cross-repo/`: flag entries whose referenced repos have moved past the recorded SHA.
-- A **book aggregation job** — scheduled, pulls the ~16 `.help/` sets into a local searchable
+- A **book aggregation job** — scheduled, pulls the ~16 book directories into a local searchable
   directory. A cron job, not a service (A-10).
 - **An authoring path**, without which the store stays empty: a cross-repo mode for
   `repo-intel` — *"trace this contract across every repo that touches it, and write the
@@ -341,6 +342,9 @@ Much smaller than v2 — one distribution channel.
   Skills receive **zero** per-tool transformation, so each is a destination path.
 - Keep `agents_render.py` — those four tools still need TOML transcoding, per-tool frontmatter,
   skill-fallback synthesis, and tool-vocabulary translation. No plugin format does this.
+- **Book directory becomes `.neeve/` (D11).** Resolve it from `framework.yaml`'s `book_dir`
+  rather than the hardcoded `HELP_DIR` constant, and fall back to `.help/` when `.neeve/` is
+  absent. New workspaces get `.neeve/`; existing repos migrate on their own schedule (P7b).
 - **`tools/init_workspace.sh` — promoted to a first-class deliverable (D10).** Three workspace
   kinds: code repo, planning repo, design repo. Each scaffolds its book/templates, its
   pre-commit hook, and a committed `.claude/settings.json` carrying
@@ -351,6 +355,24 @@ Much smaller than v2 — one distribution channel.
 **Gone from v2:** org-library ZIPs, `PUBLISHED.yaml` checksum manifest, the manual-publish
 drift problem, 200-character description rewrites, `PORTABILITY.md`.
 
+#### P7b — migrate the product repos to `.neeve/`
+
+Runs after P7 and in parallel with everything else. **One self-contained PR per repo**, no
+coordination, no flag day — dual-path resolution means an un-migrated repo keeps working
+indefinitely.
+
+Per-repo checklist:
+
+1. `git mv .help .neeve`
+2. Re-run `init_workspace.sh` to reinstall the hook (safe on an already-initialised repo)
+3. **Update `.dockerignore` and `.gitignore`.** The book is a dot-directory specifically so
+   `.dockerignore` can exclude it — **a missed entry ships the book into a container image**
+4. Verify one image build is clean
+5. Commit — atomic, since each repo carries its own hook copy
+
+**Gate for dropping the fallback:** all ~16 repos migrated, verified by a script that checks
+each registered repo in `registry/repos.yaml` for a `.neeve/` directory and no `.help/`.
+
 **Gate:** plugin drift check green; throwaway-`$HOME` smoke test; and the real one —
 **a clean machine, a fresh clone, and a non-engineer reaching a working first task without
 help** (re-run of S-2).
@@ -360,7 +382,7 @@ help** (re-run of S-2).
 ### P8 — Evals & the feedback loop
 
 - `evals/<skill>/cases/` — start with each discipline's two or three core skills.
-- **Lessons aggregation**: a scheduled job collecting `.help/lessons.md` across clones,
+- **Lessons aggregation**: a scheduled job collecting `.neeve/lessons.md` across clones,
   attributing each correction to the artifact that caused it — skill, gate, book, or
   cross-repo entry.
 - `claude plugin eval` is early-access gated and printed a not-enabled message in this
@@ -386,6 +408,7 @@ on one real example.
 | — | — | P3: tiers ratio computed and reported |
 | — | — | P6: A-9 check; cross-repo freshness check |
 | — | — | P7: `dist/` drift check; workspace provisioning smoke test |
+| — | — | P7b: every registered repo has `.neeve/` and no `.help/` — the gate for removing the fallback |
 
 Local pre-PR sequence stays as `CONTRIBUTING.md` §5 describes, plus the throwaway-`$HOME`
 install smoke test, which CI still does not run for you.
@@ -419,6 +442,9 @@ install smoke test, which CI still does not run for you.
    writes to stays empty.
 6. **P5's silent failure.** The `.neeve-manifest` rename migration is the only breakage that
    fails quietly on someone else's machine.
-7. **Corpus quality caps outcomes.** Books are uneven; TS/Go symbol detection is conservative.
-8. **Confluence-hosted artifacts cannot be gated.** Accept `Surfaced` or move them to git
+7. **The `.neeve/` migration has no forcing function** (O-8). Dual-path resolution is what
+   makes it safe, and also what makes it easy to leave half-done for a year. Needs an owner
+   and a target date, or the fallback becomes permanent.
+8. **Corpus quality caps outcomes.** Books are uneven; TS/Go symbol detection is conservative.
+9. **Confluence-hosted artifacts cannot be gated.** Accept `Surfaced` or move them to git
    (O-5).

@@ -5,7 +5,8 @@
 `implementation-plan.md` (v3, sequenced plan) · `superseded/connector/**` (a service
 we decided not to build).
 **Revised 2026-09-02** — connector dropped (D7); `cross-repo/` added (D8); `surfaces/`
-simplified to one channel (D9); workspace provisioning promoted (D10).
+simplified to one channel (D9); workspace provisioning promoted (D10); per-repo book
+directory renamed `.help/` → `.neeve/` (D11).
 
 This document translates the redesign into a filesystem. Every directory below exists to
 make one decision legible; where a directory has no decision behind it, it is not here.
@@ -24,6 +25,7 @@ The shape follows from what is already decided:
 | One surface, three populations | **D9** | `surfaces/` collapses to one real channel plus thin adapters |
 | Layer 03b (executable rules) must stay in git | ADR-10 | `process/gates/` — new, and the centre of gravity |
 | Storage ≠ delivery | Invariant A-9 | `foundation/` sits beside `ambient/` but **never renders into it** |
+| The per-repo book is a namespace, not just docs | **D11** | `.help/` → `.neeve/`, name held in `framework.yaml`, dual-path migration |
 | Ambient context is a ~40-line budget, and its job is routing | Move 2, §6.2 | `ambient/` is tiny and partly **generated** |
 
 A sixth, from the coupling audit: adding a tool today touches ~10 sites in `install.sh`.
@@ -36,6 +38,7 @@ Any structure that doesn't fix that has failed.
 ```
 neeve-copilot/
 ├── framework.yaml                  # identity, marker token, tool targets, enabled disciplines
+│                                   # + book_dir: .neeve  (D11 — a value, not a literal)
 ├── README.md  CONTRIBUTING.md  LICENSE
 ├── sync.sh                         # the one user-facing entry point
 │
@@ -102,7 +105,7 @@ neeve-copilot/
 │                                   # (no claude-ai/ — browser surface out of scope, D9)
 │
 ├── templates/                      # per-workspace scaffolds
-│   ├── book/                       # the .help/ OKF book skeleton
+│   ├── book/                       # the .neeve/ OKF book skeleton (was .help/ — D11)
 │   ├── workspace/.claude/settings.json   # D10 — auto-enables the discipline plugin
 │   ├── hooks/pre-commit-context-sync
 │   └── ci/{context-sync-check,integration-verify}.yml
@@ -176,7 +179,7 @@ a generated one cannot drift from the map it is built from.
 **`products/` disappears entirely.** This is the least obvious consequence of the layer
 decision. `products/robin/context/product-overview.md` splits three ways — narrative and
 personas to `foundation/products/robin.md`, the repo table to `registry/repos.yaml`, the local-dev runbook into
-Robin's own `.help/` book. `products/robin/README.md`, which is currently the framework's
+Robin's own `.neeve/` book. `products/robin/README.md`, which is currently the framework's
 *actual* setup and troubleshooting doc misfiled inside a product directory, becomes
 `docs/setup.md`. The two context fragments move to the discipline and skill that use them.
 One skill remains, and it moves to `skills/` with a `products: [robin]` frontmatter field.
@@ -190,7 +193,7 @@ addition.
 
 **`cross-repo/` is a new top-level layer, not a subdirectory of something.** Cross-repo
 knowledge — how auth flows across three repos, which repos share a contract — belonged
-nowhere before: not derivable from any single `.help/` book, owned by no repo. It is the
+nowhere before: not derivable from any single repo's book, owned by no repo. It is the
 content most prone to silent rot, so every entry carries `verified-against:` repo SHAs and a
 scheduled check flags entries whose repos have moved past them. Without that contract it
 becomes the wiki page that was accurate in March.
@@ -241,7 +244,7 @@ Complete for everything currently in the repo.
 | `neeve/references/quality-gates.md` | "why" → `disciplines/engineering/references/` · **the commands** → `process/gates/quality-gates.yaml` | Move 1: the gate becomes executable, not described |
 | `neeve/references/pm-lens.md` | checklist prose → `disciplines/product/references/` · checkable items → `process/gates/artifact-rules.yaml` | Feeds `create_prd` validation |
 | `neeve/references/prd-system-of-record.md` | narrative → `disciplines/product/references/` · Status lifecycle + write-back rule → `process/workflow.yaml` | The lifecycle is data |
-| `neeve/products/robin/context/product-overview.md` | narrative → `foundation/products/robin.md` · repo table → `registry/repos.yaml` · local-dev runbook → Robin's own `.help/` | §4 above. Still a three-way split, but all destinations are now in-repo |
+| `neeve/products/robin/context/product-overview.md` | narrative → `foundation/products/robin.md` · repo table → `registry/repos.yaml` · local-dev runbook → Robin's own book | §4 above. Still a three-way split, but all destinations are now in-repo |
 | `neeve/install.sh` (495 lines) | `surfaces/*/install.sh` + `tools/` | Fixes the ~10-site problem |
 | `neeve/scripts/skills_sync.sh` | Retired for Claude Code (plugins replace it); kept for `surfaces/adapters/` | Plugin format replaces zip packaging on the primary surface |
 
@@ -308,6 +311,32 @@ Beyond the ~400 citations already breaking in step 4:
 The `.neeve-manifest` row is the only one that fails **silently**. Everything else fails
 loudly in CI. Add the three old names to a migration list in the same commit.
 
+### 5.6 `.help/` → `.neeve/` — the rename that reaches other repos
+
+Unlike §5.4's skill renames, this one lives in **product repos**, so the framework's own path
+rewrite (step 4) does not cover it. Full rationale: `ARCHITECTURE.md` D11.
+
+| Location | Change | Cost |
+|---|---|---|
+| `templates/hooks/pre-commit-context-sync:85` | `HELP_DIR = REPO / ".help"` → resolve `book_dir` from config, `.neeve/` then `.help/` fallback | **One line.** The other 22 hits in this file are docstrings and messages |
+| `init-repo.sh` → `tools/init_workspace.sh` | Emit `.neeve/` for new workspaces | 42 hits, but this file is rewritten in P7 anyway — marginal cost ≈ zero |
+| `templates/ci/context-sync-check.yml` | One comment | Trivial |
+| Skills · ambient · docs | ~40 prose citations | Find-and-replace |
+| `framework.yaml` | New `book_dir: .neeve` key | The name becomes a value, not a literal |
+| **~16 product repos** | `git mv .help .neeve` + reinstall hook + **update `.dockerignore` and `.gitignore`** | One self-contained PR each. **This is the whole real cost** |
+
+**Per-repo migration checklist** — the third item is the one that bites:
+
+1. `git mv .help .neeve`
+2. Reinstall the hook (`init_workspace.sh` on an already-initialised repo is safe to re-run)
+3. **Update `.dockerignore` and `.gitignore`.** The book lives in a dot-directory precisely so
+   `.dockerignore` can exclude it; a missed entry **ships the book into a container image**
+4. Commit — atomic, because each repo carries its own copy of the hook, so directory and hook
+   cannot drift apart
+
+**No flag day.** Dual-path resolution means an untouched repo keeps working indefinitely.
+Remove the fallback once all sixteen have migrated.
+
 ---
 
 ## 6. New content that must be authored
@@ -341,6 +370,8 @@ Paths change, so these break and must be fixed in the same change:
 - **`.github/workflows/release.yml`** — 29 occurrences; the tag trigger is `robin-skills-v*`, so **no release fires under any other name**, and it copies a product README as the bundle README.
 - **`.git-hooks/post-commit`** — `SKILLS_PATH="neeve/(products/[^/]+/)?skills"` regex and a hardcoded `products/robin/README.md` path.
 - **`.gitignore`** — `neeve/dist/` → `dist/` (and see §8 on whether it stays ignored).
+- **`.help/` → `.neeve/`** — one constant in the committed hook, plus every product repo's
+  `.dockerignore`/`.gitignore` (§5.6). Not covered by the framework-side path rewrite.
 - **Test assertions** — 27 brand/path strings baked into `test_context_render.py`, `test_merge_default_agent.py`, `test_merge_house_rules.py`. These fail first and are a useful change detector.
 
 Python scripts themselves are safe: they resolve `ROOT` via `Path(__file__).resolve().parents[1]`.
@@ -383,7 +414,8 @@ Structure follows the revised roadmap, not the reverse.
 | **3** | `ambient/` shrink: `base.md` → `core.md` + discipline `ambient.md` | Product payload contains no `mypy`; any discipline ≤220 lines |
 | **4** | Flatten `neeve/`, move `skills/`, **apply the three renames**, add `disciplines:` frontmatter — one commit | Fix all §7 + §5.5 breakage here. One painful commit, not five. **Last chance to rename before publish** |
 | **5** | Restructure `foundation.md` → `foundation/`, 03a narrative → `process/narrative/`, add `cross-repo/` + its freshness check; dissolve `products/` | **A move, not an extraction.** A-9 check lands in CI here |
-| **6** | `surfaces/` + `dist/` + `templates/workspace/` | Plugin drift check green; throwaway-`$HOME` smoke test; **a non-engineer reaches a first task from a clean machine** |
+| **6** | `surfaces/` + `dist/` + `templates/workspace/`; emit `.neeve/` for new workspaces with `.help/` fallback (D11) | Plugin drift check green; throwaway-`$HOME` smoke test; **a non-engineer reaches a first task from a clean machine** |
+| **6b** | Migrate the ~16 product repos to `.neeve/`, one PR each, then drop the fallback | Each repo: book moved, hook reinstalled, ignore files updated, image build verified clean |
 | **7** | `evals/` | At least one case per PM-facing skill |
 
 **Do steps 4 and 5 in that order.** Flattening first means the content migration happens

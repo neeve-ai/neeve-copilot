@@ -2,7 +2,9 @@
 
 **Status:** Target architecture. Descriptive, not argumentative.
 **Revised 2026-09-02** — the bespoke MCP connector is **out** (D7). One surface, three
-populations, all knowledge read from git clones, all enforcement deterministic.
+populations, all knowledge read from git clones, all enforcement deterministic. The harness is
+**product-agnostic** (D12), the OT skill is retired (D13), and content stays in one repo with
+a structural boundary rather than a bundle split (D14).
 
 ## How this document relates to its siblings
 
@@ -44,6 +46,7 @@ These hold everywhere. A violation is a defect, not a trade-off.
 | **A-8** | **Nothing is committed into product repos except their own Layer 02 book** | The property that lets ~16 repos adopt this without per-repo maintenance |
 | **A-9** | **Storage location and delivery channel are independent.** Content living in git does not make it ambient | Collapsing them is how the 469-line payload gets reinvented |
 | **A-10** | **No bespoke service.** Prefer a file in a clone, then an existing connector, then nothing | Every service is an uptime obligation, an auth model, and a pager |
+| **A-11** | **The harness names no product in a prompt.** Product identity enters through the workspace — never through ambient context, a skill body, or the router | A product fact held in the framework has no connection to that product's code or roadmap, so nothing can verify it and it rots silently. That is the exact failure this framework exists to prevent, which makes the framework the worst possible home for it |
 
 ---
 
@@ -55,7 +58,8 @@ These hold everywhere. A violation is a defect, not a trade-off.
 | **03a** Process — narrative | Why the loop is shaped this way; what good looks like | git `neeve-copilot/process/narrative/` | **Pull** | Quarterly |
 | **03b** Process — executable | Gate commands, validation predicates, contracts, rule tiers | git `neeve-copilot/process/gates/` | **Pull + code-gen** | Quarterly |
 | **02½** Cross-repo intel | Contracts and flows spanning repos that no single repo owns | git `neeve-copilot/cross-repo/` | **Pull**, SHA-pinned | Medium |
-| **02** Repo context | The `.neeve/` OKF book | git — each product repo | **Pull** | **High** |
+| **02** Repo context | The `.neeve/` OKF book | git — each product **code** repo | **Pull** | **High** |
+| **02** Product knowledge | What the product is, who buys it, why | git — that product's **planning workspace** `.neeve/` book | **Pull** | Medium |
 | **02** Product artifacts | PRDs, ERDs, design docs | Confluence **or** git planning repo | Query or Pull | Medium |
 | **02** Live work state | Tickets, sprint state, deploy state | Jira · AWS | **Query**, never cached | Continuous |
 | **01** Task frame | Current repo, goal, question, research | Nowhere — assembled per request | — | Per request |
@@ -186,7 +190,7 @@ Four things the diagram is drawn to show:
 | `process/narrative/` | Content | **Layer 03a** | Beside the rules it explains |
 | `process/gates/` | **Data** | **Layer 03b**: gates, predicates, contracts, tiers | Code-gen'd into hooks and CI; never network-served (A-3) |
 | `cross-repo/` | Content + metadata | **Layer 02½** | Each entry records the repo SHAs it was verified against (§9) |
-| `registry/` | Data | Repo registry, source-of-record map | Replaces the 84-line pushed topology table |
+| `registry/` | Data | Repo registry, source-of-record map | Replaces the 84-line pushed topology table. **The index to product knowledge; never the content** (D12) |
 | `disciplines/` | Packaging | Which skills, references, and ambient block ship together | Glob-discovered |
 | `skills/` | Content | Task playbooks | Membership declared in frontmatter, not location |
 | `agent/neeve/` | Content | The single discipline-aware router | Name never changes (§10) |
@@ -345,6 +349,9 @@ Ordered by how much they would invalidate rather than adjust.
 | **D9** | One surface (Claude Code, desktop for non-engineers), three populations | Active |
 | **D10** | Workspaces self-provision via a committed `.claude/settings.json` | Active |
 | **D11** | Per-repo book directory renamed `.help/` → **`.neeve/`**, migrated by dual-path fallback | Active — see below |
+| **D12** | **Product knowledge comes from the workspace.** The harness holds the index, never the content | Active — see below |
+| **D13** | `ot-building-automation` retired; its domain content migrates into the repos it describes | Active — see below |
+| ~~D14~~ | ~~Split content into separate skill bundles~~ | **Rejected — see below** |
 | ~~ADR-9~~ | ~~Layers 03/04 exclusively in NotebookLM~~ | Superseded by D5 |
 | ~~ADR-1…8, 11~~ | Connector-internal decisions | Moot under D7; retained in `superseded/connector/` |
 
@@ -412,3 +419,132 @@ with the rename, and **a missed one ships the book into a container image.**
 **Rejected alternative.** `.okf/`, after the Open Knowledge Format — self-describing to
 someone who knows OKF, opaque otherwise, and it names the *format* rather than the *owner*,
 which is wrong once the directory holds more than the book.
+
+### D12 — product knowledge comes from the workspace
+
+**Decision.** The harness holds the **index** to product knowledge and never the **content**.
+A product's narrative — what it is, who buys it, why it exists — lives in that product's
+**planning workspace `.neeve/` book**, owned and reviewed by the people who own the product.
+
+**The rule already existed and was being violated.** `neeve/CONTRIBUTING.md` §1 states that
+repo-specific knowledge about a product repo *"does not belong in neeve-copilot at all — it
+belongs in that repo's own book. This repo only ever ships Layers 03 and 04."* The 84-line
+product-overview block contradicted it, and an earlier draft of this redesign carried the
+violation forward by inventing `foundation/products/<product>.md` — Layer 02 content in a
+Layer 04 home. That file is deleted from the target structure.
+
+**Index versus content.** The distinction is what keeps `registry/repos.yaml` legitimate: it
+names products and repos, but it is *structural data read on demand*, not prose in a prompt.
+DNS is centralised; websites are not. A-11 is scoped to prompts for exactly this reason.
+
+**Where each fact lands.**
+
+| Fact | Home |
+|---|---|
+| What this repo does — stack, wiring, deploy | that code repo's `.neeve/` book |
+| **What the product is, who buys it, why** | **that product's planning workspace `.neeve/` book** |
+| How repos interact across a product | `cross-repo/`, SHA-pinned (D8) |
+| Which repos comprise a product, ownership | `registry/repos.yaml` — data, not prompt |
+| Local dev runbook | that code repo's book |
+| Company identity, personas as *market* facts | `foundation/` — product-agnostic in shape |
+
+**The sharpest instance was not the table.** `to-prd` Core Rule 2 *mandates* a
+security-operations persona *"in a commercial real estate OT context"* and instructs the skill
+to **refuse to finalize** a PRD without one — domain knowledge encoded as a hard refusal in a
+prompt. The moment a non-CRE product exists, that skill blocks valid work. Generalised form
+keeps the teeth and drops the market: *"Name a specific persona drawn from the org's
+foundation, with the operational outcome they need. Refuse a placeholder."* The same file's
+hardcoded `robin-adr/prds/` write path goes the way `to-erd:42-45` already handles it — ask
+where this org keeps planning docs.
+
+**Enforcement.** CONTRIBUTING's *"no hardcoded repo names"* rule exists and was violated
+anyway, because it is `Advised`. By Move 1's own logic that is the tier to eliminate: a CI
+check greps `ambient/`, `skills/`, and `agent/` against a product/domain denylist derived from
+`registry/repos.yaml` and fails the build. Names in data files pass; names in prompts fail.
+Roughly thirty lines, and it moves the rule from `Advised` to `Blocked`.
+
+### D13 — retire `ot-building-automation`
+
+**Decision.** The skill is retired rather than relocated. Its durable domain content migrates
+into the `.neeve/` books of the repos it describes — `alc-hello-addon`, `alc-robin-agent`,
+`niagara-bql`, `niagara-module`, `niagara-robin-agent` — and then the skill is deleted.
+
+**Deletion is what stops it; asking does not.** Skills auto-invoke on description match, so a
+Robin engineer typing *"fix this Niagara station issue"* fires the skill whether or not they
+intend to. Removal, by contrast, self-heals: `prune_stale_skills` (`install.sh:201`) reads
+`.neeve-manifest` and deletes any skill directory previously installed and no longer shipped.
+**This is where skills behave better than agents** — agents have no manifest, which is why the
+hardcoded `RETIRED_AGENTS` list must be maintained forever. **No `RETIRED_SKILLS` equivalent
+is needed**; do not add one defensively.
+
+**Migrate before deleting.** ~12.9 KB across three files: `references/in-repo-sources.md`
+(2.5 KB, pointers into specific repos), `references/external-docs.md` (2.6 KB, vendor
+references), and `SKILL.md` (7.7 KB of durable how-to). A framework whose thesis is *"do not
+lose context to staleness"* should not lose hard-won OT grounding to a `git rm`. If the work
+itself has stopped rather than the mechanism, delete outright.
+
+**What retirement unlocks.**
+- The D12 denylist check becomes **exception-free**. With this skill present it would have
+  needed an allowlist entry, and rules with exceptions are the ones that erode.
+- `products/` dissolves completely — this skill was the last thing in it.
+- The `products/*/skills` glob can be deleted from **three** independent discovery
+  implementations (`install.sh:14-22`, `skills_sync.sh:9-12`, `check_org_sync.py:38-43`).
+  That is *structural* enforcement of D12: a product skill has nowhere to go, which beats a
+  check that has to notice.
+- **The `products:` skill-frontmatter field from D1 is dropped.** With no product skills and
+  D12 saying they do not belong here, it is speculative generality. `registry/repos.yaml`'s
+  `products:` key stays — that is structural data.
+
+`design-system` (formerly `neeve-dls`) is *not* in scope: the design system spans products, so
+it is legitimately org-level.
+
+### D14 — **rejected**: split content into separate skill bundles
+
+**Proposal.** Make `neeve-copilot` a harness plus a registry, and ship skills as versioned
+bundles in their own repos, referenced by per-plugin marketplace sources. Technically native —
+marketplace entries support `{source: github, repo: …, ref: …}`, npm, and archives.
+
+**Rejected, because it orphans the cross-cutting evals.** The highest-value evals are not
+per-skill; neither repo could run them alone:
+
+| Eval | Spans | Home if split |
+|---|---|---|
+| **S-1** — does the agent read the file when the routing block points at it? | ambient + registry + skill behaviour | **nowhere** |
+| Router picks the right skill | agent + every skill | **nowhere** |
+| Discipline isolation — a designer's payload carries no engineering tokens | ambient renderer + discipline definitions + skills | **nowhere** |
+| Does a skill work in isolation | one skill | the bundle ✅ |
+| Generated hook reproduces today's gate behaviour | harness only | the harness ✅ |
+
+Three of five go homeless, including the spike that gates the entire ambient shrink. Worse,
+the failure mode evals exist to catch **is** composition — a skill that passes alone and
+misbehaves beside the ambient block or another skill. Splitting hides exactly the bug class
+under test. A version matrix compounds it: green CI in each repo says nothing about the
+combination anyone installs, and evals cost real money per case, so N repos either multiply
+the spend or fragment the coverage.
+
+**And every benefit was reachable without it:**
+
+| Reason to split | In-repo equivalent |
+|---|---|
+| Product skills should not live in the harness | Already solved by D12 + D13's glob deletion |
+| Different change rates and CI bars | **Path-scoped CI** — `skills/**` low bar, `tools/**` and `ambient/**` high. Move 4's actual intent; it never needed a repo boundary |
+| Different owners | `CODEOWNERS` |
+| Genericity / open-sourcing | Not a current goal; the rebrand is out of scope |
+
+Evals are the only thing that tells you the framework works at all — the feedback loop this
+redesign identified as entirely missing (Move 5). Trading it for a boundary available four
+other ways is a bad deal.
+
+**What replaces it.** One repo, with the content/mechanism boundary enforced structurally:
+no home for product skills (glob deleted), path-scoped CI, `CODEOWNERS`, and the D12 denylist
+check.
+
+**Trigger conditions to revisit.** Another org adopts the harness (which also reopens the
+rebrand), or a product team needs independent release cadence for skills the platform team
+will not review. Neither is true today, and the registry mechanism keeps the change cheap
+later — a source change plus a composition lockfile, no restructuring.
+
+**Pattern worth noting:** this is the third separation in this redesign that looked right and
+lost on operational cost — the connector (D7), a separate service repo, and now bundles. The
+common thread is that a boundary which fragments verification costs more than the coupling it
+removes.

@@ -7,7 +7,10 @@ out of scope, and the bespoke connector dropped entirely (D7).** With every popu
 holding a git clone, the QUERY channel collapses into a file read; enforcement becomes
 uniform pre-commit/CI; and the discipline split becomes the *primary* rationale rather than
 one of five moves. Sections §6.1–§6.4, §7, and §8 are rewritten accordingly. The per-repo
-book directory also becomes `.neeve/` (D11).
+book directory also becomes `.neeve/` (D11). Later the same day: the harness is made
+**product-agnostic** (D12), `ot-building-automation` is retired (D13), and a proposed split of
+content into separate skill bundles is **rejected** because it orphans the cross-cutting
+evals (D14).
 **Current system-level view: `ARCHITECTURE.md`.** Design detail for the service we
 decided not to build is preserved in `superseded/connector/**`.
 **Companion doc:** `implementation-plan.md` (v3) — the sequenced plan. This document is a
@@ -208,6 +211,13 @@ The risk of one concept in two homes is the two descriptions disagreeing. **ADR-
 dissolves it:** both now live in the same directory of the same repo, so they are reviewable
 in one diff by one reviewer. Residual disagreement still surfaces as a failed gate rather
 than silent divergence, since the executable half is the half that bites.
+
+**Unbundling is a boundary, not a repo split.** The obvious next step — ship skills as
+versioned bundles in their own repos — was proposed and **rejected** (D14): the highest-value
+evals are cross-cutting (router selection, discipline isolation, the read-the-file spike) and
+neither repo could run them. Every benefit was reachable in one repo via **path-scoped CI**,
+`CODEOWNERS`, and deleting the glob that gave product skills a home. The three-product
+separation in the table above is real; it just doesn't need three repositories.
 
 ### Move 5 — Add the feedback loop, which is entirely missing
 
@@ -424,11 +434,13 @@ Full treatment of MCP's remaining role is §6.2; of the connector's withdrawal, 
 | `context_render.py`'s `OUTPUT_FILES` + 4 of 6 render functions | Dead; kept alive only by their own tests. |
 | ~400 of the 469 ambient lines | Move 2 — become files read on demand. |
 | Most of the 5-way skill fan-out | §6.3 — same bytes, five paths. |
-| The ~84-line product-overview block (16-repo table + K8s runbook) | Splits: narrative → `foundation/products/`; repo table → `registry/repos.yaml`; runbook → that repo's own book. |
+| The ~84-line product-overview block (16-repo table + K8s runbook) | Splits: narrative → **Robin's own planning workspace** (D12, not this repo); repo table → `registry/repos.yaml`; runbook → that repo's own book. |
 | `neeve/foundation.md`, `products/*/context/` as **rendered** house-rules sources | The *content* survives as `foundation/` (D5); what dies is its rendering into always-on context. Restructure, not extraction. |
 | `shared_refs_sync.sh`'s physical duplication | A workaround for zip self-containment that a plugin format removes. |
 | **The entire two-channel distribution problem** | §7 — an artefact of supporting a browser population. Org-library ZIPs, `PUBLISHED.yaml`, the manual-publish drift problem, and the 200-character description cap all go with it. |
 | **`neeve-context`, the planned MCP server** | §8 — ~1,700 lines of specification, a separate repo, a deploy pipeline, an auth model, and an on-call rotation, in exchange for what a file read and a git hook already do. |
+| **`products/` entirely, and `ot-building-automation` with it** | D12/D13 — product knowledge moves to the product's own planning workspace; the `products/*/skills` glob is deleted from three discovery implementations, so a product skill has nowhere to live. |
+| **`to-prd`'s commercial-real-estate mandate** | D12 — a prompt that instructs a skill to *refuse* a PRD unless it names a CRE-OT persona. Generalised: name a persona from the org's foundation, refuse a placeholder. |
 
 ### 6.5 North-star metric
 
@@ -650,10 +662,11 @@ surface parity.
 - Is `AGENTS.md` genuinely read by Copilot, Cursor, and Codex at the paths we would write?
   Those cross-tool claims traced to third-party write-ups, not vendor docs. **Verify before
   betting the mechanism on it.**
-- Should `products/*/` become an install-time selection axis? Today one product's 16-repo
-  table and Kubernetes runbook ship globally to everyone, including engineers not on that
-  product. (Partly answered by `registry/` plus `foundation/products/`, but the selection
-  question stands.)
+- ~~Should `products/*/` become an install-time selection axis?~~ **Resolved by D12/D13:**
+  `products/` is deleted. The repo table becomes `registry/repos.yaml` (data, read on demand),
+  the runbook goes to that repo's own book, and the product narrative goes to the product's
+  planning workspace. Nothing product-shaped ships globally because nothing product-shaped
+  ships at all.
 - Who owns the process artifact once it is unbundled? It needs a cross-functional owner, and
   a framework cannot manufacture one.
 - **Offline story is now trivially good** — everything except live state is in a clone. Worth

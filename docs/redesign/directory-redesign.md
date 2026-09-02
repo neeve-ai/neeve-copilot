@@ -6,7 +6,8 @@
 we decided not to build).
 **Revised 2026-09-02** — connector dropped (D7); `cross-repo/` added (D8); `surfaces/`
 simplified to one channel (D9); workspace provisioning promoted (D10); per-repo book
-directory renamed `.help/` → `.neeve/` (D11).
+directory renamed `.help/` → `.neeve/` (D11); **harness made product-agnostic (D12), OT skill
+retired (D13), bundle split rejected (D14)**.
 
 This document translates the redesign into a filesystem. Every directory below exists to
 make one decision legible; where a directory has no decision behind it, it is not here.
@@ -26,6 +27,8 @@ The shape follows from what is already decided:
 | Layer 03b (executable rules) must stay in git | ADR-10 | `process/gates/` — new, and the centre of gravity |
 | Storage ≠ delivery | Invariant A-9 | `foundation/` sits beside `ambient/` but **never renders into it** |
 | The per-repo book is a namespace, not just docs | **D11** | `.help/` → `.neeve/`, name held in `framework.yaml`, dual-path migration |
+| The harness names no product in a prompt | **D12** · invariant A-11 | No `foundation/products/`; no `products/` tree; product narrative lives in the product's planning workspace |
+| Content and mechanism differ in owner and CI bar — but must be evaluated together | **D14** | **One repo**, boundary enforced by path-scoped CI + `CODEOWNERS` + a deleted glob, not by a repo split |
 | Ambient context is a ~40-line budget, and its job is routing | Move 2, §6.2 | `ambient/` is tiny and partly **generated** |
 
 A sixth, from the coupling audit: adding a tool today touches ~10 sites in `install.sh`.
@@ -37,6 +40,8 @@ Any structure that doesn't fix that has failed.
 
 ```
 neeve-copilot/
+├── CODEOWNERS                      # D14 — practitioners own skills/ + evals/,
+│                                   #       platform owns tools/ ambient/ surfaces/
 ├── framework.yaml                  # identity, marker token, tool targets, enabled disciplines
 │                                   # + book_dir: .neeve  (D11 — a value, not a literal)
 ├── README.md  CONTRIBUTING.md  LICENSE
@@ -48,9 +53,10 @@ neeve-copilot/
 │
 ├── foundation/                     # Layer 04 — READ AS A FILE, never pushed (A-9)
 │   ├── identity.md                 # from foundation.md
-│   ├── personas.md
-│   ├── customers.md
-│   └── products/<product>.md       # from products/*/context/product-overview.md
+│   ├── personas.md                 # market facts about Neeve, product-agnostic
+│   └── customers.md
+│                                   # NO products/ subdir — D12. Product narrative lives in
+│                                   # that product's planning workspace .neeve/ book
 │
 ├── disciplines/
 │   ├── core/
@@ -71,9 +77,10 @@ neeve-copilot/
 │
 ├── skills/                         # ALL skills, flat. Membership declared in frontmatter.
 │   ├── to-prd/  to-workitems/  to-spec/  implement-spec/  production-review/
-│   ├── repo-ask/  repo-intel/  debug-trace/  rca-retro-adr/  design-system/
-│   └── ot-building-automation/     # products: [robin]
-│                                   # 3 renames — see §5.4
+│   └── repo-ask/  repo-intel/  debug-trace/  rca-retro-adr/  design-system/
+│                                   # 10 skills, 3 renames (§5.4).
+│                                   # ot-building-automation RETIRED — D13.
+│                                   # No `products:` frontmatter field — D13.
 │
 ├── process/
 │   ├── narrative/                  # Layer 03a — why the loop is shaped this way
@@ -160,6 +167,11 @@ through the same eight-check gate, which simultaneously over-guards skills and u
 the mechanism. This split lets `skills/` and `evals/` be contributed casually while
 `ambient/`, `process/`, and `tools/` stay carefully guarded.
 
+**This table becomes actual CI configuration, not documentation (D14).** Path-scoped
+workflows plus `CODEOWNERS` deliver the owner/change-rate separation that a separate bundle
+repo would have delivered — without fragmenting the eval suite, which is why the bundle split
+was rejected. See `ARCHITECTURE.md` D14.
+
 ---
 
 ## 4. The non-obvious choices
@@ -178,12 +190,13 @@ a generated one cannot drift from the map it is built from.
 
 **`products/` disappears entirely.** This is the least obvious consequence of the layer
 decision. `products/robin/context/product-overview.md` splits three ways — narrative and
-personas to `foundation/products/robin.md`, the repo table to `registry/repos.yaml`, the local-dev runbook into
+personas to **Robin's planning workspace book** (D12 — not this repo), the repo table to `registry/repos.yaml`, the local-dev runbook into
 Robin's own `.neeve/` book. `products/robin/README.md`, which is currently the framework's
 *actual* setup and troubleshooting doc misfiled inside a product directory, becomes
 `docs/setup.md`. The two context fragments move to the discipline and skill that use them.
-One skill remains, and it moves to `skills/` with a `products: [robin]` frontmatter field.
-Nothing is left, so the directory goes.
+The one remaining skill is **retired, not relocated** (D13), and its domain content migrates
+into the five repos it describes. Nothing is left, so the directory goes — and the
+`products/*/skills` glob goes with it, closing the door structurally.
 
 **`surfaces/` is the fix for the ~10-site problem.** Adding a sixth tool today means editing
 a `global_path()` case statement, a usage string, five `DO_*` booleans, an arg parser,
@@ -214,7 +227,7 @@ Complete for everything currently in the repo.
 | Today | Becomes | Note |
 |---|---|---|
 | `neeve/skills/<name>/` | `skills/<name>/` | + `disciplines:` frontmatter. **Three are renamed — §5.4** |
-| `neeve/products/robin/skills/ot-building-automation/` | `skills/ot-building-automation/` | + `products: [robin]` |
+| ~~`neeve/products/robin/skills/ot-building-automation/`~~ | **retired — D13** | Domain content migrates into the five repos it describes, *then* the skill is deleted. Skills self-prune via `.neeve-manifest`; no `RETIRED_SKILLS` list needed |
 | `neeve/agent/neeve/AGENT.md` | `agent/neeve/AGENT.md` | Name stays `neeve` (D2 — never rename) |
 | `neeve/agent/README.md` | `docs/agents.md` | |
 | `neeve/scripts/*.py` | `tools/*.py` | Dead ones deleted, see below |
@@ -230,7 +243,7 @@ Complete for everything currently in the repo.
 | `plan.md`, `docs/Feature-Reference.md` | `docs/history/` | |
 | `neeve/context/fragments/production-consequence-and-gaps.md` | `disciplines/core/references/` | Used by every discipline |
 | `neeve/context/fragments/dls-usage-notes.md` *(under products/robin)* | `disciplines/design/references/` | |
-| `neeve/context/fragments/ot-domain-notes.md` *(under products/robin)* | `skills/ot-building-automation/references/` | Single consumer |
+| `neeve/context/fragments/ot-domain-notes.md` *(under products/robin)* | the OT repos' `.neeve/` books | Travels with the rest of the D13 migration; the skill that consumed it is retired |
 | `neeve/references/design-review.md` | `disciplines/design/references/` | |
 | `neeve/skills/code-review/references/security.md` | `disciplines/engineering/references/security.md` | Canonical shouldn't live inside one consumer |
 
@@ -244,7 +257,7 @@ Complete for everything currently in the repo.
 | `neeve/references/quality-gates.md` | "why" → `disciplines/engineering/references/` · **the commands** → `process/gates/quality-gates.yaml` | Move 1: the gate becomes executable, not described |
 | `neeve/references/pm-lens.md` | checklist prose → `disciplines/product/references/` · checkable items → `process/gates/artifact-rules.yaml` | Feeds `create_prd` validation |
 | `neeve/references/prd-system-of-record.md` | narrative → `disciplines/product/references/` · Status lifecycle + write-back rule → `process/workflow.yaml` | The lifecycle is data |
-| `neeve/products/robin/context/product-overview.md` | narrative → `foundation/products/robin.md` · repo table → `registry/repos.yaml` · local-dev runbook → Robin's own book | §4 above. Still a three-way split, but all destinations are now in-repo |
+| `neeve/products/robin/context/product-overview.md` | narrative → **Robin's planning workspace `.neeve/` book** (D12, *not* the framework) · repo table → `registry/repos.yaml` · local-dev runbook → Robin's own code-repo book | Still three-way, but only one destination is in this repo — and it is data, not prose |
 | `neeve/install.sh` (495 lines) | `surfaces/*/install.sh` + `tools/` | Fixes the ~10-site problem |
 | `neeve/scripts/skills_sync.sh` | Retired for Claude Code (plugins replace it); kept for `surfaces/adapters/` | Plugin format replaces zip packaging on the primary surface |
 
@@ -256,7 +269,7 @@ Complete for everything currently in the repo.
 | `neeve/context/fragments/{code-review,spec}-review-checklist.md` | Their render functions are dead in production; fold into the owning skill's `references/` |
 | `neeve/scripts/shared_refs_sync.sh` | Existed to duplicate `quality-gates.md` into 6 skills; plugin bundling removes the need |
 | `context_render.py`'s `OUTPUT_FILES` + 4 of 6 render functions | Dead; kept alive only by their own tests |
-| `neeve/products/**` | Dissolves entirely (§4) |
+| `neeve/products/**` | Dissolves completely — D13 removed the last thing in it. The `products/*/skills` glob is deleted from **all three** discovery implementations (`install.sh:14-22`, `skills_sync.sh:9-12`, `check_org_sync.py:38-43`), so a product skill has nowhere to go |
 | The `neeve/` wrapper directory | Redundant nesting inside `neeve-copilot/` |
 
 ### 5.4 Renames — three, each justified
@@ -278,8 +291,8 @@ surface out of scope (D9), renaming is a quality decision rather than a deadline
 
 **Kept, with reasons:** `to-prd` / `to-spec` — the `to-` prefix reads as transformation and
 groups the family; that is a virtue. `implement-spec`, `repo-ask`, `repo-intel`,
-`ot-building-automation` — accurate (`repo-*` stays correct because those skills remain
-engineering-only; the workspace generalization does not reach them). `debug-trace` — the
+(`repo-*` stays correct because those skills remain engineering-only; the workspace
+generalization does not reach them). `debug-trace` — the
 name undersells it, since its own description calls it *"the maximal-depth grounding
 discipline"* rather than debugging, but renaming for elegance is not worth structural churn.
 
@@ -357,6 +370,9 @@ Nothing below exists today. Ordered by how much unblocks.
 | `disciplines/product/ambient.md` | PM rollout | ≤80 lines |
 | `cross-repo/` + freshness check | Layer 02½ (D8) | Reuses the manifest-hash pattern |
 | `templates/workspace/.claude/settings.json` | Onboarding (D10) | Auto-enables the right discipline plugin on folder trust |
+| `CODEOWNERS` | D14 | Practitioners own `skills/`+`evals/`; platform owns `tools/`, `ambient/`, `surfaces/` |
+| Path-scoped CI workflows | D14 | Makes §3's CI-bar column real instead of documentation |
+| `process/gates/product-names.yaml` (denylist) | D12 | Fails the build on a product name in `ambient/`, `skills/`, or `agent/`; passes in `registry/` |
 | `evals/<skill>/cases/` | Move 5 | Design for `claude plugin eval`; don't depend on it yet |
 
 ---
@@ -372,6 +388,11 @@ Paths change, so these break and must be fixed in the same change:
 - **`.gitignore`** — `neeve/dist/` → `dist/` (and see §8 on whether it stays ignored).
 - **`.help/` → `.neeve/`** — one constant in the committed hook, plus every product repo's
   `.dockerignore`/`.gitignore` (§5.6). Not covered by the framework-side path rewrite.
+- **The `products/*/skills` glob** — deleted from three independent discovery implementations
+  (D13). Each currently walks both roots; after this they walk one.
+- **`to-prd`'s domain rules** — Core Rule 2's commercial-real-estate mandate and the hardcoded
+  `robin-adr/prds/` write path (D12). The rule keeps its teeth in generalised form: *name a
+  persona from the org's foundation, refuse a placeholder.*
 - **Test assertions** — 27 brand/path strings baked into `test_context_render.py`, `test_merge_default_agent.py`, `test_merge_house_rules.py`. These fail first and are a useful change detector.
 
 Python scripts themselves are safe: they resolve `ROOT` via `Path(__file__).resolve().parents[1]`.
@@ -413,7 +434,7 @@ Structure follows the revised roadmap, not the reverse.
 | **2** | Create `process/**` from existing prose | `tiers.yaml` computes a real Blocked/Surfaced/Advised ratio |
 | **3** | `ambient/` shrink: `base.md` → `core.md` + discipline `ambient.md` | Product payload contains no `mypy`; any discipline ≤220 lines |
 | **4** | Flatten `neeve/`, move `skills/`, **apply the three renames**, add `disciplines:` frontmatter — one commit | Fix all §7 + §5.5 breakage here. One painful commit, not five. **Last chance to rename before publish** |
-| **5** | Restructure `foundation.md` → `foundation/`, 03a narrative → `process/narrative/`, add `cross-repo/` + its freshness check; dissolve `products/` | **A move, not an extraction.** A-9 check lands in CI here |
+| **5** | Restructure `foundation.md` → `foundation/`, 03a narrative → `process/narrative/`, add `cross-repo/` + its freshness check; **migrate OT content into its five repos' books, then delete the skill (D13)**; dissolve `products/` and delete the glob | **A move, not an extraction.** A-9 check and the D12 denylist check land in CI here |
 | **6** | `surfaces/` + `dist/` + `templates/workspace/`; emit `.neeve/` for new workspaces with `.help/` fallback (D11) | Plugin drift check green; throwaway-`$HOME` smoke test; **a non-engineer reaches a first task from a clean machine** |
 | **6b** | Migrate the ~16 product repos to `.neeve/`, one PR each, then drop the fallback | Each repo: book moved, hook reinstalled, ignore files updated, image build verified clean |
 | **7** | `evals/` | At least one case per PM-facing skill |
@@ -425,13 +446,13 @@ against stable paths; reversing it means doing the path fixes twice.
 
 ## 10. Open questions
 
-1. **Where does the book aggregation job run** — a cron in CI, or a local `sync` step? It
+1. **Does Robin still do Niagara/WebCTRL work?** If the work continues and only the *skill
+   mechanism* is retiring, the 12.9 KB migrates into the five repos' books first (D13). If the
+   work itself has stopped, delete outright. **The only item gating D13.**
+2. **Where does the book aggregation job run** — a cron in CI, or a local `sync` step? It
    produces a searchable local book set across ~16 repos. A job, not a service (A-10).
-2. **`dist/` committed?** Depends on whether a marketplace entry can point at a subdirectory
+3. **`dist/` committed?** Depends on whether a marketplace entry can point at a subdirectory
    of its own repo — unverified.
-3. **Does `disciplines/` need a `products:` axis of its own,** or is frontmatter on skills
-   enough? Current answer: frontmatter is enough, since `products/` dissolved. Revisit only
-   if a second product arrives with its own context needs.
 4. **Where does `HOW-TO-USE.md` land?** It spans setup, per-tool notes, and context
    management — three audiences. Probably splits into `docs/setup.md` and
    `docs/architecture.md`, but it is the most-read doc in the repo and worth a deliberate
@@ -439,3 +460,7 @@ against stable paths; reversing it means doing the path fixes twice.
 5. **Does `ambient/core.md` need a per-surface variant?** Copilot and Codex do not
    auto-route to agents, so the ambient block may be carrying more weight there than in
    Claude Code. A uniform ~40-line budget may be wrong per surface.
+
+*Closed by D12/D13:* whether `disciplines/` needs its own `products:` axis — no. `products/`
+dissolved, the skill frontmatter field is dropped, and product scoping is now a property of
+the workspace you are in rather than of a skill.

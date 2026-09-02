@@ -2,7 +2,9 @@
 
 **Version 3 — 2026-09-02.** Supersedes v2. The bespoke connector is out (D7); one surface
 serves three populations (D9); cross-repo intel gets a git home with a freshness contract
-(D8); workspaces self-provision (D10); the per-repo book becomes `.neeve/` (D11).
+(D8); workspaces self-provision (D10); the per-repo book becomes `.neeve/` (D11); the harness
+is product-agnostic (D12), the OT skill is retired (D13), and the bundle split is rejected in
+favour of one repo with a structural boundary (D14).
 
 **Status:** Plan. No code changed.
 **Companion docs:** `ARCHITECTURE.md` (what) · `redesign-proposal.md` (why) ·
@@ -45,6 +47,7 @@ Preserved unchanged from v1/v2: **D1** (frontmatter membership), **D2** (never r
 | **O-6** | Split `rca-retro-adr` into three? | P5 (it is a rename in disguise) | Judgement call |
 | **O-7** | `dist/` committed, or marketplace `git-subdir` source? | P7 layout | Test one marketplace entry |
 | **O-8** | Who drives the ~16 per-repo `.neeve/` migrations, and on what timeline? | Dropping the `.help/` fallback | Dual-path means there is no deadline — but also no forcing function, so an owner is needed or it never finishes |
+| **O-9** | Does Robin still do Niagara/WebCTRL work? | Whether D13 is migrate-then-delete or delete outright | If the work continues, ~12.9 KB moves into five repos' books first; if it has stopped, delete |
 
 **O-1, O-2, and O-3 can invalidate rather than adjust.** Two of them are staffing decisions,
 which is the honest characterisation of the biggest risk in this plan: the missing pieces are
@@ -257,7 +260,7 @@ a PM's likewise; every discipline within budget; no `{{PLACEHOLDER}}` leaks.
 **The big disruptive commit.** One commit — the path churn overlaps completely.
 
 **Structural:** delete the `neeve/` wrapper; `neeve/skills/*` → `skills/*`; the Robin skill
-moves up with `products: [robin]`; add `disciplines:` frontmatter to all 11 skills; move the
+is retired rather than moved (D13); add `disciplines:` frontmatter to the 10 remaining skills; move the
 `security.md` canonical out of the `code-review` skill; rewrite `shared_refs_sync.sh` so
 destinations are **derived** from frontmatter × `discipline.yaml` (today: one canonical, six
 hardcoded paths, four skills silently missing).
@@ -272,6 +275,19 @@ hardcoded paths, four skills silently missing).
 
 **Deletions:** `neeve/prompts/` + `prompts_sync.sh` (9 files, 89 lines, installed nowhere);
 two dead context fragments.
+
+**Product-genericity work (D12–D14), all in this commit since it touches the same paths:**
+- Delete the `products/*/skills` glob from **all three** discovery implementations
+  (`install.sh:14-22`, `skills_sync.sh:9-12`, `check_org_sync.py:38-43`). A product skill then
+  has nowhere to go — structural enforcement rather than a check that has to notice.
+- Drop the `products:` skill-frontmatter field (D13). `registry/repos.yaml`'s `products:` key
+  stays; that is data.
+- Strip `to-prd`'s domain rules (D12): Core Rule 2's commercial-real-estate mandate becomes
+  *"name a specific persona drawn from the org's foundation, with the operational outcome they
+  need; refuse a placeholder"*, and the hardcoded `robin-adr/prds/` path follows
+  `to-erd:42-45`'s pattern of asking where the org keeps planning docs.
+- Add **`CODEOWNERS`** and **path-scoped CI workflows** (D14) — this is what makes §3's
+  ownership/CI-bar table real, and what replaces the rejected bundle split.
 
 **Mechanical breakage, all fixed here:** ~400 markdown citations · `ci.yml`'s 18 path refs ·
 `release.yml`'s 29 occurrences including a `robin-skills-v*` tag trigger that means **no
@@ -294,16 +310,31 @@ Two related pieces of content work.
 | From | To |
 |---|---|
 | `foundation.md` | `foundation/{identity,personas,customers}.md` |
-| `products/robin/context/product-overview.md` — narrative | `foundation/products/robin.md` |
+| `products/robin/context/product-overview.md` — narrative | **Robin's planning workspace `.neeve/` book** — *not* this repo (D12) |
 | — repo table | already `registry/repos.yaml` (P2) |
 | — local-dev/K8s runbook | Robin's own book; it is repo context, not org context |
 | `engineering-principles.md` §§ PRD & Scoping (L18-46) | `disciplines/product/references/` |
 | — §§ Design (L50-71) | `disciplines/design/references/` |
 | `products/robin/context/fragments/dls-usage-notes.md` | `disciplines/design/references/` |
-| `products/robin/context/fragments/ot-domain-notes.md` | `skills/ot-building-automation/references/` |
+| `products/robin/context/fragments/ot-domain-notes.md` | the OT repos' `.neeve/` books, with the rest of the D13 migration |
 | `products/robin/README.md` | `docs/setup.md` — the framework's real setup doc, misfiled under a product |
 
 Then delete `foundation.md`, `engineering-principles.md`, and `products/` entirely.
+
+**Retire `ot-building-automation` (D13).** Migrate ~12.9 KB into the `.neeve/` books of
+`alc-hello-addon`, `alc-robin-agent`, `niagara-bql`, `niagara-module`, and
+`niagara-robin-agent` — `references/in-repo-sources.md` (2.5 KB) into their `index.md`,
+`references/external-docs.md` (2.6 KB) into the consuming repo's book or a `cross-repo/`
+entry, and `SKILL.md`'s durable how-to (7.7 KB) into `introduction.md`. **Then** delete the
+skill. Removal self-heals on every machine via `prune_stale_skills` + `.neeve-manifest`, so no
+`RETIRED_SKILLS` list is required — unlike agents. Gated by **O-9**.
+
+**Product-name denylist check (D12).** `process/gates/product-names.yaml`, derived from
+`registry/repos.yaml`, failing the build on a product or domain name in `ambient/`, `skills/`,
+or `agent/`. Names in data files pass. This converts CONTRIBUTING's *"no hardcoded repo
+names"* rule from `Advised` to `Blocked` — it exists today and was violated anyway, which is
+the tier problem Move 1 exists to fix. Exception-free only because D13 retired the one skill
+that would have needed an allowlist entry.
 
 **Cross-repo intel (D8)** — new Layer 02½ home:
 
@@ -327,7 +358,9 @@ verified-against:
 
 **Gate:** no placeholder leaks; citation checks pass; `docs/setup.md` reachable from the root
 README; **the A-9 check is in CI** (ambient output contains nothing sourced from
-`foundation/`); the freshness check flags a deliberately-stale cross-repo entry.
+`foundation/`); the freshness check flags a deliberately-stale cross-repo entry; **the D12
+denylist check passes with no allowlist entries**, and fails on a deliberately-introduced
+product name in a skill body.
 
 ---
 
@@ -382,6 +415,10 @@ help** (re-run of S-2).
 ### P8 — Evals & the feedback loop
 
 - `evals/<skill>/cases/` — start with each discipline's two or three core skills.
+- **Cross-cutting evals stay possible because content stays in one repo (D14):** router
+  selection spans the agent and every skill; discipline isolation spans the renderer,
+  discipline definitions, and skills; S-1 spans ambient, registry, and skill behaviour. A
+  bundle split would have orphaned all three, which is why it was rejected.
 - **Lessons aggregation**: a scheduled job collecting `.neeve/lessons.md` across clones,
   attributing each correction to the artifact that caused it — skill, gate, book, or
   cross-repo entry.
@@ -408,6 +445,7 @@ on one real example.
 | — | — | P3: tiers ratio computed and reported |
 | — | — | P6: A-9 check; cross-repo freshness check |
 | — | — | P7: `dist/` drift check; workspace provisioning smoke test |
+| — | — | P6: D12 denylist — no product/domain name in `ambient/`, `skills/`, `agent/` |
 | — | — | P7b: every registered repo has `.neeve/` and no `.help/` — the gate for removing the fallback |
 
 Local pre-PR sequence stays as `CONTRIBUTING.md` §5 describes, plus the throwaway-`$HOME`
@@ -423,6 +461,8 @@ install smoke test, which CI still does not run for you.
 - **The rebrand.** No rename of the framework, marker label, `neeve` agent, or
   `neeve.contextsync.*` keys. Prerequisite if ever taken up: a `KNOWN_LEGACY_LABELS` migration
   path plus P1's `--upgrade-from`.
+- **Splitting content into separate skill-bundle repos** (D14, rejected) — it orphans the
+  cross-cutting evals. Trigger conditions for revisiting are in `ARCHITECTURE.md` D14.
 - Federated cross-source search as a single tool.
 - MCP-to-MCP federation.
 

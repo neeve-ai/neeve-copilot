@@ -42,6 +42,11 @@ A UX designer opening Claude Code today receives `mypy --strict` and
 *"never import infrastructure concerns into the domain layer"* as **mandatory,
 precedence-winning** rules. That is the problem this redesign exists to fix.
 
+A second, narrower one: the framework's own contributing guide says product-specific knowledge
+*"does not belong in neeve-copilot at all"* — and `to-prd` nonetheless instructs the model to
+**refuse** any PRD that doesn't name a commercial-real-estate persona. The rule existed and was
+violated because it was advisory. D12 makes it enforced.
+
 ---
 
 ## Decisions of record
@@ -61,6 +66,9 @@ Full index with rationale in [`ARCHITECTURE.md`](ARCHITECTURE.md) §15.
 | D9 | One surface (Claude Code), three populations |
 | D10 | Workspaces self-provision via a committed `.claude/settings.json` |
 | D11 | Per-repo book directory `.help/` → **`.neeve/`**, migrated by dual-path fallback |
+| D12 | **Product knowledge comes from the workspace.** The harness holds the index, never the content |
+| D13 | `ot-building-automation` retired; its domain content migrates into the repos it describes |
+| ~~D14~~ | ~~Split content into skill bundles~~ — **rejected**: it orphans the cross-cutting evals |
 
 ---
 

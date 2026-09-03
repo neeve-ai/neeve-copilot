@@ -196,3 +196,5 @@ git add neeve/skills/ && git commit -m "skills: describe your change"
 
 See [`neeve/products/robin/README.md`](neeve/products/robin/README.md) for the full
 maintainer workflow and CI/release process.
+
+<!-- guard self-test, to be reverted -->

@@ -10,7 +10,8 @@ one of five moves. Sections §6.1–§6.4, §7, and §8 are rewritten accordingl
 book directory also becomes `.neeve/` (D11). Later the same day: the harness is made
 **product-agnostic** (D12), `ot-building-automation` is retired (D13), and a proposed split of
 content into separate skill bundles is **rejected** because it orphans the cross-cutting
-evals (D14).
+evals (D14). *2026-09-03:* the plugin becomes the delivery mechanism for pull-channel content,
+so **consumers never clone this repo** (D15) — §6.1's PULL column and §6.3's mechanism change.
 **Current system-level view: `ARCHITECTURE.md`.** Design detail for the service we
 decided not to build is preserved in `superseded/connector/**`.
 **Companion doc:** `implementation-plan.md` (v3) — the sequenced plan. This document is a
@@ -204,7 +205,7 @@ each, split by *purpose* rather than by audience:
 
 | Form | Home | Read by |
 |---|---|---|
-| **Narrative** — why the loop is shaped this way, what a good PRD reads like | git `process/narrative/` | humans and agents, read from the clone |
+| **Narrative** — why the loop is shaped this way, what a good PRD reads like | git `process/narrative/` | humans and agents, read from the installed plugin (D15) |
 | **Executable rules** — gate commands, validation predicates, contracts-as-data | git `process/gates/` | CI, pre-commit, connector validators |
 
 The risk of one concept in two homes is the two descriptions disagreeing. **ADR-11 largely
@@ -254,7 +255,7 @@ two authoritative homes is a conflict, not redundancy.
 ```
                      │ PUSH               │ PULL                │ QUERY
                      │ every turn, in ctx │ when the agent reads│ live, on demand
- SCOPE / SoR         │ file (AGENTS.md)   │ FILE IN A CLONE     │ existing connector
+ SCOPE / SoR         │ file (AGENTS.md)   │ FILE IN THE PLUGIN  │ existing connector
 ─────────────────────┼────────────────────┼─────────────────────┼─────────────────────
  04  ORG FOUNDATION  │ identity, stakes,  │ foundation, personas│ —
      static · prose  │ precedence,        │ customers, product  │
@@ -294,12 +295,18 @@ two authoritative homes is a conflict, not redundancy.
 ```
 
 **What changed on 2026-09-02:** the QUERY column emptied out. Every row that pointed at a
-bespoke MCP server now points at **a file in a local clone**, because all three populations
-have a filesystem and git. QUERY retains only what genuinely cannot be a file — state that
-changes faster than any sync — served by connectors that already exist.
+bespoke MCP server now points at **a file**, because all three populations have a filesystem.
+QUERY retains only what genuinely cannot be a file — state that changes faster than any sync —
+served by connectors that already exist.
 
-That is strictly better on five axes: no network, no auth, no staleness window, works
-offline, and nothing to operate.
+**What changed on 2026-09-03 (D15):** *which* file. The first version had consumers clone this
+repo, which meant cloning design documents, superseded specifications, `tools/`, `tests/`, and
+`templates/` to reach ~50 KB of content they actually need. The content layers are now
+**bundled into the `neeve-core` plugin**, so PULL means *a file in the plugin you installed* —
+and an end user never clones this repository at all.
+
+That is strictly better on six axes: no network, no auth, no staleness window, works offline,
+nothing to operate, and **no git required of the end user**.
 
 **The governing rule:** *the larger and more volatile a body of knowledge, the further
 right it belongs.* PUSH is a budget, not a home. Mass should migrate rightward over time.
@@ -324,7 +331,7 @@ an install path.
 
 **Where the system sits today:** effectively everything is in the PUSH column (469 lines)
 or PULL (skills). The redesign's work is to move the bulk of PUSH into PULL — from *shipped
-to everyone on every turn* to *read from a clone when relevant*.
+to everyone on every turn* to *read from a local file when relevant*.
 
 ### 6.2 Where MCP fits — a much smaller role than first assumed
 
@@ -341,7 +348,8 @@ already exist:
 | Deploy / cluster state | Same | AWS |
 | Human-collaboration artifacts hosted outside git — Confluence pages | They live where non-framework stakeholders read them | Atlassian |
 
-Everything else that was going to be a query is now **a file read from a local clone**. That
+Everything else that was going to be a query is now **a local file read** — bundled into the
+plugin the user installed (D15), not cloned. That
 is better on five axes at once: no network, no auth, no staleness window, works offline, and
 nothing to operate.
 
@@ -371,7 +379,7 @@ Proposed:
 - Retire the rest of the fan-out as tools converge.
 
 The whole mechanism on one page. **Only two rows have a projection step at all** — the rest
-is content read straight from a clone, which is what dropping the connector bought:
+is content read straight from a local file, which is what dropping the connector bought:
 
 ```
   SOURCE OF TRUTH (this repo)      PROJECTION               REACHES THE AGENT AS
@@ -392,23 +400,23 @@ is content read straight from a clone, which is what dropping the connector boug
     validation predicates ·           call, ever)            Layer 03b — MUST stay in git
     contracts-as-data                                        (A-3: CI has no human to auth)
 
-  ─ ─ ─  everything below is READ AS A FILE — no projection, no install, no service  ─ ─ ─
+  ─ ─ ─  everything below is READ AS A FILE — bundled by the plugin build, no service  ─ ─ ─
 
-  foundation/            ────────>  (none)       ────────> agent reads from the clone
-    Layer 04: identity ·                                   → NOT rendered into ambient
-    personas · customers ·                                    (invariant A-9)
-    product narrative                                      → citation resolves to a commit
+  foundation/            ────────> bundled into ────────> agent reads from the PLUGIN
+    Layer 04: identity ·             neeve-core             → NOT rendered into ambient
+    personas · customers ·           at build time             (invariant A-9)
+    product narrative                (CI drift-checked)     → no clone required (D15)
 
-  process/narrative/     ────────>  (none)       ────────> agent reads from the clone
-    Layer 03a: why the loop                                → sits beside the gates it
+  process/narrative/     ────────> bundled into ────────> agent reads from the PLUGIN
+    Layer 03a: why the loop          neeve-core             → sits beside the gates it
     is shaped this way                                        explains: one diff, one review
 
-  cross-repo/            ────────>  (none)       ────────> agent reads from the clone
-    Layer 02½: contracts and                               → verified-against: SHAs
+  cross-repo/            ────────> bundled into ────────> agent reads from the PLUGIN
+    Layer 02½: contracts and         neeve-core             → verified-against: SHAs
     flows spanning repos                                   → scheduled check flags drift
 
-  registry/              ────────>  (none)       ────────> agent reads from the clone
-    repos.yaml · sources.yaml                              → also GENERATES ambient/routing.md
+  registry/              ────────> bundled into ────────> agent reads from the PLUGIN
+    repos.yaml · sources.yaml        neeve-core             → also GENERATES ambient/routing.md
 
   PRODUCT REPO  (committed there, never here)
   .neeve/ book           ────────>  (none)       ────────> every population reads directly
@@ -506,11 +514,16 @@ assumes a development environment. If a PM or designer can't get through install
 cloning, they don't use the framework at all — a worse failure than any context gap, and
 worse than the browser problem the connector was meant to solve.
 
-**Mitigation: the workspace provisions itself.** A committed `.claude/settings.json` carrying
-`extraKnownMarketplaces` + `enabledPlugins` auto-registers and enables the right discipline
-plugin **on folder trust** — no marketplace URL to paste, no `/plugin` commands. Setup becomes:
-install the app, clone one repo, trust it. Their skills, their ambient block, and their default
-agent all arrive with the clone.
+**Mitigation, in two parts.** First, **the plugin carries everything** (D15) — content layers
+and the ambient-render hook included — so an end user never clones this repo. Install is three
+slash commands inside Claude Code. Second, **the workspace provisions itself** (D10): a
+committed `.claude/settings.json` carrying `extraKnownMarketplaces` + `enabledPlugins`
+auto-registers and enables the right discipline plugin **on folder trust**, so even those three
+commands disappear. Setup becomes: install the app, clone **one workspace**, trust it.
+
+The friction most likely to actually stop a designer — installing git, configuring SSH or a
+credential helper, cloning a repo they have no other reason to read — was never our code. D15
+removes it from the path.
 
 That makes the generalized `init_workspace.sh` the highest-leverage onboarding artifact in the
 programme — it is what hides a developer surface behind a single clone. Three workspace kinds:
@@ -669,7 +682,7 @@ surface parity.
   ships at all.
 - Who owns the process artifact once it is unbundled? It needs a cross-functional owner, and
   a framework cannot manufacture one.
-- **Offline story is now trivially good** — everything except live state is in a clone. Worth
+- **Offline story is now trivially good** — everything except live state is on disk. Worth
   stating only because an earlier draft treated it as a hard problem.
 
 ### Resolved by the 2026-09-02 decisions

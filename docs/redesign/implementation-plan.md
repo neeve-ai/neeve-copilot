@@ -3,8 +3,9 @@
 **Version 3 — 2026-09-02.** Supersedes v2. The bespoke connector is out (D7); one surface
 serves three populations (D9); cross-repo intel gets a git home with a freshness contract
 (D8); workspaces self-provision (D10); the per-repo book becomes `.neeve/` (D11); the harness
-is product-agnostic (D12), the OT skill is retired (D13), and the bundle split is rejected in
-favour of one repo with a structural boundary (D14).
+is product-agnostic (D12), the OT skill is retired (D13), the bundle split is rejected in
+favour of one repo with a structural boundary (D14), and **the plugin becomes the delivery
+mechanism for pull-channel content so consumers never clone this repo (D15)**.
 
 **Status:** Plan. No code changed.
 **Companion docs:** `ARCHITECTURE.md` (what) · `redesign-proposal.md` (why) ·
@@ -19,7 +20,7 @@ every file. Treat specific line numbers as "confirm on first read."
 | v2 said | v3 says | Because |
 |---|---|---|
 | Build a `neeve-context` MCP server first; Track B runs in parallel | **No connector at all.** Track B deleted | Every justification depended on a browser population (D7) |
-| Layers 04/03a served over MCP on QUERY | **Read as files from a clone** (Pull) | All three populations have a filesystem and git |
+| Layers 04/03a served over MCP on QUERY | **Read as files** (Pull) — bundled into the plugin, not cloned (D15) | All three populations have a filesystem; none needs this repo |
 | Two distribution channels with opposite properties | **One channel** — plugins | claude.ai out of scope |
 | `Blocked` for PMs requires connector write tools | **Pre-commit + CI, uniformly** | Everyone commits to git |
 | Discipline split was one of five moves | **The primary rationale.** Three populations, one ambient plane | A designer otherwise gets `mypy --strict` as a mandatory rule |
@@ -48,6 +49,8 @@ Preserved unchanged from v1/v2: **D1** (frontmatter membership), **D2** (never r
 | **O-7** | `dist/` committed, or marketplace `git-subdir` source? | P7 layout | Test one marketplace entry |
 | **O-8** | Who drives the ~16 per-repo `.neeve/` migrations, and on what timeline? | Dropping the `.help/` fallback | Dual-path means there is no deadline — but also no forcing function, so an owner is needed or it never finishes |
 | **O-9** | Does Robin still do Niagara/WebCTRL work? | Whether D13 is migrate-then-delete or delete outright | If the work continues, ~12.9 KB moves into five repos' books first; if it has stopped, delete |
+| **O-10** | Do arbitrary top-level directories survive plugin install, or must bundled content live under `skills/*/references/` or `scripts/`? | D15's packaging detail — P7 | Docs guarantee the plugin dir plus *files referenced by components*, not arbitrary dirs. Test one install; if not, move the content under documented locations — nothing else changes |
+| **O-11** | Does hook-emitted stdout join the cached prefix, and how does it interact with the precedence declaration? | Token cost and rule weighting — P4, P7 | Measure `cache_read_input_tokens` across turns; do not assume |
 
 **O-1, O-2, and O-3 can invalidate rather than adjust.** Two of them are staffing decisions,
 which is the honest characterisation of the biggest risk in this plan: the missing pieces are
@@ -350,7 +353,12 @@ verified-against:
 - `cross-repo/` directory with the `verified-against:` convention.
 - A **freshness check** reusing `pre-commit-context-sync`'s manifest-hash pattern, pointed at
   `cross-repo/`: flag entries whose referenced repos have moved past the recorded SHA.
-- A **book aggregation job** — scheduled, pulls the ~16 book directories into a local searchable
+- **Decide whether the aggregation job is still needed at all (D15).** It was partly a
+  leftover from the connector design — something had to assemble a corpus for the connector to
+  *serve*. Without a connector, engineers read their own workspace's book, cross-repo questions
+  read the curated `cross-repo/` entries, and anyone needing another repo's full book clones
+  that repo. If that holds, drop the job and one moving part with it.
+- A **book aggregation job**, *if* the decision above keeps it — scheduled, pulls the ~16 book directories into a local searchable
   directory. A cron job, not a service (A-10).
 - **An authoring path**, without which the store stays empty: a cross-repo mode for
   `repo-intel` — *"trace this contract across every repo that touches it, and write the
@@ -375,6 +383,18 @@ Much smaller than v2 — one distribution channel.
   Skills receive **zero** per-tool transformation, so each is a destination path.
 - Keep `agents_render.py` — those four tools still need TOML transcoding, per-tool frontmatter,
   skill-fallback synthesis, and tool-vocabulary translation. No plugin format does this.
+- **Bundle the pull-channel content into `neeve-core` (D15).** `foundation/`,
+  `process/narrative/`, `registry/`, and `cross-repo/` are copied into the plugin at build
+  time, and the router agent plus every skill that reads them references them by their
+  in-plugin path. A CI drift check keeps the bundle identical to source (invariant A-5) —
+  same pattern as `dist/`.
+- **Move the ambient block into a plugin-shipped `SessionStart` hook that *emits* it (D15).**
+  The hook renders from the plugin's bundled content and writes to **stdout**, which Claude
+  Code adds to the session's context — no write to `~/.claude/CLAUDE.md`, so no undocumented
+  timing question and no touching user-owned files. `merge_house_rules.py` stays only for the
+  four adapter tools, which have no hook mechanism.
+- **A-9 becomes structural here.** A block that is emitted and never stored cannot accumulate
+  back into a 469-line file; P6's check becomes a backstop rather than the defence.
 - **Book directory becomes `.neeve/` (D11).** Resolve it from `framework.yaml`'s `book_dir`
   rather than the hardcoded `HELP_DIR` constant, and fall back to `.help/` when `.neeve/` is
   absent. New workspaces get `.neeve/`; existing repos migrate on their own schedule (P7b).
@@ -406,9 +426,11 @@ Per-repo checklist:
 **Gate for dropping the fallback:** all ~16 repos migrated, verified by a script that checks
 each registered repo in `registry/repos.yaml` for a `.neeve/` directory and no `.help/`.
 
-**Gate:** plugin drift check green; throwaway-`$HOME` smoke test; and the real one —
-**a clean machine, a fresh clone, and a non-engineer reaching a working first task without
-help** (re-run of S-2).
+**Gate:** plugin drift check green; **bundled content in `neeve-core` byte-identical to
+`foundation/`, `process/narrative/`, `registry/`, and `cross-repo/`**; throwaway-`$HOME` smoke
+test; and the real one — **a clean machine and a non-engineer reaching a working first task
+without help and without cloning this repo** (re-run of S-2). The no-clone condition is the
+acceptance test for the whole delivery mechanism (D15).
 
 ---
 
@@ -488,3 +510,8 @@ install smoke test, which CI still does not run for you.
 8. **Corpus quality caps outcomes.** Books are uneven; TS/Go symbol detection is conservative.
 9. **Confluence-hosted artifacts cannot be gated.** Accept `Surfaced` or move them to git
    (O-5).
+10. **D15's packaging detail is unverified** (O-10). Arbitrary top-level directories are not
+    *guaranteed* to survive plugin install — the docs promise the plugin directory plus files
+    referenced by components. If they do not survive, the content moves under
+    `skills/*/references/` and nothing else about D15 changes. Sparse checkout is the fallback
+    of last resort. Low severity: the decision's intent survives every branch.

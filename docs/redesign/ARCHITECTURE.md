@@ -1,8 +1,9 @@
 # Architecture — Neeve Agentic Framework, Redesigned
 
 **Status:** Target architecture. Descriptive, not argumentative.
-**Revised 2026-09-02** — the bespoke MCP connector is **out** (D7). One surface, three
-populations, all knowledge read from git clones, all enforcement deterministic. The harness is
+**Revised 2026-09-03** — the bespoke MCP connector is **out** (D7). One surface, three
+populations, all enforcement deterministic. Pull-channel content is **delivered by the plugin**,
+so consumers never clone this repo (D15). The harness is
 **product-agnostic** (D12), the OT skill is retired (D13), and content stays in one repo with
 a structural boundary rather than a bundle split (D14).
 
@@ -23,7 +24,7 @@ Read this file to understand the system. Where documents disagree, this one wins
 ## 1. The system in one paragraph
 
 Knowledge lives in git, with exactly one authoritative home per domain. Agents read it from
-a local clone. A small always-on block tells them where to look. Process rules that matter
+content bundled into the plugin they installed — consumers never clone this repo. A small always-on block tells them where to look. Process rules that matter
 are executable data enforced by hooks and CI. Three populations — engineering, product,
 design — share one surface and receive only their own discipline's context. The only
 network dependencies are the external systems that own live state.
@@ -87,14 +88,18 @@ Five ways knowledge reaches a model, distinguished by *when* it arrives and what
 |---|---|---|---|---|
 | **Ambient** | Every request | Tokens on every turn | Identity, precedence, **routing pointers** | Marker-merge into an instructions file |
 | **Invocable** | On relevance | Tokens when matched | Skills, the router agent | Plugin, per discipline |
-| **Pull** | When the agent reads | Tokens when read | Layers 04 · 03a · 02½ · 02 | **File read from a local clone** |
+| **Pull** | When the agent reads | Tokens when read | Layers 04 · 03a · 02½ · 02 | **File read from the installed plugin** (Layer 02 from the workspace itself) |
 | **Query** | On demand | Nothing until asked | **Live external state only** | Existing Atlassian / AWS connectors |
 | **Executable** | At gate time | No model involved | Layer 03b rules | Pre-commit hooks, CI |
 
 **The Query channel is deliberately small.** An earlier design routed Layers 04/03a/02
-through a bespoke MCP server. With every population holding a clone, those became file
-reads — faster, offline-capable, no auth, no staleness window, no service to operate. Query
-now holds only what genuinely cannot be a file: state that changes faster than any sync.
+through a bespoke MCP server; a later one had consumers clone this repo. Both are gone. The
+content now ships *inside the plugin* — faster than a query, offline-capable, no auth, no
+staleness window, no service, and **no clone**. Query holds only what genuinely cannot be a
+file: state that changes faster than any sync.
+
+**Pull does not mean "clone the framework."** See D15 — that distinction is the whole reason
+an end user's install is three slash commands rather than a git workflow.
 
 **The Executable channel is the one conventional context designs omit**, and it is where
 enforcement lives. A rule delivered only through channels 1–4 is advice.
@@ -137,7 +142,7 @@ graph TB
         CI[CI + git hooks<br/>NO MODEL]
     end
 
-    subgraph "neeve-copilot clone — read as files"
+    subgraph "neeve-copilot — authored here, BUNDLED into the plugin (D15)"
         AMB[ambient/<br/>~40 lines, routing]
         FND[foundation/<br/>Layer 04]
         PNAR[process/narrative/<br/>Layer 03a]
@@ -186,11 +191,11 @@ Four things the diagram is drawn to show:
 | Component | Kind | Owns | Notes |
 |---|---|---|---|
 | `ambient/` | Rendered content | The ~40-line always-on block, per discipline | `routing.md` generated from `registry/sources.yaml` |
-| `foundation/` | Content | **Layer 04** | Read on demand, never pushed (A-9) |
-| `process/narrative/` | Content | **Layer 03a** | Beside the rules it explains |
+| `foundation/` | Content | **Layer 04** | Read on demand, never pushed (A-9). **Bundled into `neeve-core` at build time** (D15) |
+| `process/narrative/` | Content | **Layer 03a** | Beside the rules it explains. Bundled into `neeve-core` (D15) |
 | `process/gates/` | **Data** | **Layer 03b**: gates, predicates, contracts, tiers | Code-gen'd into hooks and CI; never network-served (A-3) |
-| `cross-repo/` | Content + metadata | **Layer 02½** | Each entry records the repo SHAs it was verified against (§9) |
-| `registry/` | Data | Repo registry, source-of-record map | Replaces the 84-line pushed topology table. **The index to product knowledge; never the content** (D12) |
+| `cross-repo/` | Content + metadata | **Layer 02½** | Each entry records the repo SHAs it was verified against (§9). Bundled into `neeve-core` (D15) |
+| `registry/` | Data | Repo registry, source-of-record map | Replaces the 84-line pushed topology table. **The index to product knowledge; never the content** (D12). Bundled into `neeve-core` (D15) |
 | `disciplines/` | Packaging | Which skills, references, and ambient block ship together | Glob-discovered |
 | `skills/` | Content | Task playbooks | Membership declared in frontmatter, not location |
 | `agent/neeve/` | Content | The single discipline-aware router | Name never changes (§10) |
@@ -232,7 +237,8 @@ Three mechanisms, all deterministic, all model-free.
 |---|---|---|
 | Layer 02 book | Manifest hash + public-symbol diff against the repo's own code | Committed `pre-commit-context-sync`; warn-only until a repo opts into blocking. Resolves `.neeve/` then falls back to `.help/` during migration (D11) |
 | **Layer 02½ cross-repo intel** | Each entry records `verified-against:` repo SHAs. A scheduled check flags entries whose repos have moved past them | Same manifest-hash pattern, pointed at `cross-repo/` |
-| Framework clone | SessionStart hook pulls and reinstalls when HEAD moves | `refresh-context.sh`, scoped to the tools the engineer actually selected |
+| Framework content, for a **consumer** | Rendered per session from the installed plugin version — there is no stored copy to go stale (D15) | The plugin's own `SessionStart` hook; freshness follows plugin updates |
+| Framework content, for a **contributor** | SessionStart hook pulls and reinstalls when HEAD moves | `refresh-context.sh`, scoped to the tools they actually selected |
 
 The cross-repo contract matters most because that content is the least owned and the fastest
 to rot. Without it, `cross-repo/` becomes the wiki page that was accurate in March — which is
@@ -278,7 +284,7 @@ The aggregation is a scheduled job over clones — not a service (A-10).
 | Failure | Effect | Populations affected |
 |---|---|---|
 | Framework clone stale | SessionStart hook refreshes; if it fails, content is merely older, and hooks still flag drift | All, equally |
-| Git remote unreachable | **No impact on reading.** Everything needed is in the clone. Commits queue locally | All, equally |
+| Git remote unreachable | **No impact on reading.** Everything needed is in the installed plugin and the current workspace. Commits queue locally | All, equally |
 | Atlassian / AWS down | Live state unavailable; Confluence-hosted artifacts unreadable | All, equally |
 | CI down | Gates unenforced until restored | All, equally |
 | Book or cross-repo entry stale | Flagged loudly by the freshness check (§9) | All, equally |
@@ -297,6 +303,8 @@ of the saved build effort.
 - No second copy of any fact (A-1); no caching of live state.
 - No knowledge database. Files in git, read directly.
 - No browser-only surface. claude.ai is out of scope.
+- **No requirement that a consumer clone this repo.** Contributors clone; users install a
+  plugin (D15).
 - No per-product-repo installation beyond that repo's own book and hook (A-8).
 - No UI. The AI clients are the UI.
 - No path to OT networks or building equipment, now or later.
@@ -352,6 +360,7 @@ Ordered by how much they would invalidate rather than adjust.
 | **D12** | **Product knowledge comes from the workspace.** The harness holds the index, never the content | Active — see below |
 | **D13** | `ot-building-automation` retired; its domain content migrates into the repos it describes | Active — see below |
 | ~~D14~~ | ~~Split content into separate skill bundles~~ | **Rejected — see below** |
+| **D15** | **The plugin is the delivery mechanism for pull-channel content.** Consumers never clone this repo | Active — see below |
 | ~~ADR-9~~ | ~~Layers 03/04 exclusively in NotebookLM~~ | Superseded by D5 |
 | ~~ADR-1…8, 11~~ | Connector-internal decisions | Moot under D7; retained in `superseded/connector/` |
 
@@ -548,3 +557,109 @@ later — a source change plus a composition lockfile, no restructuring.
 lost on operational cost — the connector (D7), a separate service repo, and now bundles. The
 common thread is that a boundary which fragments verification costs more than the coupling it
 removes.
+
+### D15 — the plugin is the delivery mechanism; consumers never clone
+
+**Decision.** `foundation/`, `process/narrative/`, `registry/`, and `cross-repo/` are bundled
+into the `neeve-core` plugin at build time and read at runtime via **`${CLAUDE_PLUGIN_ROOT}`**,
+the documented way a plugin's skills, agents, and hooks reference files beside them.
+`neeve-core` also ships a `SessionStart` hook that renders the ambient block from that bundled
+content and **emits it to stdout**, which Claude Code adds to the session's context.
+
+**An end user installs a plugin. They do not clone this repository.**
+
+**What forced the change.** D5 placed Layers 04/03a in git and described them as *"read as
+files from a clone."* That was a reasonable default when the alternative under consideration
+was a bespoke connector, but it made **cloning the whole framework repo a precondition for
+using it** — design documents, superseded connector specifications, `tools/`, `tests/`,
+`templates/`, and `docs/` included, to reach roughly 50 KB of content a consumer actually
+needs.
+
+**Why the plugin is the right carrier.** This is already the framework's own pattern.
+`shared_refs_sync.sh` exists precisely because a skill's `references/` must work without a
+clone, and the redesign was *already* deleting it on the grounds that plugin bundling replaces
+that duplication. D15 extends the same mechanism to the remaining content layers rather than
+inventing a second one.
+
+Git stays the system of record. The bundled copy is a generated, CI-diffed projection — the
+same status as `dist/`, covered by invariant **A-5**. **A-1 is not violated**: there is still
+exactly one authoritative home per domain.
+
+**What it does to the install experience.**
+
+```
+/plugin marketplace add neeve-ai/neeve-copilot
+/plugin install neeve-core@neeve-copilot
+/plugin install neeve-product@neeve-copilot
+```
+
+Three slash commands, inside Claude Code. No terminal, no git, no clone. In a workspace with a
+committed `.claude/settings.json` (D10), `extraKnownMarketplaces` + `enabledPlugins` do it on
+folder-trust and even those disappear: **clone one workspace, trust it, done.**
+
+This matters most for the population the programme is least sure about. Risk #1 is onboarding
+non-engineers onto a developer-shaped surface, and the friction most likely to actually stop a
+designer — installing git, configuring SSH or a credential helper, cloning — was never our
+code. D15 removes it from the path.
+
+**Alternatives.**
+(a) *Consumers sparse-checkout the content layers* —
+`git clone --filter=blob:none --sparse` plus `sparse-checkout set foundation process/narrative
+registry cross-repo`. Works, keeps the freshness mechanism unchanged, and is the **fallback if
+either verification below fails**. Rejected as the primary because it still requires git and a
+clone for no gain over bundling.
+(b) *A release tarball* — rejected: it reinvents fetch, versioning, and update, which the
+marketplace already provides, and loses the git-pull freshness path without replacing it.
+(c) *An MCP server* — rejected under D7; do not reopen.
+
+**Consequences.**
+- Contributors still clone the full repo. That is the correct split: two audiences, two
+  mechanisms.
+- The Pull channel keeps every property that made it attractive — no network, no auth,
+  offline-capable — while losing the clone.
+- Plugin version bumps become the update path for content as well as skills, which is one
+  mechanism instead of two.
+- **D8's book-aggregation job may become unnecessary.** It was partly a leftover from the
+  connector design: something had to assemble a corpus for the connector to *serve*. Without a
+  connector, engineers read their own workspace's book, cross-repo questions read the curated
+  `cross-repo/` entries, and anyone needing another repo's full book clones that repo. Simpler,
+  and one fewer moving part. Flagged for decision in P6 rather than resolved here.
+
+**Emit, don't write — and this is the better half of the decision.**
+
+The first draft had the hook marker-merge the block into `~/.claude/CLAUDE.md`, which raised an
+undocumented timing question: does `SessionStart` fire before or after Claude Code reads
+`CLAUDE.md`? If after, the block would be missing on session one.
+
+Hook **stdout is added to context** on `SessionStart`, so the question is *avoided* rather than
+answered. The block is rendered per session from the installed plugin version and never
+persisted. Three consequences, all improvements:
+
+- **A-9 becomes structural rather than a CI check.** A block that is emitted and never stored
+  cannot silently accumulate back into a 469-line file. The check in P6 becomes a backstop.
+- **The primary surface stops writing to user-owned files.** `merge_house_rules.py` — and the
+  data-loss bug it carries — is no longer on Claude Code's path at all. It remains necessary
+  for Codex, Cursor, Copilot, and Antigravity, which have no hook mechanism, so the fix (#18)
+  still lands; its blast radius just shrinks to the adapter surfaces.
+- **Staleness disappears for this artifact.** There is no stored copy to go stale; the block is
+  as current as the installed plugin.
+
+Cost, stated: the block is no longer visible in the user's own `CLAUDE.md`, so it is less
+inspectable and less obviously overridable. The routing block should say where it comes from.
+
+**Verification status.**
+
+| Item | Status |
+|---|---|
+| Plugin can carry ~50 KB of bundled content | ✅ Confirmed — 256 MiB archive limit; no per-file limit documented |
+| Runtime path to bundled files | ✅ Confirmed — `${CLAUDE_PLUGIN_ROOT}` in skills, agents, and hooks; `${CLAUDE_PLUGIN_DATA}` for content that must survive updates |
+| Plugin can ship a `SessionStart` hook | ✅ Confirmed — `hooks/hooks.json`, no trust step beyond enabling the plugin |
+| Hook stdout reaches context | ✅ Documented for `SessionStart` |
+| **Arbitrary top-level dirs preserved on install** | ⚠️ **Not guaranteed.** Docs promise the plugin directory and *"files referenced by components"*. **Use documented locations** — `skills/<name>/references/` or plugin-level `scripts/` — rather than inventing `foundation/` at the plugin root |
+| Whether emitted stdout joins the cached prefix, and how it interacts with precedence | ⚠️ Undocumented — measure, do not assume |
+| `InstructionsLoaded` as a possibly better-fitting event | ⚠️ Exists, fires at session start and on lazy load. Worth a look; not designed around here |
+
+Two items remain open (**O-10**, **O-11**), and neither threatens the decision — only its
+packaging detail. If bundled top-level directories turn out not to survive install, the content
+moves under `skills/*/references/` and nothing else changes. Alternative (a), sparse checkout,
+remains the fallback of last resort.

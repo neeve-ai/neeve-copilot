@@ -1,0 +1,73 @@
+name: Guard base branch
+
+# Enforces that context-architecture redesign work merges into its integration branch
+# (`redesign/context-architecture`) and never directly into `main`.
+#
+# Why a workflow and not a ruleset rule: branch protection and rulesets can only match the
+# ref being *protected* (the base). Nothing in either feature can reject a pull request
+# because of its *head* branch. This check reads `github.head_ref` and is wired in as a
+# required status check on `main`.
+#
+# Deliberate exceptions:
+#   * `redesign/context-architecture` -> `main` is ALLOWED. That is the sanctioned final
+#     integration merge; blocking it would make the programme unlandable.
+#   * A PR labelled `allow-main-merge` is ALLOWED, as a human-authored escape hatch.
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    name: base-branch-guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject redesign task branches targeting main
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          INTEGRATION_BRANCH: redesign/context-architecture
+        run: |
+          set -euo pipefail
+          echo "head branch : $HEAD_REF"
+          echo "base branch : main"
+          echo "labels      : ${LABELS:-<none>}"
+
+          if [[ ",${LABELS}," == *",allow-main-merge,"* ]]; then
+            echo "::notice::Labelled 'allow-main-merge' — guard intentionally bypassed."
+            exit 0
+          fi
+
+          if [[ "$HEAD_REF" == "$INTEGRATION_BRANCH" ]]; then
+            echo "::notice::Head is the integration branch — this is the sanctioned final merge."
+            exit 0
+          fi
+
+          case "$HEAD_REF" in
+            redesign/*|fix/*|spike/*|docs/redesign*)
+              echo "::error title=Wrong base branch::'$HEAD_REF' must target 'redesign/context-architecture', not 'main'."
+              cat <<'MSG'
+
+          This pull request targets `main`, but its branch belongs to the
+          context-architecture redesign programme. Every task in that programme merges into
+          the integration branch, and only the integration branch merges into `main`.
+
+          Retarget it:
+
+              gh pr edit <number> --base redesign/context-architecture
+
+          If this genuinely belongs on `main` (repo infrastructure, an unrelated fix), either
+          rename the branch or add the `allow-main-merge` label and re-run.
+
+          Context: https://github.com/neeve-ai/neeve-copilot/issues/30
+          MSG
+              exit 1
+              ;;
+          esac
+
+          echo "Head branch is outside the redesign programme's namespaces — allowed."

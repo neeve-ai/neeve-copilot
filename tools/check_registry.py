@@ -84,13 +84,17 @@ def architecture_layers() -> list[str]:
     layers = []
     seen = set()
     for line in section.splitlines():
-        cell_match = re.match(r"\|\s*\*{0,2}([0-9½]+[a-z]?)\*{0,2}\s*\|", line)
+        cell_match = re.match(r"\|\s*\*{0,2}([0-9½]+[a-z]?)\*{0,2}\b", line)
         if not cell_match:
             continue
         code = cell_match.group(1)
         if code not in seen:
             seen.add(code)
             layers.append(code)
+    if not layers:
+        raise RuntimeError(
+            f"{ARCHITECTURE_PATH}: matched no layer codes in §3 — table format changed?"
+        )
     return layers
 
 

@@ -83,6 +83,13 @@ jobs:
           echo "Running test_merge_session_hook.py..."
           python3 neeve/scripts/test_merge_session_hook.py -v
 
+      - name: Verify SessionStart Refresh Stays Scoped To The Selected Tools
+        run: |
+          echo "Running test_refresh_scope.sh..."
+          git config --global user.email "ci@neeve.local"
+          git config --global user.name "Neeve CI"
+          bash neeve/scripts/test_refresh_scope.sh
+
       - name: Verify Framework Consistency
         run: |
           echo "Checking the neeve agent routes every skill and reference citations stay consistent..."

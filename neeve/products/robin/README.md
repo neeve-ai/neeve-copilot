@@ -306,14 +306,18 @@ more thing: a global `SessionStart` hook in `~/.claude/settings.json` that
 runs `hooks/refresh-context.sh` at the start of every Claude Code
 session, anywhere on the machine. It:
 
-1. Pulls `neeve-copilot` and compares the commit hash before/after.
-2. **Only if something actually changed**, re-runs `sync_skills.sh` (which
-   reinstalls skills, agents, and house rules) — a normal day with no
-   upstream changes is a fast, silent no-op, not extra latency every time.
+1. Pulls `neeve-copilot` once and compares the commit hash before/after.
+2. **Only if something actually changed**, re-runs `install.sh` directly —
+   replaying only the agent flags recorded in the receipt `install.sh` wrote
+   at install time (`~/.claude/neeve-copilot-selection`), so a refresh
+   reinstalls into the tools the engineer actually selected, not every
+   supported tool. A normal day with no upstream changes is a fast, silent
+   no-op, not extra latency every time.
 3. Appends one line to a local, per-engineer log
    (`~/.claude/neeve-copilot-sync.log`) on **every** run, whether or not
    anything changed: timestamp, user (`git config user.email`, falling back
-   to `whoami`), branch, before/after commit hash, and whether it updated.
+   to `whoami`), branch, before/after commit hash, whether it updated, and
+   whether the reinstall itself succeeded (`install_ok`).
 
 No other tool has a confirmed equivalent today (Copilot/Cursor/Codex/
 Antigravity's global hook mechanisms are either unconfirmed or explicit-only
@@ -345,11 +349,13 @@ plainly rather than implied to work everywhere.
   engineers would be a separate, bigger decision (real reporting/telemetry
   infrastructure), not something this hook does on its own.
 - **Every other setting survives untouched.** `merge_session_hook.py` is
-  idempotent JSON surgery (covered by 5 unit tests in
+  idempotent JSON surgery (covered by unit tests in
   `test_merge_session_hook.py`) — it finds or creates exactly one managed
   hook entry and leaves every other key and every other hook in
   `~/.claude/settings.json` exactly as it found them, the same discipline
-  `merge_house_rules.py` already applies to `CLAUDE.md`.
+  `merge_house_rules.py` already applies to `CLAUDE.md`. A `--remove <marker>`
+  mode removes that one managed entry the same way — idempotently, and
+  without touching anything else in the file.
 
 ### Why it's scalable
 

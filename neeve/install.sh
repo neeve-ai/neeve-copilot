@@ -115,6 +115,23 @@ if ! $DO_CLAUDE && ! $DO_CODEX && ! $DO_ANTIGRAVITY && ! $DO_COPILOT && ! $DO_CU
   fi
 fi
 
+# ── Selection receipt ────────────────────────────────────────────────────────
+# Records exactly which agent flags this run resolved to (explicit or
+# auto-detected) so a later, unattended refresh (the SessionStart hook) can
+# replay the same selection instead of guessing --all and installing into
+# every tool regardless of what the engineer actually chose.
+SELECTION_RECEIPT="${HOME}/.claude/neeve-copilot-selection"
+write_selection_receipt() {
+  mkdir -p "$(dirname "${SELECTION_RECEIPT}")"
+  : > "${SELECTION_RECEIPT}"
+  if $DO_CLAUDE;      then echo "--claude-code" >> "${SELECTION_RECEIPT}"; fi
+  if $DO_CODEX;       then echo "--codex"       >> "${SELECTION_RECEIPT}"; fi
+  if $DO_ANTIGRAVITY; then echo "--antigravity" >> "${SELECTION_RECEIPT}"; fi
+  if $DO_COPILOT;     then echo "--copilot"     >> "${SELECTION_RECEIPT}"; fi
+  if $DO_CURSOR;      then echo "--cursor"      >> "${SELECTION_RECEIPT}"; fi
+}
+write_selection_receipt
+
 ensure_skill_packages() {
   if [[ -z "${ZIP_DIR}" ]]; then
     if [[ -d "${SCRIPT_DIR}/zips" ]]; then

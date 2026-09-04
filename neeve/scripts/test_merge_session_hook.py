@@ -75,6 +75,80 @@ class MergeSessionHookTests(unittest.TestCase):
             data = json.loads(target.read_text())
             self.assertEqual(len(data["hooks"]["SessionStart"]), 1)
 
+    def test_remove_removes_hook_and_preserves_other_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            original = {
+                "permissionMode": "acceptEdits",
+                "hooks": {
+                    "SessionStart": [
+                        {
+                            "matcher": "startup",
+                            "hooks": [
+                                {"type": "command", "command": "echo hi"},
+                                {"type": "command", "command": "bash /a/b/refresh-context.sh /a/b"},
+                            ],
+                        }
+                    ],
+                    "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "guard.sh"}]}],
+                },
+            }
+            target.write_text(json.dumps(original))
+            removed = msh.remove(target, "refresh-context.sh")
+            self.assertTrue(removed)
+            data = json.loads(target.read_text())
+            self.assertEqual(data["permissionMode"], "acceptEdits")
+            self.assertEqual(data["hooks"]["PreToolUse"], original["hooks"]["PreToolUse"])
+            commands = [h["command"] for h in data["hooks"]["SessionStart"][0]["hooks"]]
+            self.assertEqual(commands, ["echo hi"])
+
+    def test_remove_drops_now_empty_matcher_group(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({
+                "hooks": {
+                    "SessionStart": [
+                        {"matcher": "startup", "hooks": [{"type": "command", "command": "bash /a/b/refresh-context.sh /a/b"}]}
+                    ],
+                },
+            }))
+            removed = msh.remove(target, "refresh-context.sh")
+            self.assertTrue(removed)
+            data = json.loads(target.read_text())
+            self.assertNotIn("hooks", data)
+
+    def test_remove_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({
+                "permissionMode": "acceptEdits",
+                "hooks": {
+                    "SessionStart": [
+                        {"matcher": "startup", "hooks": [{"type": "command", "command": "bash /a/b/refresh-context.sh /a/b"}]}
+                    ],
+                },
+            }))
+            self.assertTrue(msh.remove(target, "refresh-context.sh"))
+            after_first = target.read_text()
+            self.assertFalse(msh.remove(target, "refresh-context.sh"))
+            self.assertEqual(target.read_text(), after_first)
+
+    def test_remove_no_op_when_hook_absent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            original_text = json.dumps({"permissionMode": "acceptEdits"})
+            target.write_text(original_text)
+            removed = msh.remove(target, "refresh-context.sh")
+            self.assertFalse(removed)
+            self.assertEqual(target.read_text(), original_text)
+
+    def test_remove_no_op_when_file_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            removed = msh.remove(target, "refresh-context.sh")
+            self.assertFalse(removed)
+            self.assertFalse(target.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

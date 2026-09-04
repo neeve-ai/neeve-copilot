@@ -31,6 +31,7 @@ Usage: merge_house_rules.py <target-file> <content-file> [label]
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -54,14 +55,30 @@ def _strip_legacy_unmarked_block(text: str, legacy_header: str) -> tuple[str, in
     """Remove an un-marked legacy copy from `text` (the portion of the file
     that lives before the managed block). Returns the cleaned text and the
     number of lines removed. Personal content above the legacy copy is
-    preserved; only the region from the legacy title to the end of `text`
-    goes."""
-    idx = text.find(legacy_header)
-    if idx == -1:
+    preserved. The legacy header must match a whole line exactly (not just
+    appear as a substring somewhere in the file), and removal stops at the
+    next top-level `#` heading rather than running to the end of `text`, so
+    any of the engineer's own content that follows the legacy block
+    survives."""
+    lines = text.split("\n")
+    legacy_idx = next(
+        (i for i, line in enumerate(lines) if line.rstrip("\r") == legacy_header), None
+    )
+    if legacy_idx is None:
         return text, 0
-    removed = text[idx:]
-    kept = text[:idx]
-    return kept, removed.count("\n") + (0 if removed.endswith("\n") else 1)
+
+    next_heading_idx = next(
+        (
+            i
+            for i in range(legacy_idx + 1, len(lines))
+            if re.match(r"^#\s", lines[i])
+        ),
+        len(lines),
+    )
+
+    kept = lines[:legacy_idx] + lines[next_heading_idx:]
+    removed_lines = next_heading_idx - legacy_idx
+    return "\n".join(kept), removed_lines
 
 
 def merge(
@@ -97,6 +114,12 @@ def merge(
 
     removed_lines = 0
     if legacy_header is not None:
+        # Only this path can destroy content the engineer wrote (the legacy
+        # strip below), so only it needs a safety-net backup. The other call
+        # site's target is COMMITTED into a product repo (see module
+        # docstring) — dropping an untracked `.bak` there on every run would
+        # be its own kind of repo pollution, not a safety net.
+        target.with_name(target.name + ".bak").write_text(existing)
         before, removed_lines = _strip_legacy_unmarked_block(before, legacy_header)
 
     # Keep it lean: collapse trailing whitespace left behind by a strip so the

@@ -51,7 +51,7 @@ violated because it was advisory. D12 makes it enforced.
 
 ## Decisions of record
 
-Full index with rationale in [`ARCHITECTURE.md`](ARCHITECTURE.md) §15.
+Full index with rationale in [`ARCHITECTURE.md`](ARCHITECTURE.md) §16.
 
 | ID | Decision |
 |---|---|

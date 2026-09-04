@@ -558,7 +558,7 @@ git hook provide.
 It also introduced the only asymmetric failure mode in the design: with a service in the read
 path, one population lost everything on an outage while another degraded gracefully. Removing
 it removes the asymmetry, which is the larger architectural win — ahead of the saved build
-effort. See `ARCHITECTURE.md` §12.
+effort. See `ARCHITECTURE.md` §13.
 
 This is invariant **A-10**: prefer a file in a clone, then an existing connector, then nothing.
 

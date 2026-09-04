@@ -198,7 +198,7 @@ Four things the diagram is drawn to show:
 | `registry/` | Data | Repo registry, source-of-record map | Replaces the 84-line pushed topology table. **The index to product knowledge; never the content** (D12). Bundled into `neeve-core` (D15) |
 | `disciplines/` | Packaging | Which skills, references, and ambient block ship together | Glob-discovered |
 | `skills/` | Content | Task playbooks | Membership declared in frontmatter, not location |
-| `agent/neeve/` | Content | The single discipline-aware router | Name never changes (§10) |
+| `agent/neeve/` | Content | The single discipline-aware router | Name never changes (§11) |
 | `surfaces/` | Mechanism | Plugin build, marker-merge, thin tool adapters | One directory per surface |
 | `tools/` | Mechanism | Render, merge, check, `init_workspace.sh` | Never calls a model (A-2) |
 | `templates/` | Scaffolds | `.neeve/` book, pre-commit hook, CI workflows, **workspace `.claude/settings.json`** | Installed into workspaces |
@@ -246,7 +246,70 @@ precisely the failure mode this framework exists to make loud.
 
 ---
 
-## 10. Stability commitments
+## 10. Rollout
+
+How a change reaches a user. There is no single mechanism — four paths, with materially
+different latencies.
+
+| Artifact | Mechanism | Latency | Who acts |
+|---|---|---|---|
+| Skills, router agent, bundled content, ambient hook | plugin version bump → marketplace | next plugin update | nobody, if `autoUpdate` |
+| **The ambient block itself** | rides the plugin; rendered per session | **next session** | nobody |
+| **Executable gates (`process/gates/`)** | regenerate → commit into each product repo | **weeks** | someone, per repo |
+| Adapter tools (Codex · Cursor · Copilot · Antigravity) | re-run the installer | manual | each engineer |
+| Workspace `.claude/settings.json` | commit per workspace | rarely changes | someone, per workspace |
+
+**The ambient block is the best of these, and it is a side effect rather than a design goal.**
+Today it is a marker-merged file that changes only when someone re-runs the installer, so a
+stale copy can sit on a machine indefinitely. Under D15 it is rendered per session from the
+installed plugin, so there is no stored copy to be stale — zero latency, zero action.
+
+**Rollback and canarying come free from plugin versioning.** `plugin.json`'s `version` pins, so
+rolling back is pinning the previous version, and a version can be canaried by pointing one
+workspace's `enabledPlugins` at it before broadening.
+
+### 10.1 The gap: gate rules reaching product repos
+
+§9 answers *is this stale?* It does not answer *how does a changed rule in `process/gates/`
+reach sixteen committed pre-commit hooks?* Today it does not: someone regenerates and commits
+a new hook per repo. That is a campaign, not a rollout.
+
+Note the history before proposing a fix — a per-repo bot-PR mechanism was **tried and
+abandoned** (`docs/Feature-Reference.md`) because it fought the centralized,
+nothing-per-repo model. Re-proposing it naively repeats a known mistake.
+
+Two things make it tractable:
+
+**CI and the local hook may diverge deliberately.** CI has network access and can fetch the
+current rules on every run, so **CI enforcement updates immediately** and only the *local*
+pre-commit hook lags. Since CI is the blocking gate and pre-commit is fast feedback, a lagging
+local hook is tolerable in a way a lagging CI check would not be.
+
+**Version the generated hook and let it say so.** The hook's job is surfacing mechanical facts;
+*"your gate rules are three versions behind"* is exactly that kind of fact, and it converts a
+silent lag into a `Surfaced` one (A-4).
+
+What to avoid: having the pre-commit hook fetch rules at runtime. It adds a network dependency
+to something that must work offline in under a second, and it breaks A-3 — a gate reads its
+rulebook with no human and no network in the loop.
+
+### 10.2 One asymmetry D15 introduces
+
+D15 removes the clone for Claude Code consumers, but **adapter-tool users still need one** —
+Codex, Cursor, Copilot, and Antigravity have no plugin system, so they receive skills copied by
+the installer and house rules marker-merged, which requires the repo. That population is
+engineers only, who mostly hold a clone anyway. Accepted rather than solved, but stated so
+nobody discovers it.
+
+### 10.3 Unverified
+
+Whether `autoUpdate: true` on a marketplace entry updates installed *plugin content*
+automatically, or only refreshes marketplace metadata and still needs a user action. The
+difference decides whether "nobody acts" in the table above is true or aspirational. Tracked
+as part of P7's verification.
+
+---
+## 11. Stability commitments
 
 Deliberately frozen, because changing them breaks installed state:
 
@@ -263,7 +326,7 @@ migrates forward from — not a one-way door.
 
 ---
 
-## 11. Feedback loop
+## 12. Feedback loop
 
 ```
 work happens → correction occurs → recorded in that workspace's .neeve/lessons.md
@@ -279,7 +342,7 @@ The aggregation is a scheduled job over clones — not a service (A-10).
 
 ---
 
-## 12. Degradation
+## 13. Degradation
 
 | Failure | Effect | Populations affected |
 |---|---|---|
@@ -296,7 +359,7 @@ of the saved build effort.
 
 ---
 
-## 13. Deliberately not in this architecture
+## 14. Deliberately not in this architecture
 
 - **No bespoke service, MCP server, or hosted component** (A-10, D7).
 - No model calls in any deterministic component (A-2).
@@ -311,7 +374,7 @@ of the saved build effort.
 
 ---
 
-## 14. Architectural risks
+## 15. Architectural risks
 
 Ordered by how much they would invalidate rather than adjust.
 
@@ -342,7 +405,7 @@ Ordered by how much they would invalidate rather than adjust.
 
 ---
 
-## 15. Decision index
+## 16. Decision index
 
 | ID | Decision | Status |
 |---|---|---|

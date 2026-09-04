@@ -478,7 +478,7 @@ install smoke test, which CI still does not run for you.
 ## 7. Explicitly out of scope
 
 - **Any bespoke service or MCP server** (A-10, D7). Trigger condition for revisiting is in
-  `ARCHITECTURE.md` §15.
+  `ARCHITECTURE.md` §16.
 - **claude.ai / browser-only support.**
 - **The rebrand.** No rename of the framework, marker label, `neeve` agent, or
   `neeve.contextsync.*` keys. Prerequisite if ever taken up: a `KNOWN_LEGACY_LABELS` migration

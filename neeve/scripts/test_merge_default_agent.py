@@ -112,6 +112,105 @@ class OnlyIfUnsetModeTests(unittest.TestCase):
             self.assertEqual(data["hooks"], {"SessionStart": []})
 
 
+class UpgradeFromModeTests(unittest.TestCase):
+    """The forward-migration path: correct a known-stale `agent` value
+    without touching a file where it's unset, current, or a deliberate
+    engineer override."""
+
+    def test_rewrites_when_current_value_matches_old_value(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": "old-name"}))
+            changed = mda.merge(target, "neeve", upgrade_from="old-name")
+            self.assertTrue(changed)
+            self.assertEqual(json.loads(target.read_text())["agent"], "neeve")
+
+    def test_no_ops_when_current_value_differs_from_old_value(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": "their-own-custom-agent"}))
+            changed = mda.merge(target, "neeve", upgrade_from="old-name")
+            self.assertFalse(changed)
+            self.assertEqual(json.loads(target.read_text())["agent"], "their-own-custom-agent")
+
+    def test_no_ops_when_key_is_unset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            changed = mda.merge(target, "neeve", upgrade_from="old-name")
+            self.assertFalse(changed)
+            self.assertFalse(target.exists())
+
+    def test_respects_a_deliberate_null_opt_out(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": None}))
+            changed = mda.merge(target, "neeve", upgrade_from="old-name")
+            self.assertFalse(changed)
+            self.assertIsNone(json.loads(target.read_text())["agent"])
+
+    def test_respects_a_deliberate_empty_string_opt_out(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": ""}))
+            changed = mda.merge(target, "neeve", upgrade_from="old-name")
+            self.assertFalse(changed)
+            self.assertEqual(json.loads(target.read_text())["agent"], "")
+
+    def test_preserves_unrelated_settings_on_upgrade(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": "old-name", "model": "sonnet"}))
+            mda.merge(target, "neeve", upgrade_from="old-name")
+            data = json.loads(target.read_text())
+            self.assertEqual(data["agent"], "neeve")
+            self.assertEqual(data["model"], "sonnet")
+
+
+class CliUpgradeFromFlagTests(unittest.TestCase):
+    def test_flag_parsing_rewrites_on_matching_old_value(self) -> None:
+        import subprocess
+        import sys as _sys
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": "old-name"}))
+            result = subprocess.run(
+                [_sys.executable, str(Path(__file__).parent / "merge_default_agent.py"),
+                 str(target), "neeve", "--upgrade-from", "old-name"],
+                capture_output=True, text=True, check=True,
+            )
+            self.assertIn("Wrote", result.stdout)
+            self.assertEqual(json.loads(target.read_text())["agent"], "neeve")
+
+    def test_flag_parsing_leaves_non_matching_value_untouched(self) -> None:
+        import subprocess
+        import sys as _sys
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            target.write_text(json.dumps({"agent": "their-own-custom-agent"}))
+            result = subprocess.run(
+                [_sys.executable, str(Path(__file__).parent / "merge_default_agent.py"),
+                 str(target), "neeve", "--upgrade-from", "old-name"],
+                capture_output=True, text=True, check=True,
+            )
+            self.assertIn("left as-is", result.stdout)
+            self.assertEqual(json.loads(target.read_text())["agent"], "their-own-custom-agent")
+
+    def test_only_if_unset_and_upgrade_from_together_is_rejected(self) -> None:
+        import subprocess
+        import sys as _sys
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "settings.json"
+            result = subprocess.run(
+                [_sys.executable, str(Path(__file__).parent / "merge_default_agent.py"),
+                 str(target), "neeve", "--only-if-unset", "--upgrade-from", "old-name"],
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+
+
 class CliOnlyIfUnsetFlagTests(unittest.TestCase):
     def test_flag_parsing_extracts_only_if_unset_and_two_positional_args(self) -> None:
         import subprocess

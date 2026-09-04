@@ -28,12 +28,23 @@ UP="${WORK}/up"
 ENG="${WORK}/eng"
 TEST_BRANCH="refresh-scope-test"
 
-git init --bare -q "${BARE}" 2>/dev/null
-git clone -q "${REPO_ROOT}" "${UP}" 2>/dev/null
+git init --bare -q --initial-branch="${TEST_BRANCH}" "${BARE}" 2>/dev/null
+
+# A fresh, single-commit repo seeded from the current working tree — not a
+# `git clone` of this repo's own history, which may be a shallow checkout
+# (CI's default `actions/checkout` depth) and can't be pushed to a fresh
+# bare remote ("shallow update not allowed"). The test only needs the
+# current file contents, not this repo's real history.
+mkdir -p "${UP}"
+cp -R "${REPO_ROOT}/." "${UP}/"
+rm -rf "${UP}/.git"
+git -C "${UP}" init -q
 git -C "${UP}" config user.email "refresh-scope-test@neeve.local"
 git -C "${UP}" config user.name "Refresh Scope Test"
 git -C "${UP}" checkout -q -b "${TEST_BRANCH}"
-git -C "${UP}" remote set-url origin "${BARE}"
+git -C "${UP}" add -A
+git -C "${UP}" commit -q -m "test: seed refresh-scope-test upstream"
+git -C "${UP}" remote add origin "${BARE}"
 git -C "${UP}" push -q origin "${TEST_BRANCH}"
 
 git clone -q "${BARE}" "${ENG}"

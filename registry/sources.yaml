@@ -1,0 +1,56 @@
+# Source-of-record map — one entry per knowledge layer in
+# docs/redesign/ARCHITECTURE.md §3. This is the input that generates
+# ambient/routing.md (see ARCHITECTURE.md §6), so routing can never drift
+# from where knowledge actually lives.
+#
+# Invariant A-1: one knowledge domain, one system of record. A domain name
+# repeated with a different `sor` is a violation — enforced by
+# tools/check_registry.py.
+domains:
+  - domain: foundation
+    layer: "04"
+    sor: git:neeve-copilot/foundation/
+    delivery: pull
+
+  - domain: process-narrative
+    layer: "03a"
+    sor: git:neeve-copilot/process/narrative/
+    delivery: pull
+
+  - domain: process-executable
+    layer: "03b"
+    sor: git:neeve-copilot/process/gates/
+    delivery: executable # never network-served — A-3
+
+  - domain: cross-repo-intel
+    layer: "02½"
+    sor: git:neeve-copilot/cross-repo/
+    delivery: pull
+
+  - domain: repo-context
+    layer: "02"
+    sor: "git:<product-repo>/.neeve/"
+    delivery: pull
+
+  - domain: product-knowledge
+    layer: "02"
+    sor: "git:<product-planning-repo>/.neeve/"
+    delivery: pull
+
+  - domain: product-artifacts
+    layer: "02"
+    sor: confluence-or-git-planning-repo
+    delivery: query-or-pull
+    connector: atlassian
+
+  - domain: live-work-state
+    layer: "02"
+    sor: jira
+    delivery: query
+    connector: atlassian
+    cache: never
+
+  - domain: task-frame
+    layer: "01"
+    sor: none # assembled per request — nothing to point at
+    delivery: assembled-per-request

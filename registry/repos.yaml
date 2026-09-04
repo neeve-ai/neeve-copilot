@@ -1,0 +1,137 @@
+# Repo registry — replaces the pushed 16-repo table formerly in
+# neeve/products/robin/context/product-overview.md (see docs/redesign/ARCHITECTURE.md D12).
+# Structural data, read on demand. Never rendered into ambient context (A-11).
+repos:
+  - id: alc-hello-addon
+    purpose: >-
+      Example/scaffold WebCTRL add-on — reference implementation for
+      building-automation integrations, not a production Robin surface.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: alc-robin-agent
+    purpose: >-
+      WebCTRL agent — exposes ALC WebCTRL building-automation data/actions
+      to Robin.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: dls-neeve
+    purpose: >-
+      Shared design system (@neeve/dls) and fonts package — the single
+      source of pixel-perfect components/tokens consumed by robin-web and
+      robin.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: mcp-nats-handler
+    purpose: >-
+      NATS-to-MCP bridge — exposes internal NATS-based services as MCP
+      tools other Robin components can call.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: neeve-web
+    purpose: >-
+      Placeholder repo — not yet built out; stack/role to be filled in
+      once work starts here.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: niagara-robin-agent
+    purpose: >-
+      Niagara N4/BQL agent — exposes Tridium Niagara station data (alarms,
+      points, schedules, history) to Robin via read-only MCP tools.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-adr
+    purpose: >-
+      Product-wide planning repo — ADRs, work-item breakdowns, and
+      PRDs/ERDs; the source of truth for what's being built and why, one
+      level above any single repo.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-ai
+    purpose: >-
+      Main backend — the policy/API authority for Robin; owns the primary
+      database schema and orchestrates the other services.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-commons
+    purpose: >-
+      Shared Python library (resilience, observability, messaging helpers)
+      used across robin-ai and the other backend services to avoid
+      duplicated infrastructure code.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-expirements
+    purpose: >-
+      Scratch space for AI/eval research experiments — not a shipped
+      product surface.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-helm
+    purpose: >-
+      Helm charts that deploy the full Robin stack (robin-ai, robin-web,
+      gateway, observability) to Kubernetes, including each developer's
+      own sandbox namespace.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-kb-service
+    purpose: >-
+      Knowledge-base / long-term-memory service backing Robin's AI
+      features.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-testbench
+    purpose: >-
+      Automated browser-based test harness that exercises Robin's Chrome
+      extension flows end-to-end.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin-web
+    purpose: >-
+      Admin portal — the enterprise/org-management frontend (React) and
+      its BFF backend (FastAPI), used by facilities/security-ops admins,
+      not end users of the extension.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: robin
+    purpose: >-
+      The Robin Chrome extension itself — the AI co-pilot surface an end
+      user (facilities/security-ops staff) actually installs and uses
+      inside their existing OT web apps.
+    owner: robin
+    products: [robin]
+    book: .neeve/
+
+  - id: wstunnel-reverse-proxy
+    purpose: >-
+      WebSocket tunnel reverse proxy — exposes MCP servers sitting behind
+      NAT (e.g. an OT-side Niagara connection) back to robin-ai.
+    owner: robin
+    products: [robin]
+    book: .neeve/

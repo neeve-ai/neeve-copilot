@@ -83,6 +83,11 @@ jobs:
           echo "Running test_merge_session_hook.py..."
           python3 neeve/scripts/test_merge_session_hook.py -v
 
+      - name: Run Default-Agent Merge Unit Tests
+        run: |
+          echo "Running test_merge_default_agent.py..."
+          python3 neeve/scripts/test_merge_default_agent.py -v
+
       - name: Verify SessionStart Refresh Stays Scoped To The Selected Tools
         run: |
           echo "Running test_refresh_scope.sh..."

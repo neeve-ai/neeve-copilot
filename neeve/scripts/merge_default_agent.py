@@ -25,6 +25,7 @@ it with different force semantics:
   section already states for every other layer.
 
 Usage: merge_default_agent.py <settings.json path> <agent-name> [--only-if-unset]
+       merge_default_agent.py <settings.json path> <agent-name> --upgrade-from <old-value>
 """
 from __future__ import annotations
 
@@ -33,24 +34,39 @@ import sys
 from pathlib import Path
 
 
-def merge(settings_path: Path, agent_name: str, only_if_unset: bool = False) -> bool:
+def merge(
+    settings_path: Path,
+    agent_name: str,
+    only_if_unset: bool = False,
+    upgrade_from: str | None = None,
+) -> bool:
     """Returns True if the file changed, False if left as-is.
 
-    only_if_unset=False (default): force-set `agent` to agent_name, the same
-    way every other key this system manages converges to the current source
-    of truth on each run.
+    only_if_unset=False, upgrade_from=None (default): force-set `agent` to
+    agent_name, the same way every other key this system manages converges
+    to the current source of truth on each run.
 
     only_if_unset=True: set `agent` only if the key is completely absent from
     the file. If it's already present — to agent_name, to something else, or
     to an explicit empty/null the engineer set to opt out — leave it exactly
     as-is. This is a one-time default, not an enforced value.
+
+    upgrade_from=<old value>: rewrite `agent` to agent_name only when the
+    current value equals exactly upgrade_from. This is the forward-migration
+    path `--only-if-unset` cannot provide — it corrects a known-stale value
+    without touching a file where the key is unset, already current, or
+    deliberately set to something else (including an explicit null opt-out,
+    which never equals a non-null upgrade_from).
     """
     if settings_path.is_file() and settings_path.stat().st_size > 0:
         data = json.loads(settings_path.read_text())
     else:
         data = {}
 
-    if only_if_unset:
+    if upgrade_from is not None:
+        if data.get("agent") != upgrade_from:
+            return False
+    elif only_if_unset:
         if "agent" in data:
             return False
     elif data.get("agent") == agent_name:
@@ -63,18 +79,40 @@ def merge(settings_path: Path, agent_name: str, only_if_unset: bool = False) -> 
 
 
 def main() -> int:
-    args = [a for a in sys.argv[1:] if a != "--only-if-unset"]
     only_if_unset = "--only-if-unset" in sys.argv[1:]
+    upgrade_from: str | None = None
+    args = []
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg == "--only-if-unset":
+            i += 1
+            continue
+        if arg == "--upgrade-from":
+            if i + 1 >= len(sys.argv):
+                print("Usage: merge_default_agent.py <settings.json path> <agent-name> --upgrade-from <old-value>", file=sys.stderr)
+                return 1
+            upgrade_from = sys.argv[i + 1]
+            i += 2
+            continue
+        args.append(arg)
+        i += 1
+
     if len(args) != 2:
         print(
-            "Usage: merge_default_agent.py <settings.json path> <agent-name> [--only-if-unset]",
+            "Usage: merge_default_agent.py <settings.json path> <agent-name> [--only-if-unset]\n"
+            "       merge_default_agent.py <settings.json path> <agent-name> --upgrade-from <old-value>",
             file=sys.stderr,
         )
         return 1
+    if only_if_unset and upgrade_from is not None:
+        print("--only-if-unset and --upgrade-from are mutually exclusive", file=sys.stderr)
+        return 1
+
     settings_path = Path(args[0]).expanduser().resolve()
     agent_name = args[1]
-    changed = merge(settings_path, agent_name, only_if_unset=only_if_unset)
-    mode = "only-if-unset" if only_if_unset else "force"
+    changed = merge(settings_path, agent_name, only_if_unset=only_if_unset, upgrade_from=upgrade_from)
+    mode = "upgrade-from" if upgrade_from is not None else ("only-if-unset" if only_if_unset else "force")
     print(f"{'Wrote' if changed else 'Already set (left as-is)'}: {settings_path} (agent={agent_name}, mode={mode})")
     return 0
 

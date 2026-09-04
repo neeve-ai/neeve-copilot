@@ -174,9 +174,13 @@ correct it again:
 - **A hardcoded list is a future bug.** Where a hardcoded name list (retired
   agents, contract paths, excluded dirs) can instead be derived or made
   config-driven, prefer that — `RETIRED_AGENTS` in `install.sh` is the one
-  accepted exception (finite, well-documented, rarely changes); the skills
-  manifest (§7 in `install.sh`) is the pattern to reach for instead of a new
-  hardcoded list.
+  accepted exception (finite, well-documented, rarely changes); the `SKILLS`
+  variable in `install.sh`, derived by scanning `neeve/skills/` and
+  `neeve/products/*/skills/` for a `SKILL.md`, is the pattern to reach for
+  instead of a new hardcoded list. (`.neeve-manifest` is not that pattern —
+  it's a per-destination install receipt install.sh writes after each run,
+  used only to prune skill directories it installed that are no longer
+  current, not an artifact registry.)
 
 ---
 

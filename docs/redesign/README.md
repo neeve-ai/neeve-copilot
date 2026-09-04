@@ -51,7 +51,7 @@ violated because it was advisory. D12 makes it enforced.
 
 ## Decisions of record
 
-Full index with rationale in [`ARCHITECTURE.md`](ARCHITECTURE.md) §15.
+Full index with rationale in [`ARCHITECTURE.md`](ARCHITECTURE.md) §16.
 
 | ID | Decision |
 |---|---|
@@ -69,6 +69,7 @@ Full index with rationale in [`ARCHITECTURE.md`](ARCHITECTURE.md) §15.
 | D12 | **Product knowledge comes from the workspace.** The harness holds the index, never the content |
 | D13 | `ot-building-automation` retired; its domain content migrates into the repos it describes |
 | ~~D14~~ | ~~Split content into skill bundles~~ — **rejected**: it orphans the cross-cutting evals |
+| D15 | **The plugin is the delivery mechanism.** Consumers install a plugin; they never clone this repo |
 
 ---
 

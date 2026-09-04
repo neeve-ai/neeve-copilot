@@ -4,10 +4,11 @@
 **Companion docs:** `redesign-proposal.md` (the five moves, layer model, surfaces) ·
 `implementation-plan.md` (v3, sequenced plan) · `superseded/connector/**` (a service
 we decided not to build).
-**Revised 2026-09-02** — connector dropped (D7); `cross-repo/` added (D8); `surfaces/`
+**Revised 2026-09-03** — connector dropped (D7); `cross-repo/` added (D8); `surfaces/`
 simplified to one channel (D9); workspace provisioning promoted (D10); per-repo book
 directory renamed `.help/` → `.neeve/` (D11); **harness made product-agnostic (D12), OT skill
-retired (D13), bundle split rejected (D14)**.
+retired (D13), bundle split rejected (D14), and the plugin made the delivery mechanism so
+consumers never clone this repo (D15)**.
 
 This document translates the redesign into a filesystem. Every directory below exists to
 make one decision legible; where a directory has no decision behind it, it is not here.
@@ -21,7 +22,7 @@ The shape follows from what is already decided:
 | Force | Source | Structural consequence |
 |---|---|---|
 | Mechanism, process, and skills have different owners, change rates, and CI bars | Move 4 | Three top-level homes, not one `neeve/` bag |
-| Layers 04 + 03a live in git, read as files | **D5** | `foundation/` and `process/narrative/` — in the repo, read from the clone, never pushed ambient |
+| Layers 04 + 03a live in git, read as files | **D5** · **D15** | `foundation/` and `process/narrative/` — authored here, **bundled into the plugin** for consumers, never pushed ambient |
 | Cross-repo knowledge has no home today | **D8** | `cross-repo/` — Layer 02½, SHA-pinned freshness |
 | One surface, three populations | **D9** | `surfaces/` collapses to one real channel plus thin adapters |
 | Layer 03b (executable rules) must stay in git | ADR-10 | `process/gates/` — new, and the centre of gravity |
@@ -29,6 +30,7 @@ The shape follows from what is already decided:
 | The per-repo book is a namespace, not just docs | **D11** | `.help/` → `.neeve/`, name held in `framework.yaml`, dual-path migration |
 | The harness names no product in a prompt | **D12** · invariant A-11 | No `foundation/products/`; no `products/` tree; product narrative lives in the product's planning workspace |
 | Content and mechanism differ in owner and CI bar — but must be evaluated together | **D14** | **One repo**, boundary enforced by path-scoped CI + `CODEOWNERS` + a deleted glob, not by a repo split |
+| A consumer must not have to clone this repo to use it | **D15** | `dist/plugins/neeve-core/` carries the content layers; **contributors clone, users install a plugin** |
 | Ambient context is a ~40-line budget, and its job is routing | Move 2, §6.2 | `ambient/` is tiny and partly **generated** |
 
 A sixth, from the coupling audit: adding a tool today touches ~10 sites in `install.sh`.
@@ -130,7 +132,20 @@ neeve-copilot/
 │   └── <skill>/cases/
 │
 ├── dist/                           # GENERATED — see §8 on whether this is committed
-│   ├── plugins/<discipline>/
+│   ├── plugins/
+│   │   ├── neeve-core/             # D15 — THE DELIVERY MECHANISM
+│   │   │   ├── skills/             #   core skills (+ references/)
+│   │   │   ├── agents/neeve.md     #   the router
+│   │   │   ├── hooks/hooks.json    #   SessionStart: render + EMIT the ambient block
+│   │   │   ├── foundation/         #   ← bundled from foundation/      (drift-checked)
+│   │   │   ├── process/narrative/  #   ← bundled from process/narrative/
+│   │   │   ├── registry/           #   ← bundled from registry/
+│   │   │   └── cross-repo/         #   ← bundled from cross-repo/
+│   │   │                           #   read at runtime via ${CLAUDE_PLUGIN_ROOT}
+│   │   │                           #   (see O-10: if arbitrary top-level dirs don't
+│   │   │                           #    survive install, these move under
+│   │   │                           #    skills/*/references/ — nothing else changes)
+│   │   └── neeve-{engineering,product,design}/
 │   └── marketplace.json
 │
 └── docs/
@@ -143,6 +158,10 @@ neeve-copilot/
 
 **No companion service repo.** The planned `neeve-context` was withdrawn under D7; its design
 is preserved in `superseded/connector/**` so the reasoning stays findable.
+
+**Two audiences, two mechanisms (D15).** A *contributor* clones this repo and gets everything —
+docs, tools, tests, templates. A *consumer* installs `neeve-core` plus their discipline plugin
+and gets the content layers bundled inside it. **Nobody clones this repo in order to use it.**
 
 ---
 

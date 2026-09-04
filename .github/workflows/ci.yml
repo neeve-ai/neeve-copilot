@@ -17,7 +17,7 @@ jobs:
       - name: Install Python Dependencies
         run: pip install pyyaml
 
-      - name: Verify Registry (A-1: no domain with two systems of record)
+      - name: "Verify Registry (A-1: no domain with two systems of record)"
         run: |
           echo "Checking registry/repos.yaml and registry/sources.yaml..."
           python3 tools/check_registry.py

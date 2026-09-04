@@ -124,6 +124,15 @@ class MergeHouseRulesTests(unittest.TestCase):
             self.assertTrue(backup.is_file())
             self.assertEqual(backup.read_text(), original)
 
+    def test_matches_legacy_header_across_crlf_line_endings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "CLAUDE.md"
+            target.write_text(f"{mhr.LEGACY_HEADER}\r\n\r\nOLD RULES\r\n")
+            removed = mhr.merge(target, "house rules v2")
+            text = target.read_text()
+            self.assertGreater(removed, 0)
+            self.assertNotIn("OLD RULES", text)
+
     def test_no_legacy_returns_zero_removed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "CLAUDE.md"
@@ -182,6 +191,18 @@ class CustomLabelTests(unittest.TestCase):
             self.assertIn("routing content", text)
             self.assertEqual(text.count(mhr.BEGIN), 1)
             self.assertEqual(text.count(f"BEGIN {self.LABEL}"), 1)
+
+    def test_legacy_header_none_does_not_write_backup(self) -> None:
+        # This call site's target is COMMITTED into a product repo (see
+        # module docstring) — an untracked `.bak` dropped there on every
+        # init/re-init would be repo pollution, not a safety net, since
+        # legacy_header=None means nothing destructive happens here.
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "copilot-instructions.md"
+            target.write_text("# Team conventions\n- stay off main\n")
+            mhr.merge(target, "routing content", label=self.LABEL, legacy_header=None)
+            backup = target.with_name(target.name + ".bak")
+            self.assertFalse(backup.exists())
 
     def test_legacy_header_none_does_not_touch_unrelated_house_rules_legacy_text(self) -> None:
         # If a file happens to contain the OLD house-rules legacy title for

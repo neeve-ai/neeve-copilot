@@ -61,7 +61,9 @@ def _strip_legacy_unmarked_block(text: str, legacy_header: str) -> tuple[str, in
     any of the engineer's own content that follows the legacy block
     survives."""
     lines = text.split("\n")
-    legacy_idx = next((i for i, line in enumerate(lines) if line == legacy_header), None)
+    legacy_idx = next(
+        (i for i, line in enumerate(lines) if line.rstrip("\r") == legacy_header), None
+    )
     if legacy_idx is None:
         return text, 0
 
@@ -100,7 +102,6 @@ def merge(
         return 0
 
     existing = target.read_text()
-    target.with_name(target.name + ".bak").write_text(existing)
 
     if begin in existing and end in existing:
         before, _, rest = existing.partition(begin)
@@ -113,6 +114,12 @@ def merge(
 
     removed_lines = 0
     if legacy_header is not None:
+        # Only this path can destroy content the engineer wrote (the legacy
+        # strip below), so only it needs a safety-net backup. The other call
+        # site's target is COMMITTED into a product repo (see module
+        # docstring) — dropping an untracked `.bak` there on every run would
+        # be its own kind of repo pollution, not a safety net.
+        target.with_name(target.name + ".bak").write_text(existing)
         before, removed_lines = _strip_legacy_unmarked_block(before, legacy_header)
 
     # Keep it lean: collapse trailing whitespace left behind by a strip so the
